@@ -2,19 +2,19 @@
 
 exports[`exclude option should match snapshot for a single RegExp value: assets 1`] = `
 Object {
-  "entry.js": "(()=>{var r={921:r=>{r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
+  "entry.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
   "excluded1.js": "/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 508:
-/***/ ((module) => {
+/***/ 508
+(module) {
 
 module.exports = function Bar1() {
   const b = 2 + 2;
   console.log(b + 1 + 2);
 };
 
-/***/ })
+/***/ }
 
 /******/ 	});
 /************************************************************************/
@@ -51,7 +51,7 @@ module.exports = function Bar1() {
 /******/ 	
 /******/ })()
 ;",
-  "excluded2.js": "(()=>{var r={93:r=>{r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(93)})();",
+  "excluded2.js": "(()=>{var r={93(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(93)})();",
 }
 `;
 
@@ -61,19 +61,19 @@ exports[`exclude option should match snapshot for a single RegExp value: warning
 
 exports[`exclude option should match snapshot for a single String value: assets 1`] = `
 Object {
-  "entry.js": "(()=>{var r={921:r=>{r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
+  "entry.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
   "excluded1.js": "/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 508:
-/***/ ((module) => {
+/***/ 508
+(module) {
 
 module.exports = function Bar1() {
   const b = 2 + 2;
   console.log(b + 1 + 2);
 };
 
-/***/ })
+/***/ }
 
 /******/ 	});
 /************************************************************************/
@@ -110,7 +110,7 @@ module.exports = function Bar1() {
 /******/ 	
 /******/ })()
 ;",
-  "excluded2.js": "(()=>{var r={93:r=>{r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(93)})();",
+  "excluded2.js": "(()=>{var r={93(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(93)})();",
 }
 `;
 
@@ -120,19 +120,19 @@ exports[`exclude option should match snapshot for a single String value: warning
 
 exports[`exclude option should match snapshot for multiple RegExp values: assets 1`] = `
 Object {
-  "entry.js": "(()=>{var r={921:r=>{r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
+  "entry.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
   "excluded1.js": "/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 508:
-/***/ ((module) => {
+/***/ 508
+(module) {
 
 module.exports = function Bar1() {
   const b = 2 + 2;
   console.log(b + 1 + 2);
 };
 
-/***/ })
+/***/ }
 
 /******/ 	});
 /************************************************************************/
@@ -172,15 +172,15 @@ module.exports = function Bar1() {
   "excluded2.js": "/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 93:
-/***/ ((module) => {
+/***/ 93
+(module) {
 
 module.exports = function Bar2() {
   const b = 2 + 2;
   console.log(b + 1 + 2);
 };
 
-/***/ })
+/***/ }
 
 /******/ 	});
 /************************************************************************/
@@ -226,19 +226,19 @@ exports[`exclude option should match snapshot for multiple RegExp values: warnin
 
 exports[`exclude option should match snapshot for multiple String values: assets 1`] = `
 Object {
-  "entry.js": "(()=>{var r={921:r=>{r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
+  "entry.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
   "excluded1.js": "/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 508:
-/***/ ((module) => {
+/***/ 508
+(module) {
 
 module.exports = function Bar1() {
   const b = 2 + 2;
   console.log(b + 1 + 2);
 };
 
-/***/ })
+/***/ }
 
 /******/ 	});
 /************************************************************************/
@@ -278,15 +278,15 @@ module.exports = function Bar1() {
   "excluded2.js": "/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 93:
-/***/ ((module) => {
+/***/ 93
+(module) {
 
 module.exports = function Bar2() {
   const b = 2 + 2;
   console.log(b + 1 + 2);
 };
 
-/***/ })
+/***/ }
 
 /******/ 	});
 /************************************************************************/

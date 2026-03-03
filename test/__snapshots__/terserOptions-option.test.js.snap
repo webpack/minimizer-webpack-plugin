@@ -2,7 +2,7 @@
 
 exports[`terserOptions option should match snapshot for the "compress" option with an object value: assets 1`] = `
 Object {
-  "main.js": "(()=>{var r={921:r=>{r.exports=function(){console.log(7)}}};var o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
+  "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}};var o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
@@ -13,7 +13,7 @@ exports[`terserOptions option should match snapshot for the "compress" option wi
 exports[`terserOptions option should match snapshot for the "compress" option with the "false" value: assets 1`] = `
 Object {
   "main.js": "/*! For license information please see main.js.LICENSE.txt */
-(()=>{var r={921:r=>{const n=null&&2+2;r.exports=function r(){const n=2+2;console.log(n+1+2)}}};var n={};function o(t){var e=n[t];if(e!==undefined){return e.exports}var s=n[t]={exports:{}};r[t](s,s.exports,o);return s.exports}var t=o(921)})();",
+(()=>{var r={921(r){const n=null&&2+2;r.exports=function r(){const n=2+2;console.log(n+1+2)}}};var n={};function o(t){var e=n[t];if(e!==undefined){return e.exports}var s=n[t]={exports:{}};r[t](s,s.exports,o);return s.exports}var t=o(921)})();",
   "main.js.LICENSE.txt": "/* @preserve*/
 ",
 }
@@ -25,7 +25,7 @@ exports[`terserOptions option should match snapshot for the "compress" option wi
 
 exports[`terserOptions option should match snapshot for the "compress" option with the "true" value: assets 1`] = `
 Object {
-  "main.js": "(()=>{var r={921:r=>{r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
+  "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
@@ -143,7 +143,7 @@ exports[`terserOptions option should match snapshot for the "ecma" and set the o
 Object {
   "main.js": "(() => {
     var __webpack_modules__ = {
-        326: module => {
+        326(module) {
             var abc, Person = {
                 firstName: null,
                 lastName: null
@@ -192,7 +192,7 @@ exports[`terserOptions option should match snapshot for the "ecma" and set the o
 
 exports[`terserOptions option should match snapshot for the "ecma" option with the "5" value ("swc"): assets 1`] = `
 Object {
-  "main.js": "(()=>{var __webpack_modules__={326:module=>{var Person={firstName:null,lastName:null},Employee=Object.create(Person,{id:{value:null,enumerable:!0,configurable:!0,writable:!0}}),Manager=Object.create(Employee,{department:{value:null,enumerable:!0,configurable:!0,writable:!0}});module.exports={Person:Person,Employee:Employee,Manager:Manager},console.log({data(){return{a:2}}})}},__webpack_module_cache__={};!function __webpack_require__(moduleId){var cachedModule=__webpack_module_cache__[moduleId];if(void 0!==cachedModule)return cachedModule.exports;var module=__webpack_module_cache__[moduleId]={exports:{}};return __webpack_modules__[moduleId](module,module.exports,__webpack_require__),module.exports}(326)})();",
+  "main.js": "(()=>{var __webpack_modules__={326(module){var Person={firstName:null,lastName:null},Employee=Object.create(Person,{id:{value:null,enumerable:!0,configurable:!0,writable:!0}}),Manager=Object.create(Employee,{department:{value:null,enumerable:!0,configurable:!0,writable:!0}});module.exports={Person:Person,Employee:Employee,Manager:Manager},console.log({data(){return{a:2}}})}},__webpack_module_cache__={};!function __webpack_require__(moduleId){var cachedModule=__webpack_module_cache__[moduleId];if(void 0!==cachedModule)return cachedModule.exports;var module=__webpack_module_cache__[moduleId]={exports:{}};return __webpack_modules__[moduleId](module,module.exports,__webpack_require__),module.exports}(326)})();",
 }
 `;
 
@@ -204,7 +204,7 @@ exports[`terserOptions option should match snapshot for the "ecma" option with t
 Object {
   "main.js": "(() => {
     var __webpack_modules__ = {
-        326: module => {
+        326(module) {
             var abc, Person = {
                 firstName: null,
                 lastName: null
@@ -255,7 +255,7 @@ exports[`terserOptions option should match snapshot for the "ecma" option with t
 
 exports[`terserOptions option should match snapshot for the "ecma" option with the "6" value ("swc"): assets 1`] = `
 Object {
-  "main.js": "(()=>{var __webpack_modules__={391:module=>{console.log({data:()=>({a:2})}),module.exports=class{constructor(principal,years,rate){this.principal=principal,this.years=years,this.rate=rate}get monthlyPayment(){let monthlyRate=this.rate/100/12;return this.principal*monthlyRate/(1-Math.pow(1/(1+monthlyRate),12*this.years))}get amortization(){let monthlyPayment=this.monthlyPayment,monthlyRate=this.rate/100/12,balance=this.principal,amortization=[];for(let y=0;y<this.years;y++){let interestY=0,principalY=0;for(let m=0;m<12;m++){let interestM=balance*monthlyRate,principalM=monthlyPayment-interestM;interestY+=interestM,principalY+=principalM,balance-=principalM}amortization.push({principalY,interestY,balance})}return amortization}}}},__webpack_module_cache__={};!function __webpack_require__(moduleId){var cachedModule=__webpack_module_cache__[moduleId];if(void 0!==cachedModule)return cachedModule.exports;var module=__webpack_module_cache__[moduleId]={exports:{}};return __webpack_modules__[moduleId](module,module.exports,__webpack_require__),module.exports}(391)})();",
+  "main.js": "(()=>{var __webpack_modules__={391(module){console.log({data:()=>({a:2})}),module.exports=class{constructor(principal,years,rate){this.principal=principal,this.years=years,this.rate=rate}get monthlyPayment(){let monthlyRate=this.rate/100/12;return this.principal*monthlyRate/(1-Math.pow(1/(1+monthlyRate),12*this.years))}get amortization(){let monthlyPayment=this.monthlyPayment,monthlyRate=this.rate/100/12,balance=this.principal,amortization=[];for(let y=0;y<this.years;y++){let interestY=0,principalY=0;for(let m=0;m<12;m++){let interestM=balance*monthlyRate,principalM=monthlyPayment-interestM;interestY+=interestM,principalY+=principalM,balance-=principalM}amortization.push({principalY,interestY,balance})}return amortization}}}},__webpack_module_cache__={};!function __webpack_require__(moduleId){var cachedModule=__webpack_module_cache__[moduleId];if(void 0!==cachedModule)return cachedModule.exports;var module=__webpack_module_cache__[moduleId]={exports:{}};return __webpack_modules__[moduleId](module,module.exports,__webpack_require__),module.exports}(391)})();",
 }
 `;
 
@@ -267,7 +267,7 @@ exports[`terserOptions option should match snapshot for the "ecma" option with t
 Object {
   "main.js": "(() => {
     var __webpack_modules__ = {
-        391: module => {
+        391(module) {
             var abc;
             abc = {
                 data: () => ({
@@ -321,7 +321,7 @@ exports[`terserOptions option should match snapshot for the "ecma" option with t
 Object {
   "main.js": "(() => {
     var __webpack_modules__ = {
-        192: module => {
+        192(module) {
             module.exports = function(base, exponent) {
                 return base ** exponent;
             };
@@ -348,7 +348,7 @@ exports[`terserOptions option should match snapshot for the "ecma" option with t
 Object {
   "main.js": "(() => {
     var __webpack_modules__ = {
-        489: module => {
+        489(module) {
             module.exports = async function(url) {
                 try {
                     let request = await fetch(url), text = await request.text();
@@ -380,7 +380,7 @@ exports[`terserOptions option should match snapshot for the "format.beautify" op
 Object {
   "main.js": "(() => {
     var r = {
-        921: r => {
+        921(r) {
             r.exports = function() {
                 console.log(7);
             };
@@ -406,9 +406,7 @@ exports[`terserOptions option should match snapshot for the "format.comments" op
 Object {
   "main.js": "/******/(()=>{// webpackBootstrap
 /******/var r={
-/***/921:
-/***/r=>{r.exports=function(){console.log(7)}}
-/***/
+/***/921(r){r.exports=function(){console.log(7)}}
 /******/},o={};
 /************************************************************************/
 /******/ // The module cache
@@ -452,7 +450,7 @@ exports[`terserOptions option should match snapshot for the "format.comments" op
 
 exports[`terserOptions option should match snapshot for the "ie8" option with the "false" value: assets 1`] = `
 Object {
-  "main.js": "(()=>{var r={921:r=>{r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
+  "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
@@ -462,7 +460,7 @@ exports[`terserOptions option should match snapshot for the "ie8" option with th
 
 exports[`terserOptions option should match snapshot for the "ie8" option with the "true" value: assets 1`] = `
 Object {
-  "main.js": "(()=>{var r={921:r=>{r.exports=function(){console.log(7)}}},e={};(function o(n){var t=e[n];if(t!==undefined)return t.exports;var s=e[n]={exports:{}};return r[n](s,s.exports,o),s.exports})(921)})();",
+  "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},e={};(function o(n){var t=e[n];if(t!==undefined)return t.exports;var s=e[n]={exports:{}};return r[n](s,s.exports,o),s.exports})(921)})();",
 }
 `;
 
@@ -472,7 +470,7 @@ exports[`terserOptions option should match snapshot for the "ie8" option with th
 
 exports[`terserOptions option should match snapshot for the "keep_classnames" option with the "false" value: assets 1`] = `
 Object {
-  "main.js": "(()=>{var r={921:r=>{r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
+  "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
@@ -482,7 +480,7 @@ exports[`terserOptions option should match snapshot for the "keep_classnames" op
 
 exports[`terserOptions option should match snapshot for the "keep_classnames" option with the "true" value: assets 1`] = `
 Object {
-  "main.js": "(()=>{var r={921:r=>{r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
+  "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
@@ -492,7 +490,7 @@ exports[`terserOptions option should match snapshot for the "keep_classnames" op
 
 exports[`terserOptions option should match snapshot for the "keep_fnames" option with the "false" value: assets 1`] = `
 Object {
-  "main.js": "(()=>{var r={921:r=>{r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
+  "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
@@ -502,7 +500,7 @@ exports[`terserOptions option should match snapshot for the "keep_fnames" option
 
 exports[`terserOptions option should match snapshot for the "keep_fnames" option with the "true" value: assets 1`] = `
 Object {
-  "main.js": "(()=>{var r={921:r=>{r.exports=function Foo(){console.log(7)}}},e={};(function __webpack_require__(o){var _=e[o];if(void 0!==_)return _.exports;var t=e[o]={exports:{}};return r[o](t,t.exports,__webpack_require__),t.exports})(921)})();",
+  "main.js": "(()=>{var r={921(r){r.exports=function Foo(){console.log(7)}}},e={};(function __webpack_require__(o){var _=e[o];if(void 0!==_)return _.exports;var t=e[o]={exports:{}};return r[o](t,t.exports,__webpack_require__),t.exports})(921)})();",
 }
 `;
 
@@ -512,7 +510,7 @@ exports[`terserOptions option should match snapshot for the "keep_fnames" option
 
 exports[`terserOptions option should match snapshot for the "mangle" option with object values: assets 1`] = `
 Object {
-  "main.js": "(()=>{var r={921:r=>{r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
+  "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
@@ -522,7 +520,7 @@ exports[`terserOptions option should match snapshot for the "mangle" option with
 
 exports[`terserOptions option should match snapshot for the "mangle" option with the "false" value: assets 1`] = `
 Object {
-  "main.js": "(()=>{var __webpack_modules__={921:module=>{module.exports=function(){console.log(7)}}},__webpack_module_cache__={};(function __webpack_require__(moduleId){var cachedModule=__webpack_module_cache__[moduleId];if(void 0!==cachedModule)return cachedModule.exports;var module=__webpack_module_cache__[moduleId]={exports:{}};return __webpack_modules__[moduleId](module,module.exports,__webpack_require__),module.exports})(921)})();",
+  "main.js": "(()=>{var __webpack_modules__={921(module){module.exports=function(){console.log(7)}}},__webpack_module_cache__={};(function __webpack_require__(moduleId){var cachedModule=__webpack_module_cache__[moduleId];if(void 0!==cachedModule)return cachedModule.exports;var module=__webpack_module_cache__[moduleId]={exports:{}};return __webpack_modules__[moduleId](module,module.exports,__webpack_require__),module.exports})(921)})();",
 }
 `;
 
@@ -532,7 +530,7 @@ exports[`terserOptions option should match snapshot for the "mangle" option with
 
 exports[`terserOptions option should match snapshot for the "mangle" option with the "true" value: assets 1`] = `
 Object {
-  "main.js": "(()=>{var r={921:r=>{r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
+  "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
@@ -542,7 +540,7 @@ exports[`terserOptions option should match snapshot for the "mangle" option with
 
 exports[`terserOptions option should match snapshot for the "module" option with the "false" value: assets 1`] = `
 Object {
-  "main.js": "(()=>{var r={921:r=>{r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
+  "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
@@ -552,7 +550,7 @@ exports[`terserOptions option should match snapshot for the "module" option with
 
 exports[`terserOptions option should match snapshot for the "module" option with the "true" value: assets 1`] = `
 Object {
-  "main.js": "var r,o;r={921:r=>{r.exports=function(){console.log(7)}}},o={},function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports}(921);",
+  "main.js": "var r,o;r={921(r){r.exports=function(){console.log(7)}}},o={},function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports}(921);",
 }
 `;
 
@@ -562,7 +560,7 @@ exports[`terserOptions option should match snapshot for the "module" option with
 
 exports[`terserOptions option should match snapshot for the "nameCache" option with a empty object value: assets 1`] = `
 Object {
-  "main.js": "(()=>{var r={921:r=>{r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
+  "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
@@ -574,7 +572,7 @@ exports[`terserOptions option should match snapshot for the "output.beautify" op
 Object {
   "main.js": "(() => {
     var r = {
-        921: r => {
+        921(r) {
             r.exports = function() {
                 console.log(7);
             };
@@ -600,9 +598,7 @@ exports[`terserOptions option should match snapshot for the "output.comments" op
 Object {
   "main.js": "/******/(()=>{// webpackBootstrap
 /******/var r={
-/***/921:
-/***/r=>{r.exports=function(){console.log(7)}}
-/***/
+/***/921(r){r.exports=function(){console.log(7)}}
 /******/},o={};
 /************************************************************************/
 /******/ // The module cache
@@ -646,7 +642,7 @@ exports[`terserOptions option should match snapshot for the "output.comments" op
 
 exports[`terserOptions option should match snapshot for the "parse.ecma" option with the "8" value: assets 1`] = `
 Object {
-  "main.js": "(()=>{var r={921:r=>{r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
+  "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
@@ -656,7 +652,7 @@ exports[`terserOptions option should match snapshot for the "parse.ecma" option 
 
 exports[`terserOptions option should match snapshot for the "safari10" option with the "false" value: assets 1`] = `
 Object {
-  "main.js": "(()=>{var r={921:r=>{r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
+  "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
@@ -666,7 +662,7 @@ exports[`terserOptions option should match snapshot for the "safari10" option wi
 
 exports[`terserOptions option should match snapshot for the "safari10" option with the "true" value: assets 1`] = `
 Object {
-  "main.js": "(()=>{var r={921:r=>{r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
+  "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
@@ -676,7 +672,7 @@ exports[`terserOptions option should match snapshot for the "safari10" option wi
 
 exports[`terserOptions option should match snapshot for the "toplevel" option with the "false" value: assets 1`] = `
 Object {
-  "main.js": "(()=>{var r={921:r=>{r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
+  "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
@@ -686,7 +682,7 @@ exports[`terserOptions option should match snapshot for the "toplevel" option wi
 
 exports[`terserOptions option should match snapshot for the "toplevel" option with the "true" value: assets 1`] = `
 Object {
-  "main.js": "var r,o;r={921:r=>{r.exports=function(){console.log(7)}}},o={},function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports}(921);",
+  "main.js": "var r,o;r={921(r){r.exports=function(){console.log(7)}}},o={},function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports}(921);",
 }
 `;
 

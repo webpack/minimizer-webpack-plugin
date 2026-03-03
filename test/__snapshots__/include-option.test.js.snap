@@ -5,8 +5,8 @@ Object {
   "entry.js": "/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 921:
-/***/ ((module) => {
+/***/ 921
+(module) {
 
 // foo
 /* @preserve*/
@@ -19,7 +19,7 @@ module.exports = function Foo() {
 };
 
 
-/***/ })
+/***/ }
 
 /******/ 	});
 /************************************************************************/
@@ -56,12 +56,12 @@ module.exports = function Foo() {
 /******/ 	
 /******/ })()
 ;",
-  "included1.js": "(()=>{var r={46:r=>{r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(46)})();",
+  "included1.js": "(()=>{var r={46(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(46)})();",
   "included2.js": "/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 515:
-/***/ ((module) => {
+/***/ 515
+(module) {
 
 module.exports = function Bar2() {
   const b = 2 + 2;
@@ -69,7 +69,7 @@ module.exports = function Bar2() {
 };
 
 
-/***/ })
+/***/ }
 
 /******/ 	});
 /************************************************************************/
@@ -118,8 +118,8 @@ Object {
   "entry.js": "/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 921:
-/***/ ((module) => {
+/***/ 921
+(module) {
 
 // foo
 /* @preserve*/
@@ -132,7 +132,7 @@ module.exports = function Foo() {
 };
 
 
-/***/ })
+/***/ }
 
 /******/ 	});
 /************************************************************************/
@@ -169,12 +169,12 @@ module.exports = function Foo() {
 /******/ 	
 /******/ })()
 ;",
-  "included1.js": "(()=>{var r={46:r=>{r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(46)})();",
+  "included1.js": "(()=>{var r={46(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(46)})();",
   "included2.js": "/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 515:
-/***/ ((module) => {
+/***/ 515
+(module) {
 
 module.exports = function Bar2() {
   const b = 2 + 2;
@@ -182,7 +182,7 @@ module.exports = function Bar2() {
 };
 
 
-/***/ })
+/***/ }
 
 /******/ 	});
 /************************************************************************/
@@ -231,8 +231,8 @@ Object {
   "entry.js": "/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 921:
-/***/ ((module) => {
+/***/ 921
+(module) {
 
 // foo
 /* @preserve*/
@@ -245,7 +245,7 @@ module.exports = function Foo() {
 };
 
 
-/***/ })
+/***/ }
 
 /******/ 	});
 /************************************************************************/
@@ -282,8 +282,8 @@ module.exports = function Foo() {
 /******/ 	
 /******/ })()
 ;",
-  "included1.js": "(()=>{var r={46:r=>{r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(46)})();",
-  "included2.js": "(()=>{var r={515:r=>{r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(515)})();",
+  "included1.js": "(()=>{var r={46(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(46)})();",
+  "included2.js": "(()=>{var r={515(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(515)})();",
 }
 `;
 
@@ -296,8 +296,8 @@ Object {
   "entry.js": "/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 921:
-/***/ ((module) => {
+/***/ 921
+(module) {
 
 // foo
 /* @preserve*/
@@ -310,7 +310,7 @@ module.exports = function Foo() {
 };
 
 
-/***/ })
+/***/ }
 
 /******/ 	});
 /************************************************************************/
@@ -347,8 +347,8 @@ module.exports = function Foo() {
 /******/ 	
 /******/ })()
 ;",
-  "included1.js": "(()=>{var r={46:r=>{r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(46)})();",
-  "included2.js": "(()=>{var r={515:r=>{r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(515)})();",
+  "included1.js": "(()=>{var r={46(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(46)})();",
+  "included2.js": "(()=>{var r={515(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(515)})();",
 }
 `;
 

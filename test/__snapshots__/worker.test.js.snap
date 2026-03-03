@@ -181,6 +181,7 @@ Object {
   "code": "function foo(f){if(f)return bar()}",
   "extractedComments": Array [],
   "map": Object {
+    "ignoreList": Array [],
     "mappings": "AAAA,SAASA,IAAIC,GAAK,GAAIA,EAAK,OAAOC,KAAwB",
     "names": Array [
       "foo",
