@@ -36,11 +36,13 @@
     "filebase",
     "toplevel",
     "commitlint",
-    "tapable"
+    "tapable",
+    "nocheck"
   ],
   "ignorePaths": [
     "CHANGELOG.md",
     "package.json",
+    "src/serialize-javascript.js",
     "dist/**",
     "**/__snapshots__/**",
     "package-lock.json",
