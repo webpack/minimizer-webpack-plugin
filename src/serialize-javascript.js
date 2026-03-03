@@ -1,4 +1,25 @@
 // @ts-nocheck
+
+var g = typeof globalThis !== 'undefined' ? globalThis : global;
+var crypto = g.crypto || {};
+
+if (typeof crypto.getRandomValues !== 'function') {
+  var nodeCrypto = require('crypto');
+
+  crypto.getRandomValues = function(typedArray) {
+    // Генерируем буфер случайных байтов нужной длины
+    var bytes = nodeCrypto.randomBytes(typedArray.byteLength);
+
+    // Копируем байты в типизированный массив через Uint8Array View
+    new Uint8Array(
+      typedArray.buffer,
+      typedArray.byteOffset,
+      typedArray.byteLength
+    ).set(bytes);
+
+    return typedArray;
+  };
+}
 /*
 Copyright (c) 2014, Yahoo! Inc. All rights reserved.
 Copyrights licensed under the New BSD License.

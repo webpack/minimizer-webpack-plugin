@@ -4,6 +4,27 @@ const path = require("path");
 
 /* eslint-disable no-console */
 
+const randomBytesFallback = `
+var g = typeof globalThis !== 'undefined' ? globalThis : global;
+var crypto = g.crypto || {};
+
+if (typeof crypto.getRandomValues !== 'function') {
+  var nodeCrypto = require('crypto');
+
+  crypto.getRandomValues = function(typedArray) {
+    var bytes = nodeCrypto.randomBytes(typedArray.byteLength);
+
+    new Uint8Array(
+      typedArray.buffer,
+      typedArray.byteOffset,
+      typedArray.byteLength
+    ).set(bytes);
+
+    return typedArray;
+  };
+}
+`;
+
 /**
  * @param {string} src source path
  * @param {string} dest destination path
@@ -14,7 +35,7 @@ async function copyIfChanged(src, dest) {
 
   try {
     srcContent = await fs.readFile(src, "utf8");
-    srcContent = `// @ts-nocheck\n${srcContent}`;
+    srcContent = `// @ts-nocheck\n${randomBytesFallback}${srcContent}`;
   } catch (_err) {
     srcContent = null;
   }
