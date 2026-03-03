@@ -1,3 +1,4 @@
+src/serialize-javascript.js
 /coverage
 /dist
 /node_modules

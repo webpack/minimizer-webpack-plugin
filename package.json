@@ -37,11 +37,13 @@
   "scripts": {
     "clean": "del-cli dist types",
     "prebuild": "npm run clean",
+    "build:serialize-javascript": "node ./scripts/copy-serialize-javascript.js",
     "build:types": "tsc --declaration --emitDeclarationOnly --outDir types && prettier \"types/**/*.ts\" --write",
     "build:code": "cross-env NODE_ENV=production babel src -d dist --copy-files",
     "build": "npm-run-all -p \"build:**\"",
     "commitlint": "commitlint --from=main",
     "security": "npm audit --production",
+    "lint:serialize-javascript": "node ./scripts/copy-serialize-javascript.js --check",
     "lint:prettier": "prettier --list-different .",
     "lint:code": "eslint --cache .",
     "lint:spelling": "cspell \"**/*.*\"",
@@ -62,7 +64,6 @@
     "@jridgewell/trace-mapping": "^0.3.25",
     "jest-worker": "^27.4.5",
     "schema-utils": "^4.3.0",
-    "serialize-javascript": "^6.0.2",
     "terser": "^5.31.1"
   },
   "devDependencies": {
@@ -91,6 +92,7 @@
     "npm-run-all": "^4.1.5",
     "prettier": "^3.6.0",
     "prettier-2": "npm:prettier@^2",
+    "serialize-javascript": "^7.0.4",
     "standard-version": "^9.3.1",
     "typescript": "^5.9.2",
     "uglify-js": "^3.19.3",

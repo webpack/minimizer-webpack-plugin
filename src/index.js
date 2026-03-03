@@ -163,7 +163,7 @@ const {
  */
 
 const getTraceMapping = memoize(() => require("@jridgewell/trace-mapping"));
-const getSerializeJavascript = memoize(() => require("serialize-javascript"));
+const getSerializeJavascript = memoize(() => require("./serialize-javascript"));
 
 /**
  * @template [T=import("terser").MinifyOptions]
