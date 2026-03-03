@@ -20,6 +20,7 @@ const {
 /** @typedef {import("webpack").Configuration} Configuration */
 /** @typedef {import("webpack").Asset} Asset */
 /** @typedef {import("webpack").AssetInfo} AssetInfo */
+/** @typedef {import("webpack").TemplatePath} TemplatePath */
 /** @typedef {import("jest-worker").Worker} JestWorker */
 /** @typedef {import("@jridgewell/trace-mapping").EncodedSourceMap & { sources: string[], sourcesContent?: string[], file: string }} RawSourceMap */
 /** @typedef {import("@jridgewell/trace-mapping").TraceMap} TraceMap */
@@ -27,21 +28,22 @@ const {
 /** @typedef {RegExp | string} Rule */
 /** @typedef {Rule[] | Rule} Rules */
 
-// eslint-disable-next-line jsdoc/no-restricted-syntax
+// eslint-disable-next-line jsdoc/reject-any-type
+/** @typedef {any} EXPECTED_ANY */
+
 /**
  * @callback ExtractCommentsFunction
- * @param {any} astNode ast Node
- * @param {{ value: string, type: 'comment1' | 'comment2' | 'comment3' | 'comment4', pos: number, line: number, col: number }} comment comment node
+ * @param {EXPECTED_ANY} astNode ast Node
+ * @param {{ value: string, type: "comment1" | "comment2" | "comment3" | "comment4", pos: number, line: number, col: number }} comment comment node
  * @returns {boolean} true when need to extract comment, otherwise false
  */
 
 /**
- * @typedef {boolean | 'all' | 'some' | RegExp | ExtractCommentsFunction} ExtractCommentsCondition
+ * @typedef {boolean | "all" | "some" | RegExp | ExtractCommentsFunction} ExtractCommentsCondition
  */
 
-// eslint-disable-next-line jsdoc/no-restricted-syntax
 /**
- * @typedef {string | ((fileData: any) => string)} ExtractCommentsFilename
+ * @typedef {TemplatePath} ExtractCommentsFilename
  */
 
 /**
@@ -71,18 +73,17 @@ const {
  * @typedef {object} MinimizedResult
  * @property {string=} code code
  * @property {RawSourceMap=} map source map
- * @property {Array<Error | string>=} errors errors
- * @property {Array<Error | string>=} warnings warnings
- * @property {Array<string>=} extractedComments extracted comments
+ * @property {(Error | string)[]=} errors errors
+ * @property {(Error | string)[]=} warnings warnings
+ * @property {string[]=} extractedComments extracted comments
  */
 
 /**
  * @typedef {{ [file: string]: string }} Input
  */
 
-// eslint-disable-next-line jsdoc/no-restricted-syntax
 /**
- * @typedef {{ [key: string]: any }} CustomOptions
+ * @typedef {{ [key: string]: EXPECTED_ANY }} CustomOptions
  */
 
 /**
@@ -215,13 +216,13 @@ class TerserPlugin {
     // https://github.com/jridgewell/trace-mapping#usage
     return Boolean(
       input &&
-        typeof input === "object" &&
-        input !== null &&
-        "version" in input &&
-        "sources" in input &&
-        Array.isArray(input.sources) &&
-        "mappings" in input &&
-        typeof input.mappings === "string",
+      typeof input === "object" &&
+      input !== null &&
+      "version" in input &&
+      "sources" in input &&
+      Array.isArray(input.sources) &&
+      "mappings" in input &&
+      typeof input.mappings === "string",
     );
   }
 
@@ -454,7 +455,7 @@ class TerserPlugin {
     const { SourceMapSource, ConcatSource, RawSource } =
       compiler.webpack.sources;
 
-    /** @typedef {{ extractedCommentsSource : import("webpack").sources.RawSource, commentsFilename: string }} ExtractedCommentsInfo */
+    /** @typedef {{ extractedCommentsSource: import("webpack").sources.RawSource, commentsFilename: string }} ExtractedCommentsInfo */
     /** @type {Map<string, ExtractedCommentsInfo>} */
     const allExtractedComments = new Map();
     const scheduledTasks = [];

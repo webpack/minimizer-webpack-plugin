@@ -12,7 +12,7 @@
  */
 
 /**
- * @typedef {Array<string>} ExtractedComments
+ * @typedef {string[]} ExtractedComments
  */
 
 const notSettled = Symbol("not-settled");
@@ -90,7 +90,7 @@ async function terserMinify(
   };
 
   /**
-   * @param {import("terser").MinifyOptions & { sourceMap: import("terser").SourceMapOptions | undefined  } & ({ output: import("terser").FormatOptions & { beautify: boolean } } | { format: import("terser").FormatOptions & { beautify: boolean } })} terserOptions terser options
+   * @param {import("terser").MinifyOptions & { sourceMap: import("terser").SourceMapOptions | undefined } & ({ output: import("terser").FormatOptions & { beautify: boolean } } | { format: import("terser").FormatOptions & { beautify: boolean } })} terserOptions terser options
    * @param {ExtractedComments} extractedComments extracted comments
    * @returns {ExtractCommentsFunction} function to extract comments
    */
@@ -346,7 +346,7 @@ async function uglifyJsMinify(
   };
 
   /**
-   * @param {import("uglify-js").MinifyOptions & { sourceMap: boolean | import("uglify-js").SourceMapOptions | undefined } & { output: import("uglify-js").OutputOptions & { beautify: boolean }}} uglifyJsOptions uglify-js options
+   * @param {import("uglify-js").MinifyOptions & { sourceMap: boolean | import("uglify-js").SourceMapOptions | undefined } & { output: import("uglify-js").OutputOptions & { beautify: boolean } }} uglifyJsOptions uglify-js options
    * @param {ExtractedComments} extractedComments extracted comments
    * @returns {ExtractCommentsFunction} extract comments function
    */
@@ -455,7 +455,7 @@ async function uglifyJsMinify(
 
   /**
    * @param {PredefinedOptions<import("uglify-js").MinifyOptions> & import("uglify-js").MinifyOptions=} uglifyJsOptions uglify-js options
-   * @returns {import("uglify-js").MinifyOptions & { sourceMap: boolean | import("uglify-js").SourceMapOptions | undefined } & { output: import("uglify-js").OutputOptions & { beautify: boolean }}} uglify-js options
+   * @returns {import("uglify-js").MinifyOptions & { sourceMap: boolean | import("uglify-js").SourceMapOptions | undefined } & { output: import("uglify-js").OutputOptions & { beautify: boolean } }} uglify-js options
    */
   const buildUglifyJsOptions = (uglifyJsOptions = {}) => {
     if (typeof uglifyJsOptions.ecma !== "undefined") {
