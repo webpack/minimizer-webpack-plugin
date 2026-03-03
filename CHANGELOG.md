@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [5.3.17](https://github.com/webpack/terser-webpack-plugin/compare/v5.3.16...v5.3.17) (2026-03-03)
+
+
+### Bug Fixes
+
+* update `serialize-javascript` ([37c490c](https://github.com/webpack/terser-webpack-plugin/commit/37c490c326ffe3416b50028a91bfba5661e1344e))
+
 ### [5.3.16](https://github.com/webpack/terser-webpack-plugin/compare/v5.3.15...v5.3.16) (2025-12-11)
 
 
