@@ -164,13 +164,6 @@ exports[`minify option should work using when the \`minify\` option is \`jsonMin
 
 exports[`minify option should work using when the \`minify\` option is \`jsonMinify\` and allows to set \`JSON.stringify\` options: warnings 1`] = `Array []`;
 
-exports[`minify option should work using when the \`minify\` option is \`jsonMinify\` and output errors: errors 1`] = `
-Array [
-  "Error: 02c6f39b64edc78375dd.json from Terser plugin
-Unexpected token '}', \\"{",
-]
-`;
-
 exports[`minify option should work using when the \`minify\` option is \`jsonMinify\` and output errors: warnings 1`] = `Array []`;
 
 exports[`minify option should work using when the \`minify\` option is \`jsonMinify\`: assets 1`] = `
