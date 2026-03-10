@@ -1,6 +1,6 @@
 {
   "name": "terser-webpack-plugin",
-  "version": "5.3.17",
+  "version": "5.4.0",
   "description": "Terser plugin for webpack",
   "keywords": [
     "uglify",

@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [5.4.0](https://github.com/webpack/terser-webpack-plugin/compare/v5.3.17...v5.4.0) (2026-03-10)
+
+
+### Features
+
+* added ability to minimizer `JSON` using `jsonMinify` ([#657](https://github.com/webpack/terser-webpack-plugin/issues/657)) ([29ac915](https://github.com/webpack/terser-webpack-plugin/commit/29ac915e58ec2ff81346d936ee2cf63ac6e300b8))
+
+
 ### [5.3.17](https://github.com/webpack/terser-webpack-plugin/compare/v5.3.16...v5.3.17) (2026-03-03)
 
 
