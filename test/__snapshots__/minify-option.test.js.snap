@@ -166,8 +166,8 @@ exports[`minify option should work using when the \`minify\` option is \`jsonMin
 
 exports[`minify option should work using when the \`minify\` option is \`jsonMinify\` and output errors: errors 1`] = `
 Array [
-  "Error: bb04048b84f42c02ce30.json from Terser plugin
-Expected ',' or ']' after array element in JSON at position 41 (line 7 column 1)",
+  "Error: 02c6f39b64edc78375dd.json from Terser plugin
+Unexpected token '}', \\"{",
 ]
 `;
 
