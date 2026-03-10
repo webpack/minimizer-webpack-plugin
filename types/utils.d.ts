@@ -34,6 +34,22 @@ export namespace esbuildMinify {
   function supportsWorkerThreads(): boolean | undefined;
 }
 /**
+ * @param {Input} input input
+ * @param {RawSourceMap=} sourceMap source map
+ * @param {CustomOptions=} minimizerOptions options
+ * @returns {Promise<MinimizedResult>} minimized result
+ */
+export function jsonMinify(
+  input: Input,
+  sourceMap?: RawSourceMap | undefined,
+  minimizerOptions?: CustomOptions | undefined,
+): Promise<MinimizedResult>;
+export namespace jsonMinify {
+  function getMinimizerVersion(): string;
+  function supportsWorker(): boolean;
+  function supportsWorkerThreads(): boolean;
+}
+/**
  * @template T
  * @typedef {() => T} FunctionReturning
  */
