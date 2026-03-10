@@ -815,6 +815,31 @@ module.exports = {
 };
 ```
 
+### JSON
+
+Uses `JSON.stringify()` to minify your JSON files during the build process.
+
+**webpack.config.js**
+
+```js
+module.exports = {
+  optimization: {
+    minimize: true,
+    minimizer: [
+      // Keeps original terser plugin to minify JS files
+      "...",
+      // Will minify JSON files (they can come from copy-webpack-plugin or when you are using asset modules)
+      new TerserPlugin({
+        test: /\.json$/,
+        minify: TerserPlugin.jsonMinify,
+        // We are supporting `space` and `replacer` options, you can set them below
+        terserOptions: {},
+      }),
+    ],
+  },
+};
+```
+
 ### Custom Minify Function
 
 Override the default minify function - use `uglify-js` for minification.
