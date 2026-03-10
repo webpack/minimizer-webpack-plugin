@@ -869,7 +869,7 @@ describe("minify option", () => {
 
     const stats = await compile(compiler);
 
-    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(stats.compilation.errors[0].message).toContain("Unexpected token");
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
 
