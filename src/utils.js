@@ -775,6 +775,32 @@ esbuildMinify.getMinimizerVersion = () => {
  */
 esbuildMinify.supportsWorkerThreads = () => false;
 
+/* istanbul ignore next */
+/**
+ * @param {Input} input input
+ * @param {RawSourceMap=} sourceMap source map
+ * @param {CustomOptions=} minimizerOptions options
+ * @returns {Promise<MinimizedResult>} minimized result
+ */
+async function jsonMinify(input, sourceMap, minimizerOptions) {
+  const options =
+    /** @type {{ replacer?: Parameters<typeof JSON.stringify>[1], space?: Parameters<typeof JSON.stringify>[2] }} */
+    (minimizerOptions);
+
+  const [[, code]] = Object.entries(input);
+  const result = JSON.stringify(
+    JSON.parse(code),
+    options.replacer,
+    options.space,
+  );
+
+  return { code: result };
+}
+
+jsonMinify.getMinimizerVersion = () => "1.0.0";
+jsonMinify.supportsWorker = () => false;
+jsonMinify.supportsWorkerThreads = () => false;
+
 /**
  * @template T
  * @typedef {() => T} FunctionReturning
@@ -806,6 +832,7 @@ function memoize(fn) {
 
 module.exports = {
   esbuildMinify,
+  jsonMinify,
   memoize,
   swcMinify,
   terserMinify,

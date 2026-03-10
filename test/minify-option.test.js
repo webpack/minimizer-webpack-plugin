@@ -819,6 +819,60 @@ describe("minify option", () => {
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
 
+  it("should work using when the `minify` option is `jsonMinify`", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/json.js"),
+    });
+
+    new TerserPlugin().apply(compiler);
+    new TerserPlugin({
+      test: /\.json$/i,
+      minify: TerserPlugin.jsonMinify,
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should work using when the `minify` option is `jsonMinify` and allows to set `JSON.stringify` options", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/json.js"),
+    });
+
+    new TerserPlugin().apply(compiler);
+    new TerserPlugin({
+      test: /\.json$/i,
+      minify: TerserPlugin.jsonMinify,
+      terserOptions: { space: 4, replacer: null },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should work using when the `minify` option is `jsonMinify` and output errors", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/json-error.js"),
+    });
+
+    new TerserPlugin().apply(compiler);
+    new TerserPlugin({
+      test: /\.json$/i,
+      minify: TerserPlugin.jsonMinify,
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(stats.compilation.errors[0].message).toContain("Unexpected token");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
   // Due `esbuild` doesn't support extract comments we keep legal comments by default
   it("should work using when the `minify` option is `esbuildMinify` and keep legal comments when extract comments is disabled", async () => {
     const compiler = getCompiler({

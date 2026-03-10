@@ -71,6 +71,7 @@ declare namespace TerserPlugin {
     uglifyJsMinify,
     swcMinify,
     esbuildMinify,
+    jsonMinify,
     Schema,
     Compiler,
     Compilation,
@@ -112,6 +113,7 @@ import { terserMinify } from "./utils";
 import { uglifyJsMinify } from "./utils";
 import { swcMinify } from "./utils";
 import { esbuildMinify } from "./utils";
+import { jsonMinify } from "./utils";
 type Schema = import("schema-utils/declarations/validate").Schema;
 type Compiler = import("webpack").Compiler;
 type Compilation = import("webpack").Compilation;
@@ -250,6 +252,10 @@ type MinimizeFunctionHelpers = {
    * true when minimizer support worker threads, otherwise false
    */
   supportsWorkerThreads?: (() => boolean | undefined) | undefined;
+  /**
+   * true when minimizer support worker, otherwise false
+   */
+  supportsWorker?: (() => boolean | undefined) | undefined;
 };
 type MinimizerImplementation<T> = BasicMinimizerImplementation<T> &
   MinimizeFunctionHelpers;

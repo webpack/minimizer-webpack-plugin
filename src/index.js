@@ -7,6 +7,7 @@ const { minify } = require("./minify");
 const schema = require("./options.json");
 const {
   esbuildMinify,
+  jsonMinify,
   memoize,
   swcMinify,
   terserMinify,
@@ -117,6 +118,7 @@ const {
  * @typedef {object} MinimizeFunctionHelpers
  * @property {() => string | undefined=} getMinimizerVersion function that returns version of minimizer
  * @property {() => boolean | undefined=} supportsWorkerThreads true when minimizer support worker threads, otherwise false
+ * @property {() => boolean | undefined=} supportsWorker true when minimizer support worker, otherwise false
  */
 
 /**
@@ -178,6 +180,7 @@ class TerserPlugin {
       baseDataPath: "options",
     });
 
+    // TODO handle json and etc in the next major release
     // TODO make `minimizer` option instead `minify` and `terserOptions` in the next major release, also rename `terserMinify` to `terserMinimize`
     const {
       minify = /** @type {MinimizerImplementation<T>} */ (terserMinify),
@@ -407,7 +410,15 @@ class TerserPlugin {
     /** @type {undefined | number} */
     let numberOfWorkers;
 
-    if (optimizeOptions.availableNumberOfCores > 0) {
+    const needCreateWorker =
+      optimizeOptions.availableNumberOfCores > 0 &&
+      (typeof this.options.minimizer.implementation.supportsWorker ===
+        "undefined" ||
+        (typeof this.options.minimizer.implementation.supportsWorker ===
+          "function" &&
+          this.options.minimizer.implementation.supportsWorker()));
+
+    if (needCreateWorker) {
       // Do not create unnecessary workers when the number of files is less than the available cores, it saves memory
       numberOfWorkers = Math.min(
         numberOfAssets,
@@ -908,5 +919,6 @@ TerserPlugin.terserMinify = terserMinify;
 TerserPlugin.uglifyJsMinify = uglifyJsMinify;
 TerserPlugin.swcMinify = swcMinify;
 TerserPlugin.esbuildMinify = esbuildMinify;
+TerserPlugin.jsonMinify = jsonMinify;
 
 module.exports = TerserPlugin;
