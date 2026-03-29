@@ -76,7 +76,7 @@
     "@types/node": "^24.2.1",
     "@types/serialize-javascript": "^5.0.2",
     "@types/uglify-js": "^3.17.5",
-    "copy-webpack-plugin": "^9.0.1",
+    "copy-webpack-plugin": "^14.0.0",
     "cross-env": "^7.0.3",
     "cspell": "^6.31.2",
     "del": "^6.0.0",
