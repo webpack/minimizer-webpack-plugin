@@ -659,40 +659,6 @@ async function swcMinify(input, sourceMap, minimizerOptions, extractComments) {
   };
 
   /**
-   * @param {string | undefined} version swc version
-   * @returns {boolean} true when the installed swc build supports comment extraction
-   */
-  const hasExtractCommentsSupport = (version) => {
-    if (!version) {
-      return false;
-    }
-
-    /**
-     * @param {string} value version string
-     * @returns {number[]} normalized semver parts
-     */
-    const normalizeVersion = (value) =>
-      value
-        .split("-")[0]
-        .split(".")
-        .map((item) => Number.parseInt(item, 10) || 0);
-    const currentVersion = normalizeVersion(version);
-    const minimumVersion = normalizeVersion("1.15.30");
-
-    for (let i = 0; i < minimumVersion.length; i++) {
-      if ((currentVersion[i] || 0) > minimumVersion[i]) {
-        return true;
-      }
-
-      if ((currentVersion[i] || 0) < minimumVersion[i]) {
-        return false;
-      }
-    }
-
-    return true;
-  };
-
-  /**
    * @param {PredefinedOptions<import("@swc/core").JsMinifyOptions> & import("@swc/core").JsMinifyOptions=} swcOptions swc options
    * @returns {SwcMinifyOptionsWithExtractComments & { sourceMap: undefined | boolean } & { compress: import("@swc/core").TerserCompressOptions }} built swc options
    */
@@ -732,14 +698,6 @@ async function swcMinify(input, sourceMap, minimizerOptions, extractComments) {
     return { errors: [/** @type {Error} */ (err)] };
   }
 
-  let swcVersion;
-
-  try {
-    ({ version: swcVersion } = require("@swc/core/package.json"));
-  } catch (_error) {
-    // Ignore
-  }
-
   // Copy `swc` options
   const swcOptions = buildSwcOptions(minimizerOptions);
   const normalizedExtractComments = normalizeExtractComments(extractComments);
@@ -761,16 +719,6 @@ async function swcMinify(input, sourceMap, minimizerOptions, extractComments) {
   }
 
   if (normalizedExtractComments.extractComments !== false) {
-    if (!hasExtractCommentsSupport(swcVersion)) {
-      return {
-        errors: [
-          new Error(
-            `The 'extractComments' option for 'swcMinify' requires @swc/core >= 1.15.30${swcVersion ? ` (found ${swcVersion})` : ""}. Please upgrade @swc/core.`,
-          ),
-        ],
-      };
-    }
-
     /** @type {SwcMinifyOptionsWithExtractComments} */ (
       swcOptions
     ).extractComments = normalizedExtractComments.extractComments;
