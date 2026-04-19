@@ -17,8 +17,8 @@ Array [
 
 exports[`minify option should report an error when the \`extractComments\` option for \`swcMinify\` uses a function condition: assets 1`] = `
 Object {
-  "203.203.js": "Error: ENOENT: no such file or directory, open '/Users/kdy1/.codex/worktrees/72b5/terser-webpack-plugin/test/helpers/dist/203.203.js'",
-  "main.js": "Error: ENOENT: no such file or directory, open '/Users/kdy1/.codex/worktrees/72b5/terser-webpack-plugin/test/helpers/dist/main.js'",
+  "203.203.js": "Error: ENOENT: no such file or directory, open 'test/helpers/dist/203.203.js'",
+  "main.js": "Error: ENOENT: no such file or directory, open 'test/helpers/dist/main.js'",
 }
 `;
 
