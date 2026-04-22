@@ -168,13 +168,13 @@ exports[`minify option should work using when the \`minify\` option is \`esbuild
 
 exports[`minify option should work using when the \`minify\` option is \`jsonMinify\` and allows to set \`JSON.stringify\` options: assets 1`] = `
 Object {
-  "71be2c5d019f14d29bdd.json": "{
+  "[hash].json": "{
     \\"foo\\": \\"bar\\",
     \\"bar\\": [
         \\"baz\\"
     ]
 }",
-  "main.js": "(()=>{var t={437(t,r,e){\\"use strict\\";t.exports=e.p+\\"71be2c5d019f14d29bdd.json\\"}},r={};function e(o){var n=r[o];if(void 0!==n)return n.exports;var c=r[o]={exports:{}};return t[o](c,c.exports,e),c.exports}e.m=t,e.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(t){if(\\"object\\"==typeof window)return window}}(),e.o=(t,r)=>Object.prototype.hasOwnProperty.call(t,r),(()=>{var t;e.g.importScripts&&(t=e.g.location+\\"\\");var r=e.g.document;if(!t&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(t=r.currentScript.src),!t)){var o=r.getElementsByTagName(\\"script\\");if(o.length)for(var n=o.length-1;n>-1&&(!t||!/^http(s?):/.test(t));)t=o[n--].src}if(!t)throw new Error(\\"Automatic publicPath is not supported in this browser\\");t=t.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),e.p=t})(),e.b=\\"undefined\\"!=typeof document&&document.baseURI||self.location.href,console.log(new URL(e(437),e.b))})();",
+  "main.js": "(()=>{var t={437(t,r,e){\\"use strict\\";t.exports=e.p+\\"[hash].json\\"}},r={};function e(o){var n=r[o];if(void 0!==n)return n.exports;var c=r[o]={exports:{}};return t[o](c,c.exports,e),c.exports}e.m=t,e.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(t){if(\\"object\\"==typeof window)return window}}(),e.o=(t,r)=>Object.prototype.hasOwnProperty.call(t,r),(()=>{var t;e.g.importScripts&&(t=e.g.location+\\"\\");var r=e.g.document;if(!t&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(t=r.currentScript.src),!t)){var o=r.getElementsByTagName(\\"script\\");if(o.length)for(var n=o.length-1;n>-1&&(!t||!/^http(s?):/.test(t));)t=o[n--].src}if(!t)throw new Error(\\"Automatic publicPath is not supported in this browser\\");t=t.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),e.p=t})(),e.b=\\"undefined\\"!=typeof document&&document.baseURI||self.location.href,console.log(new URL(e(437),e.b))})();",
 }
 `;
 
@@ -186,8 +186,8 @@ exports[`minify option should work using when the \`minify\` option is \`jsonMin
 
 exports[`minify option should work using when the \`minify\` option is \`jsonMinify\`: assets 1`] = `
 Object {
-  "60491a50c1e5dd7216b6.json": "{\\"foo\\":\\"bar\\",\\"bar\\":[\\"baz\\"]}",
-  "main.js": "(()=>{var t={437(t,r,e){\\"use strict\\";t.exports=e.p+\\"60491a50c1e5dd7216b6.json\\"}},r={};function e(o){var n=r[o];if(void 0!==n)return n.exports;var c=r[o]={exports:{}};return t[o](c,c.exports,e),c.exports}e.m=t,e.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(t){if(\\"object\\"==typeof window)return window}}(),e.o=(t,r)=>Object.prototype.hasOwnProperty.call(t,r),(()=>{var t;e.g.importScripts&&(t=e.g.location+\\"\\");var r=e.g.document;if(!t&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(t=r.currentScript.src),!t)){var o=r.getElementsByTagName(\\"script\\");if(o.length)for(var n=o.length-1;n>-1&&(!t||!/^http(s?):/.test(t));)t=o[n--].src}if(!t)throw new Error(\\"Automatic publicPath is not supported in this browser\\");t=t.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),e.p=t})(),e.b=\\"undefined\\"!=typeof document&&document.baseURI||self.location.href,console.log(new URL(e(437),e.b))})();",
+  "[hash].json": "{\\"foo\\":\\"bar\\",\\"bar\\":[\\"baz\\"]}",
+  "main.js": "(()=>{var t={437(t,r,e){\\"use strict\\";t.exports=e.p+\\"[hash].json\\"}},r={};function e(o){var n=r[o];if(void 0!==n)return n.exports;var c=r[o]={exports:{}};return t[o](c,c.exports,e),c.exports}e.m=t,e.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(t){if(\\"object\\"==typeof window)return window}}(),e.o=(t,r)=>Object.prototype.hasOwnProperty.call(t,r),(()=>{var t;e.g.importScripts&&(t=e.g.location+\\"\\");var r=e.g.document;if(!t&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(t=r.currentScript.src),!t)){var o=r.getElementsByTagName(\\"script\\");if(o.length)for(var n=o.length-1;n>-1&&(!t||!/^http(s?):/.test(t));)t=o[n--].src}if(!t)throw new Error(\\"Automatic publicPath is not supported in this browser\\");t=t.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),e.p=t})(),e.b=\\"undefined\\"!=typeof document&&document.baseURI||self.location.href,console.log(new URL(e(437),e.b))})();",
 }
 `;
 

@@ -25,6 +25,8 @@ import {
 
 jest.setTimeout(30000);
 
+const terserPluginName = "TerserPlugin";
+
 expect.addSnapshotSerializer({
   test: (value) => {
     // For string that are valid JSON
@@ -153,13 +155,19 @@ describe("TerserPlugin", () => {
       },
     ]);
 
-    const emptyPluginCount = countPlugins(multiCompiler.compilers[0]);
-    const expectedPluginCount = countPlugins(multiCompiler.compilers[1]);
+    const emptyPluginCount = countPlugins(
+      multiCompiler.compilers[0],
+      terserPluginName,
+    );
+    const expectedPluginCount = countPlugins(
+      multiCompiler.compilers[1],
+      terserPluginName,
+    );
 
     expect(emptyPluginCount).not.toEqual(expectedPluginCount);
 
     for (const compiler of multiCompiler.compilers.slice(2)) {
-      const pluginCount = countPlugins(compiler);
+      const pluginCount = countPlugins(compiler, terserPluginName);
 
       expect(pluginCount).not.toEqual(emptyPluginCount);
       expect(pluginCount).toEqual(expectedPluginCount);
@@ -262,13 +270,19 @@ describe("TerserPlugin", () => {
       },
     ]);
 
-    const emptyPluginCount = countPlugins(multiCompiler.compilers[0]);
-    const expectedPluginCount = countPlugins(multiCompiler.compilers[1]);
+    const emptyPluginCount = countPlugins(
+      multiCompiler.compilers[0],
+      terserPluginName,
+    );
+    const expectedPluginCount = countPlugins(
+      multiCompiler.compilers[1],
+      terserPluginName,
+    );
 
     expect(emptyPluginCount).not.toEqual(expectedPluginCount);
 
     for (const compiler of multiCompiler.compilers.slice(2)) {
-      const pluginCount = countPlugins(compiler);
+      const pluginCount = countPlugins(compiler, terserPluginName);
 
       expect(pluginCount).not.toEqual(emptyPluginCount);
       expect(pluginCount).toEqual(expectedPluginCount);
