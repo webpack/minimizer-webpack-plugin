@@ -10,20 +10,7 @@ export type Input = import("./index.js").Input;
 export type MinimizedResult = import("./index.js").MinimizedResult;
 export type CustomOptions = import("./index.js").CustomOptions;
 export type RawSourceMap = import("./index.js").RawSourceMap;
-export type SwcMinifyOptionsWithExtractComments =
-  import("@swc/core").JsMinifyOptions & {
-    extractComments?:
-      | false
-      | true
-      | "some"
-      | "all"
-      | {
-          regex: string;
-        };
-  };
-export type SwcMinifyOutput = import("@swc/core").Output & {
-  extractedComments?: string[];
-};
+export type EXPECTED_OBJECT = import("./index.js").EXPECTED_OBJECT;
 export type PredefinedOptions<T> = import("./index.js").PredefinedOptions<T>;
 export type ExtractedComments = string[];
 /**

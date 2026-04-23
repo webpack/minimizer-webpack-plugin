@@ -5,8 +5,7 @@
 /** @typedef {import("./index.js").MinimizedResult} MinimizedResult */
 /** @typedef {import("./index.js").CustomOptions} CustomOptions */
 /** @typedef {import("./index.js").RawSourceMap} RawSourceMap */
-/** @typedef {import("@swc/core").JsMinifyOptions & { extractComments?: false | true | "some" | "all" | { regex: string } }} SwcMinifyOptionsWithExtractComments */
-/** @typedef {import("@swc/core").Output & { extractedComments?: string[] }} SwcMinifyOutput */
+/** @typedef {import("./index.js").EXPECTED_OBJECT} EXPECTED_OBJECT */
 
 /**
  * @template T
@@ -81,7 +80,7 @@ async function terserMinify(
 ) {
   /**
    * @param {unknown} value value
-   * @returns {boolean} true when value is object or function
+   * @returns {value is EXPECTED_OBJECT} true when value is object or function
    */
   const isObject = (value) => {
     const type = typeof value;
@@ -617,9 +616,9 @@ async function swcMinify(input, sourceMap, minimizerOptions, extractComments) {
     }
 
     if (extractCommentsOptions && isObject(extractCommentsOptions)) {
-      const { condition = "some" } = /** @type {{ condition?: unknown }} */ (
-        extractCommentsOptions
-      );
+      const { condition = "some" } =
+        /** @type {{ condition?: unknown }} */
+        (extractCommentsOptions);
 
       if (typeof condition === "boolean") {
         return {
@@ -660,7 +659,7 @@ async function swcMinify(input, sourceMap, minimizerOptions, extractComments) {
 
   /**
    * @param {PredefinedOptions<import("@swc/core").JsMinifyOptions> & import("@swc/core").JsMinifyOptions=} swcOptions swc options
-   * @returns {SwcMinifyOptionsWithExtractComments & { sourceMap: undefined | boolean } & { compress: import("@swc/core").TerserCompressOptions }} built swc options
+   * @returns {import("@swc/core").JsMinifyOptions & { extractComments?: false | true | "some" | "all" | { regex: string } } & { sourceMap: undefined | boolean } & { compress: import("@swc/core").TerserCompressOptions }} built swc options
    */
   const buildSwcOptions = (swcOptions = {}) =>
     // Need deep copy objects to avoid https://github.com/terser/terser/issues/366
@@ -719,9 +718,8 @@ async function swcMinify(input, sourceMap, minimizerOptions, extractComments) {
   }
 
   if (normalizedExtractComments.extractComments !== false) {
-    /** @type {SwcMinifyOptionsWithExtractComments} */ (
-      swcOptions
-    ).extractComments = normalizedExtractComments.extractComments;
+    /** @type {import("@swc/core").JsMinifyOptions & { extractComments?: false | true | "some" | "all" | { regex: string } }} */
+    (swcOptions).extractComments = normalizedExtractComments.extractComments;
   }
 
   if (swcOptions.compress) {
@@ -740,9 +738,9 @@ async function swcMinify(input, sourceMap, minimizerOptions, extractComments) {
   }
 
   const [[filename, code]] = Object.entries(input);
-  const result = /** @type {SwcMinifyOutput} */ (
-    await swc.minify(code, swcOptions)
-  );
+  const result =
+    /** @type {import("@swc/core").Output & { extractedComments?: string[] }} */
+    (await swc.minify(code, swcOptions));
 
   let map;
 

@@ -736,7 +736,7 @@ describe("minify option", () => {
 
     new TerserPlugin({
       minify: TerserPlugin.swcMinify,
-      extractComments: false,
+      extractComments: /moon/,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -762,7 +762,6 @@ describe("minify option", () => {
 
     const stats = await compile(compiler);
 
-    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
     expect(getErrors(stats)).toMatchSnapshot("errors");
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });

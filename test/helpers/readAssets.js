@@ -1,4 +1,3 @@
-import normalizeBuildOutput from "./normalizeBuildOutput";
 import readAsset from "./readAsset";
 
 /**
@@ -10,9 +9,7 @@ export default function readAssets(compiler, stats) {
   const assets = {};
 
   for (const asset of Object.keys(stats.compilation.assets)) {
-    assets[normalizeBuildOutput(asset)] = normalizeBuildOutput(
-      readAsset(asset, compiler, stats),
-    );
+    assets[asset] = readAsset(asset, compiler, stats);
   }
 
   return assets;

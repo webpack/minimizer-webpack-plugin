@@ -1,25 +1,6 @@
 import path from "path";
 
 /**
- * @param {string} value value
- * @returns {string} value without cwd
- */
-function removeCWD(value) {
-  const isWin = process.platform === "win32";
-  let normalizedValue = value;
-  let cwd = process.cwd();
-
-  if (isWin) {
-    normalizedValue = normalizedValue.replace(/\\/g, "/");
-    cwd = cwd.replace(/\\/g, "/");
-  }
-
-  const cwdPrefix = `${cwd}/`;
-
-  return normalizedValue.split(cwdPrefix).join("");
-}
-
-/**
  * @param {string} asset asset name
  * @param {import("webpack").Compiler} compiler compiler
  * @param {import("webpack").Stats} stats stats
@@ -41,7 +22,7 @@ export default (asset, compiler, stats) => {
   try {
     data = usedFs.readFileSync(path.join(outputPath, targetFile)).toString();
   } catch (error) {
-    data = removeCWD(error.toString());
+    data = error.toString();
   }
 
   return data;
