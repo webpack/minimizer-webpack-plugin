@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [5.5.0](https://github.com/webpack/terser-webpack-plugin/compare/v5.4.0...v5.5.0) (2026-04-23)
+
+
+### Features
+
+* support extractComments in swcMinify ([#665](https://github.com/webpack/terser-webpack-plugin/issues/665)) ([03143d3](https://github.com/webpack/terser-webpack-plugin/commit/03143d3fe38eae8a177eafd2cf2c225949d8fd95))
+
 ## [5.4.0](https://github.com/webpack/terser-webpack-plugin/compare/v5.3.17...v5.4.0) (2026-03-10)
 
 
