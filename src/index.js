@@ -31,6 +31,8 @@ const {
 
 // eslint-disable-next-line jsdoc/reject-any-type
 /** @typedef {any} EXPECTED_ANY */
+// eslint-disable-next-line jsdoc/require-property
+/** @typedef {object} EXPECTED_OBJECT */
 
 /**
  * @callback ExtractCommentsFunction

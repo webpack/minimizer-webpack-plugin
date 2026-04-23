@@ -5,6 +5,7 @@
 /** @typedef {import("./index.js").MinimizedResult} MinimizedResult */
 /** @typedef {import("./index.js").CustomOptions} CustomOptions */
 /** @typedef {import("./index.js").RawSourceMap} RawSourceMap */
+/** @typedef {import("./index.js").EXPECTED_OBJECT} EXPECTED_OBJECT */
 
 /**
  * @template T
@@ -77,10 +78,9 @@ async function terserMinify(
   minimizerOptions,
   extractComments,
 ) {
-  // eslint-disable-next-line jsdoc/no-restricted-syntax
   /**
    * @param {unknown} value value
-   * @returns {value is object} true when value is object or function
+   * @returns {value is EXPECTED_OBJECT} true when value is object or function
    */
   const isObject = (value) => {
     const type = typeof value;
@@ -333,10 +333,9 @@ async function uglifyJsMinify(
   minimizerOptions,
   extractComments,
 ) {
-  // eslint-disable-next-line jsdoc/no-restricted-syntax
   /**
    * @param {unknown} value value
-   * @returns {value is object} true when value is object or function
+   * @returns {boolean} true when value is object or function
    */
   const isObject = (value) => {
     const type = typeof value;
@@ -555,12 +554,112 @@ uglifyJsMinify.supportsWorkerThreads = () => true;
  * @param {Input} input input
  * @param {RawSourceMap=} sourceMap source map
  * @param {CustomOptions=} minimizerOptions options
+ * @param {ExtractCommentsOptions=} extractComments extract comments option
  * @returns {Promise<MinimizedResult>} minimized result
  */
-async function swcMinify(input, sourceMap, minimizerOptions) {
+async function swcMinify(input, sourceMap, minimizerOptions, extractComments) {
+  /**
+   * @param {unknown} value value
+   * @returns {boolean} true when value is object or function
+   */
+  const isObject = (value) => {
+    const type = typeof value;
+
+    // eslint-disable-next-line no-eq-null, eqeqeq
+    return value != null && (type === "object" || type === "function");
+  };
+
+  /**
+   * @param {unknown} extractCommentsOptions extract comments option
+   * @returns {Error} error for unsupported extract comments option
+   */
+  const createExtractCommentsError = (extractCommentsOptions) =>
+    new Error(
+      `The 'extractComments' option for 'swcMinify' only supports booleans, "some", "all", string patterns, RegExp values without flags, or object conditions that resolve to those forms. Received: ${extractCommentsOptions instanceof RegExp ? extractCommentsOptions.toString() : typeof extractCommentsOptions}.`,
+    );
+
+  /**
+   * @param {unknown} extractCommentsOptions extract comments option
+   * @returns {{ extractComments: false | true | "some" | "all" | { regex: string }, useDefaultPreserveComments: boolean }} normalized swc extract comments options
+   */
+  const normalizeExtractComments = (extractCommentsOptions) => {
+    if (typeof extractCommentsOptions === "boolean") {
+      return {
+        extractComments: extractCommentsOptions,
+        useDefaultPreserveComments: !extractCommentsOptions,
+      };
+    }
+
+    if (typeof extractCommentsOptions === "string") {
+      return {
+        extractComments:
+          extractCommentsOptions === "some" || extractCommentsOptions === "all"
+            ? extractCommentsOptions
+            : { regex: extractCommentsOptions },
+        useDefaultPreserveComments: false,
+      };
+    }
+
+    if (extractCommentsOptions instanceof RegExp) {
+      if (extractCommentsOptions.flags) {
+        throw createExtractCommentsError(extractCommentsOptions);
+      }
+
+      return {
+        extractComments: { regex: extractCommentsOptions.source },
+        useDefaultPreserveComments: false,
+      };
+    }
+
+    if (typeof extractCommentsOptions === "function") {
+      throw createExtractCommentsError(extractCommentsOptions);
+    }
+
+    if (extractCommentsOptions && isObject(extractCommentsOptions)) {
+      const { condition = "some" } =
+        /** @type {{ condition?: unknown }} */
+        (extractCommentsOptions);
+
+      if (typeof condition === "boolean") {
+        return {
+          extractComments: condition ? "some" : false,
+          useDefaultPreserveComments: false,
+        };
+      }
+
+      if (typeof condition === "string") {
+        return {
+          extractComments:
+            condition === "some" || condition === "all"
+              ? condition
+              : { regex: condition },
+          useDefaultPreserveComments: false,
+        };
+      }
+
+      if (condition instanceof RegExp) {
+        if (condition.flags) {
+          throw createExtractCommentsError(condition);
+        }
+
+        return {
+          extractComments: { regex: condition.source },
+          useDefaultPreserveComments: false,
+        };
+      }
+
+      throw createExtractCommentsError(condition);
+    }
+
+    return {
+      extractComments: false,
+      useDefaultPreserveComments: false,
+    };
+  };
+
   /**
    * @param {PredefinedOptions<import("@swc/core").JsMinifyOptions> & import("@swc/core").JsMinifyOptions=} swcOptions swc options
-   * @returns {import("@swc/core").JsMinifyOptions & { sourceMap: undefined | boolean } & { compress: import("@swc/core").TerserCompressOptions }} built swc options
+   * @returns {import("@swc/core").JsMinifyOptions & { extractComments?: false | true | "some" | "all" | { regex: string } } & { sourceMap: undefined | boolean } & { compress: import("@swc/core").TerserCompressOptions }} built swc options
    */
   const buildSwcOptions = (swcOptions = {}) =>
     // Need deep copy objects to avoid https://github.com/terser/terser/issues/366
@@ -579,6 +678,7 @@ async function swcMinify(input, sourceMap, minimizerOptions) {
           : typeof swcOptions.mangle === "boolean"
             ? swcOptions.mangle
             : { ...swcOptions.mangle },
+      format: { ...swcOptions.format },
       // ecma: swcOptions.ecma,
       // keep_classnames: swcOptions.keep_classnames,
       // keep_fnames: swcOptions.keep_fnames,
@@ -599,10 +699,27 @@ async function swcMinify(input, sourceMap, minimizerOptions) {
 
   // Copy `swc` options
   const swcOptions = buildSwcOptions(minimizerOptions);
+  const normalizedExtractComments = normalizeExtractComments(extractComments);
+
+  if (!swcOptions.format) {
+    swcOptions.format = {};
+  }
 
   // Let `swc` generate a SourceMap
   if (sourceMap) {
     swcOptions.sourceMap = true;
+  }
+
+  if (
+    normalizedExtractComments.useDefaultPreserveComments &&
+    typeof swcOptions.format.comments === "undefined"
+  ) {
+    swcOptions.format.comments = "some";
+  }
+
+  if (normalizedExtractComments.extractComments !== false) {
+    /** @type {import("@swc/core").JsMinifyOptions & { extractComments?: false | true | "some" | "all" | { regex: string } }} */
+    (swcOptions).extractComments = normalizedExtractComments.extractComments;
   }
 
   if (swcOptions.compress) {
@@ -621,7 +738,9 @@ async function swcMinify(input, sourceMap, minimizerOptions) {
   }
 
   const [[filename, code]] = Object.entries(input);
-  const result = await swc.minify(code, swcOptions);
+  const result =
+    /** @type {import("@swc/core").Output & { extractedComments?: string[] }} */
+    (await swc.minify(code, swcOptions));
 
   let map;
 
@@ -637,6 +756,7 @@ async function swcMinify(input, sourceMap, minimizerOptions) {
   return {
     code: result.code,
     map,
+    extractedComments: result.extractedComments || [],
   };
 }
 

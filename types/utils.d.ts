@@ -10,6 +10,7 @@ export type Input = import("./index.js").Input;
 export type MinimizedResult = import("./index.js").MinimizedResult;
 export type CustomOptions = import("./index.js").CustomOptions;
 export type RawSourceMap = import("./index.js").RawSourceMap;
+export type EXPECTED_OBJECT = import("./index.js").EXPECTED_OBJECT;
 export type PredefinedOptions<T> = import("./index.js").PredefinedOptions<T>;
 export type ExtractedComments = string[];
 /**
@@ -63,12 +64,14 @@ export function memoize<T>(fn: FunctionReturning<T>): FunctionReturning<T>;
  * @param {Input} input input
  * @param {RawSourceMap=} sourceMap source map
  * @param {CustomOptions=} minimizerOptions options
+ * @param {ExtractCommentsOptions=} extractComments extract comments option
  * @returns {Promise<MinimizedResult>} minimized result
  */
 export function swcMinify(
   input: Input,
   sourceMap?: RawSourceMap | undefined,
   minimizerOptions?: CustomOptions | undefined,
+  extractComments?: ExtractCommentsOptions | undefined,
 ): Promise<MinimizedResult>;
 export namespace swcMinify {
   /**

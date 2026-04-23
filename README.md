@@ -762,7 +762,9 @@ module.exports = {
 
 > **Warning**
 >
-> The `extractComments` option is not supported, and all comments will be removed by default. This will be fixed in future
+> `extractComments` is supported with `@swc/core >= 1.15.30`.
+> Only serializable extract conditions are supported: booleans, `"some"`, `"all"`, string patterns, `RegExp` values without flags, or object conditions that resolve to those forms.
+> Function conditions and flagged regular expressions are not supported.
 
 **webpack.config.js**
 

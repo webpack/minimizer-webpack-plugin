@@ -692,9 +692,7 @@ describe("minify option", () => {
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
 
-  // TODO fix it after `swc` do the new release with support extract comments
-  // eslint-disable-next-line jest/no-disabled-tests
-  it.skip("should work using when the `minify` option is `swcMinify` and extract comments by default", async () => {
+  it("should work using when the `minify` option is `swcMinify` and extract comments by default", async () => {
     const compiler = getCompiler({
       entry: path.resolve(__dirname, "./fixtures/comments.js"),
     });
@@ -710,21 +708,60 @@ describe("minify option", () => {
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
 
-  // TODO fix it after `swc` do the new release with support extract comments
-  // eslint-disable-next-line jest/no-disabled-tests
-  it.skip("should work using when the `minify` option is `swcMinify` and keep legal comments when extract comments is disabled", async () => {
+  it("should work using when the `minify` option is `swcMinify` and extract comments using object options", async () => {
     const compiler = getCompiler({
       entry: path.resolve(__dirname, "./fixtures/comments.js"),
     });
 
     new TerserPlugin({
       minify: TerserPlugin.swcMinify,
-      extractComments: false,
+      extractComments: {
+        condition: "all",
+        filename: "licenses.txt",
+        banner: "For license information please see licenses.txt",
+      },
     }).apply(compiler);
 
     const stats = await compile(compiler);
 
     expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should work using when the `minify` option is `swcMinify` and keep legal comments when extract comments is disabled", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/comments.js"),
+    });
+
+    new TerserPlugin({
+      minify: TerserPlugin.swcMinify,
+      extractComments: /moon/,
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should report an error when the `extractComments` option for `swcMinify` uses a function condition", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/comments.js"),
+      bail: false,
+    });
+
+    new TerserPlugin({
+      minify: TerserPlugin.swcMinify,
+      parallel: false,
+      extractComments: {
+        condition: () => true,
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
     expect(getErrors(stats)).toMatchSnapshot("errors");
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });

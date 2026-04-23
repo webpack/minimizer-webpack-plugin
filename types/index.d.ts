@@ -85,6 +85,7 @@ declare namespace TerserPlugin {
     Rule,
     Rules,
     EXPECTED_ANY,
+    EXPECTED_OBJECT,
     ExtractCommentsFunction,
     ExtractCommentsCondition,
     ExtractCommentsFilename,
@@ -131,6 +132,7 @@ type TraceMap = import("@jridgewell/trace-mapping").TraceMap;
 type Rule = RegExp | string;
 type Rules = Rule[] | Rule;
 type EXPECTED_ANY = any;
+type EXPECTED_OBJECT = object;
 type ExtractCommentsFunction = (
   astNode: EXPECTED_ANY,
   comment: {
