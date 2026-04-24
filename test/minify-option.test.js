@@ -1032,4 +1032,31 @@ describe("minify option", () => {
     expect(getErrors(stats)).toMatchSnapshot("errors");
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
+
+  it("should carry the last good code forward when a step in the array returns no code", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+    });
+
+    new TerserPlugin({
+      parallel: false,
+      minify: [
+        (file, sourceMap, minimizerOptions) =>
+          require("terser").minify(file, minimizerOptions),
+        // Middle step returns only a warning - next step must get the previous code
+        async () => ({ warnings: ["middle step did nothing"] }),
+        async (file) => {
+          const [code] = Object.values(file);
+
+          return { code: `${code}\n/* Appended after skipped middle step */` };
+        },
+      ],
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
 });

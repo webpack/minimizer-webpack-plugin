@@ -1,5 +1,20 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`minify option should carry the last good code forward when a step in the array returns no code: assets 1`] = `
+Object {
+  "main.js": "(()=>{\\"use strict\\";console.log(\\"HERE\\")})();
+/* Appended after skipped middle step */",
+}
+`;
+
+exports[`minify option should carry the last good code forward when a step in the array returns no code: errors 1`] = `Array []`;
+
+exports[`minify option should carry the last good code forward when a step in the array returns no code: warnings 1`] = `
+Array [
+  "Warning: middle step did nothing",
+]
+`;
+
 exports[`minify option should merge warnings and errors from all minimizers in an array: errors 1`] = `Array []`;
 
 exports[`minify option should merge warnings and errors from all minimizers in an array: warnings 1`] = `

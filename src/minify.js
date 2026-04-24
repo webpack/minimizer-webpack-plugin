@@ -15,20 +15,15 @@ async function minify(options) {
     : [implementation];
 
   /** @type {string | undefined} */
-  let code;
+  let lastCode;
   /** @type {RawSourceMap | undefined} */
-  let map;
+  let lastMap;
   /** @type {(Error | string)[]} */
   const warnings = [];
   /** @type {(Error | string)[]} */
   const errors = [];
   /** @type {string[]} */
   const extractedComments = [];
-
-  let currentInput =
-    /** @type {string | undefined} */
-    (input);
-  let currentMap = inputSourceMap;
 
   for (let i = 0; i < implementations.length; i++) {
     const currentImplementation =
@@ -39,9 +34,11 @@ async function minify(options) {
       (
         Array.isArray(minimizerOptions) ? minimizerOptions[i] : minimizerOptions
       );
+    const currentInput = typeof lastCode === "string" ? lastCode : input;
+    const currentMap = typeof lastCode === "string" ? lastMap : inputSourceMap;
 
     const result = await currentImplementation(
-      { [name]: /** @type {string} */ (currentInput) },
+      { [name]: currentInput },
       currentMap,
       currentOptions,
       extractComments,
@@ -59,19 +56,19 @@ async function minify(options) {
       extractedComments.push(...result.extractedComments);
     }
 
-    code = result.code;
-    map = result.map;
-
-    // Stop chaining if a minimizer didn't produce code
-    if (typeof code !== "string") {
-      break;
+    if (typeof result.code === "string") {
+      lastCode = result.code;
+      lastMap = result.map;
     }
-
-    currentInput = code;
-    currentMap = map;
   }
 
-  return { code, map, warnings, errors, extractedComments };
+  return {
+    code: lastCode,
+    map: lastMap,
+    warnings,
+    errors,
+    extractedComments,
+  };
 }
 
 /**
