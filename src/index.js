@@ -7,6 +7,7 @@ const { minify } = require("./minify");
 const schema = require("./options.json");
 const {
   esbuildMinify,
+  getEcmaVersion,
   jsonMinify,
   memoize,
   swcMinify,
@@ -18,7 +19,6 @@ const {
 /** @typedef {import("schema-utils/declarations/validate").Schema} Schema */
 /** @typedef {import("webpack").Compiler} Compiler */
 /** @typedef {import("webpack").Compilation} Compilation */
-/** @typedef {import("webpack").Configuration} Configuration */
 /** @typedef {import("webpack").Asset} Asset */
 /** @typedef {import("webpack").AssetInfo} AssetInfo */
 /** @typedef {import("webpack").TemplatePath} TemplatePath */
@@ -530,11 +530,7 @@ class TerserPlugin {
 
           const ecmaVersion =
             /** @type {PredefinedOptions<T>["ecma"]} */
-            (
-              TerserPlugin.getEcmaVersion(
-                compiler.options.output.environment || {},
-              )
-            );
+            (getEcmaVersion(compiler.options.output.environment || {}));
           const optionsList = Array.isArray(options.minimizer.options)
             ? /** @type {PredefinedOptions<T>[]} */ (options.minimizer.options)
             : [/** @type {PredefinedOptions<T>} */ (options.minimizer.options)];
@@ -851,31 +847,6 @@ class TerserPlugin {
       },
       /** @type {Promise<unknown>} */ (Promise.resolve()),
     );
-  }
-
-  /**
-   * @private
-   * @param {NonNullable<NonNullable<Configuration["output"]>["environment"]>} environment environment
-   * @returns {number} ecma version
-   */
-  static getEcmaVersion(environment) {
-    // ES 6th
-    if (
-      environment.arrowFunction ||
-      environment.const ||
-      environment.destructuring ||
-      environment.forOf ||
-      environment.module
-    ) {
-      return 2015;
-    }
-
-    // ES 11th
-    if (environment.bigIntLiteral || environment.dynamicImport) {
-      return 2020;
-    }
-
-    return 5;
   }
 
   /**

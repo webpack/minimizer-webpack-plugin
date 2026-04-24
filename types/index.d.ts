@@ -32,12 +32,6 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    */
   private static getAvailableNumberOfCores;
   /**
-   * @private
-   * @param {NonNullable<NonNullable<Configuration["output"]>["environment"]>} environment environment
-   * @returns {number} ecma version
-   */
-  private static getEcmaVersion;
-  /**
    * @param {BasePluginOptions & DefinedDefaultMinimizerAndOptions<T>=} options options
    */
   constructor(
@@ -75,7 +69,6 @@ declare namespace TerserPlugin {
     Schema,
     Compiler,
     Compilation,
-    Configuration,
     Asset,
     AssetInfo,
     TemplatePath,
@@ -118,7 +111,6 @@ import { jsonMinify } from "./utils";
 type Schema = import("schema-utils/declarations/validate").Schema;
 type Compiler = import("webpack").Compiler;
 type Compilation = import("webpack").Compilation;
-type Configuration = import("webpack").Configuration;
 type Asset = import("webpack").Asset;
 type AssetInfo = import("webpack").AssetInfo;
 type TemplatePath = import("webpack").TemplatePath;

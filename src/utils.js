@@ -16,6 +16,30 @@
  * @typedef {string[]} ExtractedComments
  */
 
+/**
+ * @param {NonNullable<NonNullable<import("webpack").Configuration["output"]>["environment"]>} environment environment
+ * @returns {number} ecma version
+ */
+function getEcmaVersion(environment) {
+  // ES 6th
+  if (
+    environment.arrowFunction ||
+    environment.const ||
+    environment.destructuring ||
+    environment.forOf ||
+    environment.module
+  ) {
+    return 2015;
+  }
+
+  // ES 11th
+  if (environment.bigIntLiteral || environment.dynamicImport) {
+    return 2020;
+  }
+
+  return 5;
+}
+
 const notSettled = Symbol("not-settled");
 
 /**
@@ -952,6 +976,7 @@ function memoize(fn) {
 
 module.exports = {
   esbuildMinify,
+  getEcmaVersion,
   jsonMinify,
   memoize,
   swcMinify,
