@@ -1033,6 +1033,42 @@ describe("minify option", () => {
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
 
+  it("should not error when the minimizer returns only warnings (no code)", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+    });
+
+    new TerserPlugin({
+      parallel: false,
+      minify: async () => ({ warnings: ["just a warning, no code"] }),
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+  });
+
+  it("should not error when the minimizer returns only extracted comments (no code)", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+    });
+
+    new TerserPlugin({
+      parallel: false,
+      minify: async () => ({
+        extractedComments: ["/*! @license from no-code minimizer */"],
+      }),
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+  });
+
   it("should carry the last good code forward when a step in the array returns no code", async () => {
     const compiler = getCompiler({
       entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),

@@ -24,10 +24,76 @@ Array [
 ]
 `;
 
+exports[`minify option should not error when the minimizer returns only extracted comments (no code): assets 1`] = `
+Object {
+  "main.js": "/******/ (() => { // webpackBootstrap
+/******/ 	\\"use strict\\";
+class Point {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+
+  static distance(a, b) {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+
+    return Math.hypot(dx, dy);
+  }
+}
+
+console.log('HERE');
+
+/* unused harmony default export */ var __WEBPACK_DEFAULT_EXPORT__ = ((/* unused pure expression or super */ null && (Point)));
+
+/******/ })()
+;",
+  "main.js.LICENSE.txt": "/*! @license from no-code minimizer */
+",
+}
+`;
+
+exports[`minify option should not error when the minimizer returns only extracted comments (no code): errors 1`] = `Array []`;
+
+exports[`minify option should not error when the minimizer returns only extracted comments (no code): warnings 1`] = `Array []`;
+
+exports[`minify option should not error when the minimizer returns only warnings (no code): assets 1`] = `
+Object {
+  "main.js": "/******/ (() => { // webpackBootstrap
+/******/ 	\\"use strict\\";
+class Point {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+
+  static distance(a, b) {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+
+    return Math.hypot(dx, dy);
+  }
+}
+
+console.log('HERE');
+
+/* unused harmony default export */ var __WEBPACK_DEFAULT_EXPORT__ = ((/* unused pure expression or super */ null && (Point)));
+
+/******/ })()
+;",
+}
+`;
+
+exports[`minify option should not error when the minimizer returns only warnings (no code): errors 1`] = `Array []`;
+
+exports[`minify option should not error when the minimizer returns only warnings (no code): warnings 1`] = `
+Array [
+  "Warning: just a warning, no code",
+]
+`;
+
 exports[`minify option should output errors and warning: errors 1`] = `
 Array [
-  "Error: main.js from Terser plugin
-Minimizer doesn't return result",
   "Error: main.js from Terser plugin
 error",
 ]
@@ -705,8 +771,6 @@ exports[`minify option should work using when the \`minify\` option is \`uglifyJ
 
 exports[`minify option should work using when the \`minify\` option is \`uglifyJsMinify\` and output errors: errors 1`] = `
 Array [
-  "Error: broken.js from Terser plugin
-Minimizer doesn't return result",
   "Error: broken.js from Terser plugin
 Unterminated template literal [broken.js:1,undefined]",
 ]

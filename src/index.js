@@ -584,14 +584,6 @@ class TerserPlugin {
             return;
           }
 
-          if (typeof output.code === "undefined") {
-            compilation.errors.push(
-              new Error(
-                `${name} from Terser plugin\nMinimizer doesn't return result`,
-              ),
-            );
-          }
-
           if (output.warnings && output.warnings.length > 0) {
             output.warnings = output.warnings.map(
               /**
@@ -627,10 +619,11 @@ class TerserPlugin {
             );
           }
 
-          // Custom functions can return `undefined` or `null`
-          if (typeof output.code !== "undefined" && output.code !== null) {
-            let shebang;
+          let shebang;
 
+          // Custom functions can return `undefined` or `null` when the
+          // minimizer only produced warnings, errors or extracted comments
+          if (typeof output.code !== "undefined" && output.code !== null) {
             if (
               /** @type {ExtractCommentsObject} */
               (this.options.extractComments).banner !== false &&
@@ -659,73 +652,69 @@ class TerserPlugin {
             } else {
               output.source = new RawSource(output.code);
             }
+          }
 
-            if (
-              output.extractedComments &&
-              output.extractedComments.length > 0
-            ) {
-              const commentsFilename =
-                /** @type {ExtractCommentsObject} */
-                (this.options.extractComments).filename ||
-                "[file].LICENSE.txt[query]";
+          if (output.extractedComments && output.extractedComments.length > 0) {
+            const commentsFilename =
+              /** @type {ExtractCommentsObject} */
+              (this.options.extractComments).filename ||
+              "[file].LICENSE.txt[query]";
 
-              let query = "";
-              let filename = name;
+            let query = "";
+            let filename = name;
 
-              const querySplit = filename.indexOf("?");
+            const querySplit = filename.indexOf("?");
 
-              if (querySplit >= 0) {
-                query = filename.slice(querySplit);
-                filename = filename.slice(0, querySplit);
-              }
-
-              const lastSlashIndex = filename.lastIndexOf("/");
-              const basename =
-                lastSlashIndex === -1
-                  ? filename
-                  : filename.slice(lastSlashIndex + 1);
-              const data = { filename, basename, query };
-
-              output.commentsFilename = compilation.getPath(
-                commentsFilename,
-                data,
-              );
-
-              let banner;
-
-              // Add a banner to the original file
-              if (
-                /** @type {ExtractCommentsObject} */
-                (this.options.extractComments).banner !== false
-              ) {
-                banner =
-                  /** @type {ExtractCommentsObject} */
-                  (this.options.extractComments).banner ||
-                  `For license information please see ${path
-                    .relative(path.dirname(name), output.commentsFilename)
-                    .replace(/\\/g, "/")}`;
-
-                if (typeof banner === "function") {
-                  banner = banner(output.commentsFilename);
-                }
-
-                if (banner) {
-                  output.source = new ConcatSource(
-                    shebang ? `${shebang}\n` : "",
-                    `/*! ${banner} */\n`,
-                    output.source,
-                  );
-                }
-              }
-
-              const extractedCommentsString = output.extractedComments
-                .sort()
-                .join("\n\n");
-
-              output.extractedCommentsSource = new RawSource(
-                `${extractedCommentsString}\n`,
-              );
+            if (querySplit >= 0) {
+              query = filename.slice(querySplit);
+              filename = filename.slice(0, querySplit);
             }
+
+            const lastSlashIndex = filename.lastIndexOf("/");
+            const basename =
+              lastSlashIndex === -1
+                ? filename
+                : filename.slice(lastSlashIndex + 1);
+            const data = { filename, basename, query };
+
+            output.commentsFilename = compilation.getPath(
+              commentsFilename,
+              data,
+            );
+
+            // Banner only applies when we have a new source to prepend to
+            if (
+              output.source &&
+              /** @type {ExtractCommentsObject} */
+              (this.options.extractComments).banner !== false
+            ) {
+              let banner =
+                /** @type {ExtractCommentsObject} */
+                (this.options.extractComments).banner ||
+                `For license information please see ${path
+                  .relative(path.dirname(name), output.commentsFilename)
+                  .replace(/\\/g, "/")}`;
+
+              if (typeof banner === "function") {
+                banner = banner(output.commentsFilename);
+              }
+
+              if (banner) {
+                output.source = new ConcatSource(
+                  shebang ? `${shebang}\n` : "",
+                  `/*! ${banner} */\n`,
+                  output.source,
+                );
+              }
+            }
+
+            const extractedCommentsString = output.extractedComments
+              .sort()
+              .join("\n\n");
+
+            output.extractedCommentsSource = new RawSource(
+              `${extractedCommentsString}\n`,
+            );
           }
 
           await cacheItem.storePromise({
@@ -749,27 +738,29 @@ class TerserPlugin {
           }
         }
 
+        // Emit extracted comments file even if the main asset was not
+        // rewritten (some minimizers only produce comments / warnings / errors)
+        if (output.extractedCommentsSource) {
+          allExtractedComments.set(name, {
+            extractedCommentsSource: output.extractedCommentsSource,
+            commentsFilename: /** @type {string} */ (output.commentsFilename),
+          });
+        }
+
         if (!output.source) {
           return;
         }
 
         /** @type {AssetInfo} */
         const newInfo = { minimized: true };
-        const { source, extractedCommentsSource } = output;
 
-        // Write extracted comments to commentsFilename
-        if (extractedCommentsSource) {
-          const { commentsFilename } = output;
-
-          newInfo.related = { license: commentsFilename };
-
-          allExtractedComments.set(name, {
-            extractedCommentsSource,
-            commentsFilename,
-          });
+        if (output.extractedCommentsSource) {
+          newInfo.related = {
+            license: /** @type {string} */ (output.commentsFilename),
+          };
         }
 
-        compilation.updateAsset(name, source, newInfo);
+        compilation.updateAsset(name, output.source, newInfo);
       });
     }
 
