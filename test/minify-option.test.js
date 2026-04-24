@@ -945,4 +945,91 @@ describe("minify option", () => {
     expect(getErrors(stats)).toMatchSnapshot("errors");
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
+
+  it("should work when `minify` is an array of functions", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+      output: {
+        path: path.resolve(__dirname, "./dist-terser"),
+        filename: "[name].js",
+        chunkFilename: "[id].[name].js",
+      },
+    });
+
+    new TerserPlugin({
+      minify: [
+        (file, sourceMap, minimizerOptions) =>
+          require("terser").minify(file, minimizerOptions),
+        async (file) => {
+          const [code] = Object.values(file);
+
+          return { code: `${code}\n/* Appended by second minimizer */` };
+        },
+      ],
+      terserOptions: {
+        mangle: false,
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should work when `minify` and `terserOptions` are both arrays", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+      output: {
+        path: path.resolve(__dirname, "./dist-terser"),
+        filename: "[name].js",
+        chunkFilename: "[id].[name].js",
+      },
+    });
+
+    new TerserPlugin({
+      minify: [
+        (file, sourceMap, minimizerOptions) =>
+          require("terser").minify(file, minimizerOptions),
+        (file, sourceMap, minimizerOptions) =>
+          require("terser").minify(file, minimizerOptions),
+      ],
+      terserOptions: [
+        { mangle: false },
+        { mangle: true, compress: { passes: 2 } },
+      ],
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should merge warnings and errors from all minimizers in an array", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+    });
+
+    new TerserPlugin({
+      parallel: false,
+      minify: [
+        async (file) => ({
+          code: Object.values(file)[0],
+          warnings: ["warning from first"],
+        }),
+        async (file) => ({
+          code: Object.values(file)[0],
+          warnings: ["warning from second"],
+        }),
+      ],
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
 });

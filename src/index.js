@@ -103,7 +103,7 @@ const {
 
 /**
  * @template T
- * @typedef {PredefinedOptions<T> & InferDefaultType<T>} MinimizerOptions
+ * @typedef {T extends EXPECTED_ANY[] ? { [P in keyof T]?: PredefinedOptions<T[P]> & InferDefaultType<T[P]> } : PredefinedOptions<T> & InferDefaultType<T>} MinimizerOptions
  */
 
 /**
@@ -125,7 +125,7 @@ const {
 
 /**
  * @template T
- * @typedef {BasicMinimizerImplementation<T> & MinimizeFunctionHelpers} MinimizerImplementation
+ * @typedef {T extends EXPECTED_ANY[] ? { [P in keyof T]: BasicMinimizerImplementation<T[P]> & MinimizeFunctionHelpers } : BasicMinimizerImplementation<T> & MinimizeFunctionHelpers} MinimizerImplementation
  */
 
 /**
@@ -185,7 +185,9 @@ class TerserPlugin {
     // TODO handle json and etc in the next major release
     // TODO make `minimizer` option instead `minify` and `terserOptions` in the next major release, also rename `terserMinify` to `terserMinimize`
     const {
-      minify = /** @type {MinimizerImplementation<T>} */ (terserMinify),
+      minify = /** @type {MinimizerImplementation<T>} */ (
+        /** @type {unknown} */ (terserMinify)
+      ),
       terserOptions = /** @type {MinimizerOptions<T>} */ ({}),
       test = /\.[cm]?js(\?.*)?$/i,
       extractComments = true,
@@ -412,13 +414,17 @@ class TerserPlugin {
     /** @type {undefined | number} */
     let numberOfWorkers;
 
+    const implementations = Array.isArray(this.options.minimizer.implementation)
+      ? this.options.minimizer.implementation
+      : [this.options.minimizer.implementation];
+
     const needCreateWorker =
       optimizeOptions.availableNumberOfCores > 0 &&
-      (typeof this.options.minimizer.implementation.supportsWorker ===
-        "undefined" ||
-        (typeof this.options.minimizer.implementation.supportsWorker ===
-          "function" &&
-          this.options.minimizer.implementation.supportsWorker()));
+      implementations.every(
+        (impl) =>
+          typeof impl.supportsWorker === "undefined" ||
+          (typeof impl.supportsWorker === "function" && impl.supportsWorker()),
+      );
 
     if (needCreateWorker) {
       // Do not create unnecessary workers when the number of files is less than the available cores, it saves memory
@@ -439,12 +445,11 @@ class TerserPlugin {
           (
             new Worker(require.resolve("./minify"), {
               numWorkers: numberOfWorkers,
-              enableWorkerThreads:
-                typeof this.options.minimizer.implementation
-                  .supportsWorkerThreads !== "undefined"
-                  ? this.options.minimizer.implementation.supportsWorkerThreads() !==
-                    false
-                  : true,
+              enableWorkerThreads: implementations.every(
+                (impl) =>
+                  typeof impl.supportsWorkerThreads === "undefined" ||
+                  impl.supportsWorkerThreads() !== false,
+              ),
             })
           );
 
@@ -502,6 +507,11 @@ class TerserPlugin {
             input = input.toString();
           }
 
+          const originalMinimizerOptions = this.options.minimizer.options;
+          const clonedMinimizerOptions = Array.isArray(originalMinimizerOptions)
+            ? originalMinimizerOptions.map((item) => ({ ...item }))
+            : { ...originalMinimizerOptions };
+
           /**
            * @type {InternalOptions<T>}
            */
@@ -511,33 +521,44 @@ class TerserPlugin {
             inputSourceMap,
             minimizer: {
               implementation: this.options.minimizer.implementation,
-              options: { ...this.options.minimizer.options },
+              options:
+                /** @type {MinimizerOptions<T>} */
+                (clonedMinimizerOptions),
             },
             extractComments: this.options.extractComments,
           };
 
-          if (typeof options.minimizer.options.module === "undefined") {
-            if (typeof info.javascriptModule !== "undefined") {
-              options.minimizer.options.module =
-                /** @type {PredefinedOptions<T>["module"]} */
-                (info.javascriptModule);
-            } else if (/\.mjs(\?.*)?$/i.test(name)) {
-              options.minimizer.options.module =
-                /** @type {PredefinedOptions<T>["module"]} */ (true);
-            } else if (/\.cjs(\?.*)?$/i.test(name)) {
-              options.minimizer.options.module =
-                /** @type {PredefinedOptions<T>["module"]} */ (false);
-            }
-          }
+          const ecmaVersion =
+            /** @type {PredefinedOptions<T>["ecma"]} */
+            (
+              TerserPlugin.getEcmaVersion(
+                compiler.options.output.environment || {},
+              )
+            );
+          const optionsList = Array.isArray(options.minimizer.options)
+            ? /** @type {PredefinedOptions<T>[]} */ (options.minimizer.options)
+            : [/** @type {PredefinedOptions<T>} */ (options.minimizer.options)];
 
-          if (typeof options.minimizer.options.ecma === "undefined") {
-            options.minimizer.options.ecma =
-              /** @type {PredefinedOptions<T>["ecma"]} */
-              (
-                TerserPlugin.getEcmaVersion(
-                  compiler.options.output.environment || {},
-                )
-              );
+          for (const item of optionsList) {
+            if (typeof item.module === "undefined") {
+              if (typeof info.javascriptModule !== "undefined") {
+                item.module =
+                  /** @type {PredefinedOptions<T>["module"]} */
+                  (info.javascriptModule);
+              } else if (/\.mjs(\?.*)?$/i.test(name)) {
+                item.module = /** @type {PredefinedOptions<T>["module"]} */ (
+                  true
+                );
+              } else if (/\.cjs(\?.*)?$/i.test(name)) {
+                item.module = /** @type {PredefinedOptions<T>["module"]} */ (
+                  false
+                );
+              }
+            }
+
+            if (typeof item.ecma === "undefined") {
+              item.ecma = ecmaVersion;
+            }
           }
 
           try {
@@ -872,13 +893,21 @@ class TerserPlugin {
         compiler.webpack.javascript.JavascriptModulesPlugin.getCompilationHooks(
           compilation,
         );
+      /**
+       * @param {BasicMinimizerImplementation<EXPECTED_ANY> & MinimizeFunctionHelpers} impl implementation
+       * @returns {string} minimizer version or "0.0.0"
+       */
+      const getVersion = (impl) =>
+        typeof impl.getMinimizerVersion !== "undefined"
+          ? impl.getMinimizerVersion() || "0.0.0"
+          : "0.0.0";
       const data = getSerializeJavascript()({
-        minimizer:
-          typeof this.options.minimizer.implementation.getMinimizerVersion !==
-          "undefined"
-            ? this.options.minimizer.implementation.getMinimizerVersion() ||
-              "0.0.0"
-            : "0.0.0",
+        minimizer: Array.isArray(this.options.minimizer.implementation)
+          ? this.options.minimizer.implementation.map(getVersion)
+          : getVersion(
+              /** @type {BasicMinimizerImplementation<EXPECTED_ANY> & MinimizeFunctionHelpers} */
+              (this.options.minimizer.implementation),
+            ),
         options: this.options.minimizer.options,
       });
 

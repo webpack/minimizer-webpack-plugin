@@ -120,20 +120,40 @@ exports[`validation validate 8`] = `
 
 exports[`validation validate 9`] = `
 "Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
- - options.minify should be an instance of function.
-   -> Allows you to override default minify function.
-   -> Read more at https://github.com/webpack/terser-webpack-plugin#number"
+ - options.minify should be a non-empty array."
 `;
 
 exports[`validation validate 10`] = `
 "Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
- - options.terserOptions should be an object:
-   object { … }
-   -> Options for \`terser\` (by default) or custom \`minify\` function.
-   -> Read more at https://github.com/webpack/terser-webpack-plugin#terseroptions"
+ - options.minify should be one of these:
+   function | [function, ...] (should not have fewer than 1 item)
+   -> Allows you to override default minify function.
+   -> Read more at https://github.com/webpack/terser-webpack-plugin#number
+   Details:
+    * options.minify should be an instance of function.
+    * options.minify should be an array:
+      [function, ...] (should not have fewer than 1 item)"
 `;
 
 exports[`validation validate 11`] = `
+"Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
+ - options.terserOptions should be a non-empty array."
+`;
+
+exports[`validation validate 12`] = `
+"Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
+ - options.terserOptions should be one of these:
+   object { … } | [object { … }, ...] (should not have fewer than 1 item)
+   -> Options for \`terser\` (by default) or custom \`minify\` function.
+   -> Read more at https://github.com/webpack/terser-webpack-plugin#terseroptions
+   Details:
+    * options.terserOptions should be an object:
+      object { … }
+    * options.terserOptions should be an array:
+      [object { … }, ...] (should not have fewer than 1 item)"
+`;
+
+exports[`validation validate 13`] = `
 "Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
  - options.extractComments should be one of these:
    boolean | non-empty string | RegExp | function | object { condition?, filename?, banner? }
@@ -151,7 +171,7 @@ exports[`validation validate 11`] = `
        * options.extractComments.condition should be an instance of function."
 `;
 
-exports[`validation validate 12`] = `
+exports[`validation validate 14`] = `
 "Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
  - options.extractComments should be one of these:
    boolean | non-empty string | RegExp | function | object { condition?, filename?, banner? }
@@ -167,7 +187,7 @@ exports[`validation validate 12`] = `
        * options.extractComments.filename should be an instance of function."
 `;
 
-exports[`validation validate 13`] = `
+exports[`validation validate 15`] = `
 "Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
  - options.extractComments should be one of these:
    boolean | non-empty string | RegExp | function | object { condition?, filename?, banner? }
@@ -184,13 +204,13 @@ exports[`validation validate 13`] = `
        * options.extractComments.banner should be an instance of function."
 `;
 
-exports[`validation validate 14`] = `
+exports[`validation validate 16`] = `
 "Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
  - options.extractComments has an unknown property 'unknown'. These properties are valid:
    object { condition?, filename?, banner? }"
 `;
 
-exports[`validation validate 15`] = `
+exports[`validation validate 17`] = `
 "Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
  - options has an unknown property 'unknown'. These properties are valid:
    object { test?, include?, exclude?, terserOptions?, extractComments?, parallel?, minify? }"

@@ -1,5 +1,6 @@
 /** @typedef {import("./index.js").MinimizedResult} MinimizedResult */
 /** @typedef {import("./index.js").CustomOptions} CustomOptions */
+/** @typedef {import("./index.js").RawSourceMap} RawSourceMap */
 
 /**
  * @template T
@@ -9,13 +10,68 @@
 async function minify(options) {
   const { name, input, inputSourceMap, extractComments } = options;
   const { implementation, options: minimizerOptions } = options.minimizer;
+  const implementations = Array.isArray(implementation)
+    ? implementation
+    : [implementation];
 
-  return implementation(
-    { [name]: input },
-    inputSourceMap,
-    minimizerOptions,
-    extractComments,
-  );
+  /** @type {string | undefined} */
+  let code;
+  /** @type {RawSourceMap | undefined} */
+  let map;
+  /** @type {(Error | string)[]} */
+  const warnings = [];
+  /** @type {(Error | string)[]} */
+  const errors = [];
+  /** @type {string[]} */
+  const extractedComments = [];
+
+  let currentInput =
+    /** @type {string | undefined} */
+    (input);
+  let currentMap = inputSourceMap;
+
+  for (let i = 0; i < implementations.length; i++) {
+    const currentImplementation =
+      /** @type {import("./index.js").BasicMinimizerImplementation<T> & import("./index.js").MinimizeFunctionHelpers} */
+      (implementations[i]);
+    const currentOptions =
+      /** @type {import("./index.js").MinimizerOptions<T>} */
+      (
+        Array.isArray(minimizerOptions) ? minimizerOptions[i] : minimizerOptions
+      );
+
+    const result = await currentImplementation(
+      { [name]: /** @type {string} */ (currentInput) },
+      currentMap,
+      currentOptions,
+      extractComments,
+    );
+
+    if (result.warnings && result.warnings.length > 0) {
+      warnings.push(...result.warnings);
+    }
+
+    if (result.errors && result.errors.length > 0) {
+      errors.push(...result.errors);
+    }
+
+    if (result.extractedComments && result.extractedComments.length > 0) {
+      extractedComments.push(...result.extractedComments);
+    }
+
+    code = result.code;
+    map = result.map;
+
+    // Stop chaining if a minimizer didn't produce code
+    if (typeof code !== "string") {
+      break;
+    }
+
+    currentInput = code;
+    currentMap = map;
+  }
+
+  return { code, map, warnings, errors, extractedComments };
 }
 
 /**

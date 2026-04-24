@@ -238,7 +238,9 @@ type PredefinedOptions<T> = {
         : number | string)
     | undefined;
 };
-type MinimizerOptions<T> = PredefinedOptions<T> & InferDefaultType<T>;
+type MinimizerOptions<T> = T extends EXPECTED_ANY[]
+  ? { [P in keyof T]?: PredefinedOptions<T[P]> & InferDefaultType<T[P]> }
+  : PredefinedOptions<T> & InferDefaultType<T>;
 type BasicMinimizerImplementation<T> = (
   input: Input,
   sourceMap: RawSourceMap | undefined,
@@ -259,8 +261,12 @@ type MinimizeFunctionHelpers = {
    */
   supportsWorker?: (() => boolean | undefined) | undefined;
 };
-type MinimizerImplementation<T> = BasicMinimizerImplementation<T> &
-  MinimizeFunctionHelpers;
+type MinimizerImplementation<T> = T extends EXPECTED_ANY[]
+  ? {
+      [P in keyof T]: BasicMinimizerImplementation<T[P]> &
+        MinimizeFunctionHelpers;
+    }
+  : BasicMinimizerImplementation<T> & MinimizeFunctionHelpers;
 type InternalOptions<T> = {
   /**
    * name

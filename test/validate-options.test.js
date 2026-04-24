@@ -124,12 +124,38 @@ describe("validation", () => {
     }).not.toThrow();
 
     expect(() => {
+      new TerserPlugin({ minify: [() => ({ code: "" })] });
+    }).not.toThrow();
+
+    expect(() => {
+      new TerserPlugin({
+        minify: [() => ({ code: "" }), () => ({ code: "" })],
+      });
+    }).not.toThrow();
+
+    expect(() => {
+      new TerserPlugin({ minify: [] });
+    }).toThrowErrorMatchingSnapshot();
+
+    expect(() => {
       new TerserPlugin({ minify: true });
     }).toThrowErrorMatchingSnapshot();
 
     expect(() => {
       new TerserPlugin({ terserOptions: {} });
     }).not.toThrow();
+
+    expect(() => {
+      new TerserPlugin({ terserOptions: [{}] });
+    }).not.toThrow();
+
+    expect(() => {
+      new TerserPlugin({ terserOptions: [{}, {}] });
+    }).not.toThrow();
+
+    expect(() => {
+      new TerserPlugin({ terserOptions: [] });
+    }).toThrowErrorMatchingSnapshot();
 
     expect(() => {
       new TerserPlugin({ terserOptions: null });

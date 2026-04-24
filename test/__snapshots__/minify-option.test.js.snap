@@ -1,5 +1,14 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`minify option should merge warnings and errors from all minimizers in an array: errors 1`] = `Array []`;
+
+exports[`minify option should merge warnings and errors from all minimizers in an array: warnings 1`] = `
+Array [
+  "Warning: warning from first",
+  "Warning: warning from second",
+]
+`;
+
 exports[`minify option should output errors and warning: errors 1`] = `
 Array [
   "Error: main.js from Terser plugin
@@ -715,6 +724,27 @@ Object {
 exports[`minify option should work using when the \`minify\` option is \`uglifyJsMinify\`: errors 1`] = `Array []`;
 
 exports[`minify option should work using when the \`minify\` option is \`uglifyJsMinify\`: warnings 1`] = `Array []`;
+
+exports[`minify option should work when \`minify\` and \`terserOptions\` are both arrays: assets 1`] = `
+Object {
+  "main.js": "(()=>{\\"use strict\\";console.log(\\"HERE\\")})();",
+}
+`;
+
+exports[`minify option should work when \`minify\` and \`terserOptions\` are both arrays: errors 1`] = `Array []`;
+
+exports[`minify option should work when \`minify\` and \`terserOptions\` are both arrays: warnings 1`] = `Array []`;
+
+exports[`minify option should work when \`minify\` is an array of functions: assets 1`] = `
+Object {
+  "main.js": "(()=>{\\"use strict\\";console.log(\\"HERE\\")})();
+/* Appended by second minimizer */",
+}
+`;
+
+exports[`minify option should work when \`minify\` is an array of functions: errors 1`] = `Array []`;
+
+exports[`minify option should work when \`minify\` is an array of functions: warnings 1`] = `Array []`;
 
 exports[`minify option should work when the "parallel" option is "false": assets 1`] = `
 Object {
