@@ -17,24 +17,40 @@
  */
 
 /**
+ * Map a webpack `output.environment` configuration to the highest
+ * ECMAScript version that the target is known to support. Returns `5`
+ * when no ES2015+ features are flagged.
  * @param {NonNullable<NonNullable<import("webpack").Configuration["output"]>["environment"]>} environment environment
- * @returns {number} ecma version
+ * @returns {number} ecma version (5, 2015, 2017 or 2020)
  */
 function getEcmaVersion(environment) {
-  // ES 6th
+  // ES2020 (11th edition)
+  if (
+    environment.bigIntLiteral ||
+    environment.dynamicImport ||
+    environment.dynamicImportInWorker ||
+    environment.globalThis ||
+    environment.optionalChaining
+  ) {
+    return 2020;
+  }
+
+  // ES2017 (8th edition)
+  if (environment.asyncFunction) {
+    return 2017;
+  }
+
+  // ES2015 (6th edition)
   if (
     environment.arrowFunction ||
     environment.const ||
     environment.destructuring ||
     environment.forOf ||
-    environment.module
+    environment.methodShorthand ||
+    environment.module ||
+    environment.templateLiteral
   ) {
     return 2015;
-  }
-
-  // ES 11th
-  if (environment.bigIntLiteral || environment.dynamicImport) {
-    return 2020;
   }
 
   return 5;
