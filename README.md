@@ -13,13 +13,31 @@
 
 # terser-webpack-plugin
 
-This plugin uses [terser](https://github.com/terser/terser) to minify/minimize your JavaScript by default, and can also minify other asset types — JSON and HTML — via built-in minimizers.
+This plugin minifies your assets in a webpack build. It ships with several
+built-in minimizers covering JavaScript, JSON, and HTML — pick one with the
+[`minify`](#minify) option and target the right files with [`test`](#test).
 
-For HTML it can use 3 tools:
+JavaScript minimizers:
 
-- [`html-minifier-terser`](https://github.com/terser/html-minifier-terser) — JavaScript-based HTML minifier (the default for HTML).
-- [`@swc/html`](https://github.com/swc-project/swc) — very fast Rust-based platform for the Web.
-- [`@minify-html/node`](https://github.com/wilsonzlin/minify-html) — a Rust HTML minifier, optimised for speed.
+- [`terser`](https://github.com/terser/terser) — `TerserPlugin.terserMinify` (default). The same JavaScript-based minifier that webpack uses out of the box; produces small, well-tested output and supports the full set of `extractComments` modes.
+- [`uglify-js`](https://github.com/mishoo/UglifyJS) — `TerserPlugin.uglifyJsMinify`. ES5-only minifier, useful when you specifically need UglifyJS-compatible output. Requires `npm install --save-dev uglify-js`.
+- [`@swc/core`](https://github.com/swc-project/swc) — `TerserPlugin.swcMinify`. A very fast Rust-based JavaScript/TypeScript minifier. Requires `npm install --save-dev @swc/core`.
+- [`esbuild`](https://github.com/evanw/esbuild) — `TerserPlugin.esbuildMinify`. An extremely fast JS bundler/minifier; legal comments are always preserved (no `extractComments` support). Requires `npm install --save-dev esbuild`.
+
+JSON minimizer:
+
+- `JSON.stringify` — `TerserPlugin.jsonMinify`. Built in (no extra dependency); supports `space` and `replacer` options.
+
+HTML minimizers:
+
+- [`html-minifier-terser`](https://github.com/terser/html-minifier-terser) — `TerserPlugin.htmlMinifierTerser`. The default HTML minimizer. JavaScript-based, no native dependency. Requires `npm install --save-dev html-minifier-terser`.
+- [`@swc/html`](https://github.com/swc-project/swc) — `TerserPlugin.swcMinifyHtml` (full HTML documents) and `TerserPlugin.swcMinifyHtmlFragment` (HTML fragments, e.g. `<template>` content). Very fast Rust-based platform for the Web. Requires `npm install --save-dev @swc/html`.
+- [`@minify-html/node`](https://github.com/wilsonzlin/minify-html) — `TerserPlugin.minifyHtmlNode`. A Rust HTML minifier optimised for speed and effectiveness. Requires `npm install --save-dev @minify-html/node`.
+
+All of the non-default minimizers are declared as **optional** peer
+dependencies — install only the ones you actually use. You can also stack
+multiple `TerserPlugin` instances in the same build to handle different
+file types with different minimizers (see [Examples](#examples)).
 
 ## Getting Started
 
