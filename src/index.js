@@ -8,9 +8,13 @@ const schema = require("./options.json");
 const {
   esbuildMinify,
   getEcmaVersion,
+  htmlMinifierTerser,
   jsonMinify,
   memoize,
+  minifyHtmlNode,
   swcMinify,
+  swcMinifyHtml,
+  swcMinifyHtmlFragment,
   terserMinify,
   throttleAll,
   uglifyJsMinify,
@@ -909,5 +913,9 @@ TerserPlugin.uglifyJsMinify = uglifyJsMinify;
 TerserPlugin.swcMinify = swcMinify;
 TerserPlugin.esbuildMinify = esbuildMinify;
 TerserPlugin.jsonMinify = jsonMinify;
+TerserPlugin.htmlMinifierTerser = htmlMinifierTerser;
+TerserPlugin.swcMinifyHtml = swcMinifyHtml;
+TerserPlugin.swcMinifyHtmlFragment = swcMinifyHtmlFragment;
+TerserPlugin.minifyHtmlNode = minifyHtmlNode;
 
 module.exports = TerserPlugin;

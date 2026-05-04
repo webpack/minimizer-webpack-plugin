@@ -57,6 +57,28 @@ export function getEcmaVersion(
   >,
 ): number;
 /**
+ * Minify HTML using `html-minifier-terser`.
+ * @param {Input} input input
+ * @param {RawSourceMap=} sourceMap source map (ignored for HTML)
+ * @param {CustomOptions=} minimizerOptions options
+ * @returns {Promise<MinimizedResult>} minimized result
+ */
+export function htmlMinifierTerser(
+  input: Input,
+  sourceMap?: RawSourceMap | undefined,
+  minimizerOptions?: CustomOptions | undefined,
+): Promise<MinimizedResult>;
+export namespace htmlMinifierTerser {
+  /**
+   * @returns {string | undefined} the minimizer version
+   */
+  function getMinimizerVersion(): string | undefined;
+  /**
+   * @returns {boolean | undefined} true if worker threads are supported
+   */
+  function supportsWorkerThreads(): boolean | undefined;
+}
+/**
  * @param {Input} input input
  * @param {RawSourceMap=} sourceMap source map
  * @param {CustomOptions=} minimizerOptions options
@@ -83,6 +105,28 @@ export namespace jsonMinify {
  */
 export function memoize<T>(fn: FunctionReturning<T>): FunctionReturning<T>;
 /**
+ * Minify HTML using `@minify-html/node`.
+ * @param {Input} input input
+ * @param {RawSourceMap=} sourceMap source map (ignored for HTML)
+ * @param {CustomOptions=} minimizerOptions options
+ * @returns {Promise<MinimizedResult>} minimized result
+ */
+export function minifyHtmlNode(
+  input: Input,
+  sourceMap?: RawSourceMap | undefined,
+  minimizerOptions?: CustomOptions | undefined,
+): Promise<MinimizedResult>;
+export namespace minifyHtmlNode {
+  /**
+   * @returns {string | undefined} the minimizer version
+   */
+  function getMinimizerVersion(): string | undefined;
+  /**
+   * @returns {boolean | undefined} false because `@minify-html/node` is a native binding
+   */
+  function supportsWorkerThreads(): boolean | undefined;
+}
+/**
  * @param {Input} input input
  * @param {RawSourceMap=} sourceMap source map
  * @param {CustomOptions=} minimizerOptions options
@@ -102,6 +146,53 @@ export namespace swcMinify {
   function getMinimizerVersion(): string | undefined;
   /**
    * @returns {boolean | undefined} true if worker thread is supported, false otherwise
+   */
+  function supportsWorkerThreads(): boolean | undefined;
+}
+/**
+ * Minify a complete HTML document using `@swc/html`.
+ * @param {Input} input input
+ * @param {RawSourceMap=} sourceMap source map (ignored for HTML)
+ * @param {CustomOptions=} minimizerOptions options
+ * @returns {Promise<MinimizedResult>} minimized result
+ */
+export function swcMinifyHtml(
+  input: Input,
+  sourceMap?: RawSourceMap | undefined,
+  minimizerOptions?: CustomOptions | undefined,
+): Promise<MinimizedResult>;
+export namespace swcMinifyHtml {
+  /**
+   * @returns {string | undefined} the minimizer version
+   */
+  function getMinimizerVersion(): string | undefined;
+  /**
+   * @returns {boolean | undefined} false because `@swc/html` is a native binding
+   */
+  function supportsWorkerThreads(): boolean | undefined;
+}
+/**
+ * Minify an HTML fragment using `@swc/html`.
+ *
+ * Use this for partial HTML (e.g. inside `<template></template>` tags or
+ * HTML strings that are inserted into another document).
+ * @param {Input} input input
+ * @param {RawSourceMap=} sourceMap source map (ignored for HTML)
+ * @param {CustomOptions=} minimizerOptions options
+ * @returns {Promise<MinimizedResult>} minimized result
+ */
+export function swcMinifyHtmlFragment(
+  input: Input,
+  sourceMap?: RawSourceMap | undefined,
+  minimizerOptions?: CustomOptions | undefined,
+): Promise<MinimizedResult>;
+export namespace swcMinifyHtmlFragment {
+  /**
+   * @returns {string | undefined} the minimizer version
+   */
+  function getMinimizerVersion(): string | undefined;
+  /**
+   * @returns {boolean | undefined} false because `@swc/html` is a native binding
    */
   function supportsWorkerThreads(): boolean | undefined;
 }

@@ -66,6 +66,10 @@ declare namespace TerserPlugin {
     swcMinify,
     esbuildMinify,
     jsonMinify,
+    htmlMinifierTerser,
+    swcMinifyHtml,
+    swcMinifyHtmlFragment,
+    minifyHtmlNode,
     Schema,
     Compiler,
     Compilation,
@@ -107,6 +111,10 @@ import { uglifyJsMinify } from "./utils";
 import { swcMinify } from "./utils";
 import { esbuildMinify } from "./utils";
 import { jsonMinify } from "./utils";
+import { htmlMinifierTerser } from "./utils";
+import { swcMinifyHtml } from "./utils";
+import { swcMinifyHtmlFragment } from "./utils";
+import { minifyHtmlNode } from "./utils";
 type Schema = import("schema-utils/declarations/validate").Schema;
 type Compiler = import("webpack").Compiler;
 type Compilation = import("webpack").Compilation;

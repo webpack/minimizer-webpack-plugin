@@ -956,6 +956,243 @@ jsonMinify.getMinimizerVersion = () => "1.0.0";
 jsonMinify.supportsWorker = () => false;
 jsonMinify.supportsWorkerThreads = () => false;
 
+/* istanbul ignore next */
+/**
+ * Minify HTML using `html-minifier-terser`.
+ * @param {Input} input input
+ * @param {RawSourceMap=} sourceMap source map (ignored for HTML)
+ * @param {CustomOptions=} minimizerOptions options
+ * @returns {Promise<MinimizedResult>} minimized result
+ */
+async function htmlMinifierTerser(input, sourceMap, minimizerOptions) {
+  let htmlMinifier;
+
+  try {
+    htmlMinifier = require("html-minifier-terser");
+  } catch (err) {
+    return { errors: [/** @type {Error} */ (err)] };
+  }
+
+  const [[, code]] = Object.entries(input);
+  /** @type {import("html-minifier-terser").Options} */
+  const defaultMinimizerOptions = {
+    caseSensitive: true,
+    // `collapseBooleanAttributes` is not always safe, since this can break CSS attribute selectors and not safe for XHTML
+    collapseWhitespace: true,
+    conservativeCollapse: true,
+    keepClosingSlash: true,
+    // We need ability to use cssnano, or setup own function without extra dependencies
+    minifyCSS: true,
+    minifyJS: true,
+    // `minifyURLs` is unsafe, because we can't guarantee what the base URL is
+    // `removeAttributeQuotes` is not safe in some rare cases, also HTML spec recommends against doing this
+    removeComments: true,
+    // `removeEmptyAttributes` is not safe, can affect certain style or script behavior, look at https://github.com/webpack-contrib/html-loader/issues/323
+    // `removeRedundantAttributes` is not safe, can affect certain style or script behavior, look at https://github.com/webpack-contrib/html-loader/issues/323
+    removeScriptTypeAttributes: true,
+    removeStyleLinkTypeAttributes: true,
+    // `useShortDoctype` is not safe for XHTML
+  };
+
+  const result = await htmlMinifier.minify(code, {
+    ...defaultMinimizerOptions,
+    .../** @type {import("html-minifier-terser").Options} */ (minimizerOptions),
+  });
+
+  return { code: result };
+}
+
+/**
+ * @returns {string | undefined} the minimizer version
+ */
+htmlMinifierTerser.getMinimizerVersion = () => {
+  let packageJson;
+
+  try {
+    packageJson = require("html-minifier-terser/package.json");
+  } catch (_err) {
+    // Ignore
+  }
+
+  return packageJson && packageJson.version;
+};
+
+/**
+ * @returns {boolean | undefined} true if worker threads are supported
+ */
+htmlMinifierTerser.supportsWorkerThreads = () => true;
+
+/* istanbul ignore next */
+/**
+ * Minify HTML using `@minify-html/node`.
+ * @param {Input} input input
+ * @param {RawSourceMap=} sourceMap source map (ignored for HTML)
+ * @param {CustomOptions=} minimizerOptions options
+ * @returns {Promise<MinimizedResult>} minimized result
+ */
+async function minifyHtmlNode(input, sourceMap, minimizerOptions) {
+  let minifyHtmlPkg;
+
+  try {
+    minifyHtmlPkg = require("@minify-html/node");
+  } catch (err) {
+    return { errors: [/** @type {Error} */ (err)] };
+  }
+
+  const [[, code]] = Object.entries(input);
+  const options =
+    /** @type {Parameters<import("@minify-html/node").minify>[1]} */ ({
+      ...minimizerOptions,
+    });
+  const result = await minifyHtmlPkg.minify(Buffer.from(code), options);
+
+  return { code: result.toString() };
+}
+
+/**
+ * @returns {string | undefined} the minimizer version
+ */
+minifyHtmlNode.getMinimizerVersion = () => {
+  let packageJson;
+
+  try {
+    packageJson = require("@minify-html/node/package.json");
+  } catch (_err) {
+    // Ignore
+  }
+
+  return packageJson && packageJson.version;
+};
+
+/**
+ * @returns {boolean | undefined} false because `@minify-html/node` is a native binding
+ */
+minifyHtmlNode.supportsWorkerThreads = () => false;
+
+/* istanbul ignore next */
+/**
+ * Map an `@swc/html` diagnostic to a regular `Error`.
+ * @param {EXPECTED_OBJECT} diagnostic diagnostic from `@swc/html`
+ * @returns {Error} error preserving `span` and `level` from the diagnostic
+ */
+function swcHtmlDiagnosticToError(diagnostic) {
+  const typed =
+    /** @type {{ message: string, span?: unknown, level?: unknown }} */
+    (diagnostic);
+  /** @type {Error & { span?: unknown, level?: unknown }} */
+  const error = new Error(typed.message);
+
+  error.span = typed.span;
+  error.level = typed.level;
+
+  return error;
+}
+
+/* istanbul ignore next */
+/**
+ * Minify a complete HTML document using `@swc/html`.
+ * @param {Input} input input
+ * @param {RawSourceMap=} sourceMap source map (ignored for HTML)
+ * @param {CustomOptions=} minimizerOptions options
+ * @returns {Promise<MinimizedResult>} minimized result
+ */
+async function swcMinifyHtml(input, sourceMap, minimizerOptions) {
+  let swcMinifier;
+
+  try {
+    swcMinifier = require("@swc/html");
+  } catch (err) {
+    return { errors: [/** @type {Error} */ (err)] };
+  }
+
+  const [[, code]] = Object.entries(input);
+  const options = /** @type {import("@swc/html").Options} */ ({
+    ...minimizerOptions,
+  });
+  const result = await swcMinifier.minify(Buffer.from(code), options);
+
+  return {
+    code: result.code,
+    errors: result.errors
+      ? result.errors.map(swcHtmlDiagnosticToError)
+      : undefined,
+  };
+}
+
+/**
+ * @returns {string | undefined} the minimizer version
+ */
+swcMinifyHtml.getMinimizerVersion = () => {
+  let packageJson;
+
+  try {
+    packageJson = require("@swc/html/package.json");
+  } catch (_err) {
+    // Ignore
+  }
+
+  return packageJson && packageJson.version;
+};
+
+/**
+ * @returns {boolean | undefined} false because `@swc/html` is a native binding
+ */
+swcMinifyHtml.supportsWorkerThreads = () => false;
+
+/* istanbul ignore next */
+/**
+ * Minify an HTML fragment using `@swc/html`.
+ *
+ * Use this for partial HTML (e.g. inside `<template></template>` tags or
+ * HTML strings that are inserted into another document).
+ * @param {Input} input input
+ * @param {RawSourceMap=} sourceMap source map (ignored for HTML)
+ * @param {CustomOptions=} minimizerOptions options
+ * @returns {Promise<MinimizedResult>} minimized result
+ */
+async function swcMinifyHtmlFragment(input, sourceMap, minimizerOptions) {
+  let swcMinifier;
+
+  try {
+    swcMinifier = require("@swc/html");
+  } catch (err) {
+    return { errors: [/** @type {Error} */ (err)] };
+  }
+
+  const [[, code]] = Object.entries(input);
+  const options = /** @type {import("@swc/html").FragmentOptions} */ ({
+    ...minimizerOptions,
+  });
+  const result = await swcMinifier.minifyFragment(Buffer.from(code), options);
+
+  return {
+    code: result.code,
+    errors: result.errors
+      ? result.errors.map(swcHtmlDiagnosticToError)
+      : undefined,
+  };
+}
+
+/**
+ * @returns {string | undefined} the minimizer version
+ */
+swcMinifyHtmlFragment.getMinimizerVersion = () => {
+  let packageJson;
+
+  try {
+    packageJson = require("@swc/html/package.json");
+  } catch (_err) {
+    // Ignore
+  }
+
+  return packageJson && packageJson.version;
+};
+
+/**
+ * @returns {boolean | undefined} false because `@swc/html` is a native binding
+ */
+swcMinifyHtmlFragment.supportsWorkerThreads = () => false;
+
 /**
  * @template T
  * @typedef {() => T} FunctionReturning
@@ -988,9 +1225,13 @@ function memoize(fn) {
 module.exports = {
   esbuildMinify,
   getEcmaVersion,
+  htmlMinifierTerser,
   jsonMinify,
   memoize,
+  minifyHtmlNode,
   swcMinify,
+  swcMinifyHtml,
+  swcMinifyHtmlFragment,
   terserMinify,
   throttleAll,
   uglifyJsMinify,
