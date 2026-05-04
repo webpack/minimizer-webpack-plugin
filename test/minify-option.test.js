@@ -1,3 +1,4 @@
+/* eslint-disable jest/no-standalone-expect */
 import path from "path";
 
 import TerserPlugin from "../src";
@@ -16,7 +17,6 @@ import {
 // Skip the rows that exercise them on older Node so snapshot-based
 // assertions don't drift between versions of those tools.
 const NODE_MAJOR = Number(process.versions.node.split(".")[0]);
-const itIf = (condition) => (condition ? it : it.skip);
 
 describe("minify option", () => {
   it("should work", async () => {
@@ -1310,340 +1310,388 @@ describe("minify option", () => {
   });
 
   // cssnano@7 requires Node >=18 — older Node rows install older cssnano via CI.
-  itIf(NODE_MAJOR >= 18)("should work using when the `minify` option is `cssnanoMinify`", async () => {
-    const compiler = getCompiler({
-      entry: path.resolve(__dirname, "./fixtures/css.js"),
-    });
+  (NODE_MAJOR >= 18 ? it : it.skip)(
+    "should work using when the `minify` option is `cssnanoMinify`",
+    async () => {
+      const compiler = getCompiler({
+        entry: path.resolve(__dirname, "./fixtures/css.js"),
+      });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
-      test: /\.css(\?.*)?$/i,
-      minify: TerserPlugin.cssnanoMinify,
-    }).apply(compiler);
+      new TerserPlugin().apply(compiler);
+      new TerserPlugin({
+        test: /\.css(\?.*)?$/i,
+        minify: TerserPlugin.cssnanoMinify,
+      }).apply(compiler);
 
-    const stats = await compile(compiler);
+      const stats = await compile(compiler);
 
-    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
-    expect(getErrors(stats)).toMatchSnapshot("errors");
-    expect(getWarnings(stats)).toMatchSnapshot("warnings");
-  });
+      expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+      expect(getErrors(stats)).toMatchSnapshot("errors");
+      expect(getWarnings(stats)).toMatchSnapshot("warnings");
+    },
+  );
 
-  itIf(NODE_MAJOR >= 18)("should work using when the `minify` option is `cssnanoMinify` and allows to set `cssnano` options", async () => {
-    const compiler = getCompiler({
-      entry: path.resolve(__dirname, "./fixtures/css.js"),
-    });
+  (NODE_MAJOR >= 18 ? it : it.skip)(
+    "should work using when the `minify` option is `cssnanoMinify` and allows to set `cssnano` options",
+    async () => {
+      const compiler = getCompiler({
+        entry: path.resolve(__dirname, "./fixtures/css.js"),
+      });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
-      test: /\.css(\?.*)?$/i,
-      minify: TerserPlugin.cssnanoMinify,
-      minimizerOptions: { preset: ["default", { discardComments: false }] },
-    }).apply(compiler);
+      new TerserPlugin().apply(compiler);
+      new TerserPlugin({
+        test: /\.css(\?.*)?$/i,
+        minify: TerserPlugin.cssnanoMinify,
+        minimizerOptions: { preset: ["default", { discardComments: false }] },
+      }).apply(compiler);
 
-    const stats = await compile(compiler);
+      const stats = await compile(compiler);
 
-    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
-    expect(getErrors(stats)).toMatchSnapshot("errors");
-    expect(getWarnings(stats)).toMatchSnapshot("warnings");
-  });
+      expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+      expect(getErrors(stats)).toMatchSnapshot("errors");
+      expect(getWarnings(stats)).toMatchSnapshot("warnings");
+    },
+  );
 
-  it("should work using when the `minify` option is `cssoMinify`", async () => {
-    const compiler = getCompiler({
-      entry: path.resolve(__dirname, "./fixtures/css.js"),
-    });
+  (NODE_MAJOR >= 18 ? it : it.skip)(
+    "should work using when the `minify` option is `cssoMinify`",
+    async () => {
+      const compiler = getCompiler({
+        entry: path.resolve(__dirname, "./fixtures/css.js"),
+      });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
-      test: /\.css(\?.*)?$/i,
-      minify: TerserPlugin.cssoMinify,
-    }).apply(compiler);
+      new TerserPlugin().apply(compiler);
+      new TerserPlugin({
+        test: /\.css(\?.*)?$/i,
+        minify: TerserPlugin.cssoMinify,
+      }).apply(compiler);
 
-    const stats = await compile(compiler);
+      const stats = await compile(compiler);
 
-    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
-    expect(getErrors(stats)).toMatchSnapshot("errors");
-    expect(getWarnings(stats)).toMatchSnapshot("warnings");
-  });
+      expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+      expect(getErrors(stats)).toMatchSnapshot("errors");
+      expect(getWarnings(stats)).toMatchSnapshot("warnings");
+    },
+  );
 
-  it("should work using when the `minify` option is `cssoMinify` and allows to set `csso` options", async () => {
-    const compiler = getCompiler({
-      entry: path.resolve(__dirname, "./fixtures/css.js"),
-    });
+  (NODE_MAJOR >= 18 ? it : it.skip)(
+    "should work using when the `minify` option is `cssoMinify` and allows to set `csso` options",
+    async () => {
+      const compiler = getCompiler({
+        entry: path.resolve(__dirname, "./fixtures/css.js"),
+      });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
-      test: /\.css(\?.*)?$/i,
-      minify: TerserPlugin.cssoMinify,
-      minimizerOptions: { comments: false },
-    }).apply(compiler);
+      new TerserPlugin().apply(compiler);
+      new TerserPlugin({
+        test: /\.css(\?.*)?$/i,
+        minify: TerserPlugin.cssoMinify,
+        minimizerOptions: { comments: false },
+      }).apply(compiler);
 
-    const stats = await compile(compiler);
+      const stats = await compile(compiler);
 
-    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
-    expect(getErrors(stats)).toMatchSnapshot("errors");
-    expect(getWarnings(stats)).toMatchSnapshot("warnings");
-  });
+      expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+      expect(getErrors(stats)).toMatchSnapshot("errors");
+      expect(getWarnings(stats)).toMatchSnapshot("warnings");
+    },
+  );
 
-  it("should work using when the `minify` option is `cleanCssMinify`", async () => {
-    const compiler = getCompiler({
-      entry: path.resolve(__dirname, "./fixtures/css.js"),
-    });
+  (NODE_MAJOR >= 18 ? it : it.skip)(
+    "should work using when the `minify` option is `cleanCssMinify`",
+    async () => {
+      const compiler = getCompiler({
+        entry: path.resolve(__dirname, "./fixtures/css.js"),
+      });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
-      test: /\.css(\?.*)?$/i,
-      minify: TerserPlugin.cleanCssMinify,
-    }).apply(compiler);
+      new TerserPlugin().apply(compiler);
+      new TerserPlugin({
+        test: /\.css(\?.*)?$/i,
+        minify: TerserPlugin.cleanCssMinify,
+      }).apply(compiler);
 
-    const stats = await compile(compiler);
+      const stats = await compile(compiler);
 
-    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
-    expect(getErrors(stats)).toMatchSnapshot("errors");
-    expect(getWarnings(stats)).toMatchSnapshot("warnings");
-  });
+      expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+      expect(getErrors(stats)).toMatchSnapshot("errors");
+      expect(getWarnings(stats)).toMatchSnapshot("warnings");
+    },
+  );
 
-  it("should work using when the `minify` option is `cleanCssMinify` and allows to set `clean-css` options", async () => {
-    const compiler = getCompiler({
-      entry: path.resolve(__dirname, "./fixtures/css.js"),
-    });
+  (NODE_MAJOR >= 18 ? it : it.skip)(
+    "should work using when the `minify` option is `cleanCssMinify` and allows to set `clean-css` options",
+    async () => {
+      const compiler = getCompiler({
+        entry: path.resolve(__dirname, "./fixtures/css.js"),
+      });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
-      test: /\.css(\?.*)?$/i,
-      minify: TerserPlugin.cleanCssMinify,
-      minimizerOptions: { format: "beautify" },
-    }).apply(compiler);
+      new TerserPlugin().apply(compiler);
+      new TerserPlugin({
+        test: /\.css(\?.*)?$/i,
+        minify: TerserPlugin.cleanCssMinify,
+        minimizerOptions: { format: "beautify" },
+      }).apply(compiler);
 
-    const stats = await compile(compiler);
+      const stats = await compile(compiler);
 
-    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
-    expect(getErrors(stats)).toMatchSnapshot("errors");
-    expect(getWarnings(stats)).toMatchSnapshot("warnings");
-  });
+      expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+      expect(getErrors(stats)).toMatchSnapshot("errors");
+      expect(getWarnings(stats)).toMatchSnapshot("warnings");
+    },
+  );
 
   // esbuild@0.27 requires Node >=18.
-  itIf(NODE_MAJOR >= 18)("should work using when the `minify` option is `esbuildMinifyCss`", async () => {
-    const compiler = getCompiler({
-      entry: path.resolve(__dirname, "./fixtures/css.js"),
-    });
+  (NODE_MAJOR >= 18 ? it : it.skip)(
+    "should work using when the `minify` option is `esbuildMinifyCss`",
+    async () => {
+      const compiler = getCompiler({
+        entry: path.resolve(__dirname, "./fixtures/css.js"),
+      });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
-      test: /\.css(\?.*)?$/i,
-      minify: TerserPlugin.esbuildMinifyCss,
-    }).apply(compiler);
+      new TerserPlugin().apply(compiler);
+      new TerserPlugin({
+        test: /\.css(\?.*)?$/i,
+        minify: TerserPlugin.esbuildMinifyCss,
+      }).apply(compiler);
 
-    const stats = await compile(compiler);
+      const stats = await compile(compiler);
 
-    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
-    expect(getErrors(stats)).toMatchSnapshot("errors");
-    expect(getWarnings(stats)).toMatchSnapshot("warnings");
-  });
+      expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+      expect(getErrors(stats)).toMatchSnapshot("errors");
+      expect(getWarnings(stats)).toMatchSnapshot("warnings");
+    },
+  );
 
   // `lightningcss` requires Node >=12.
-  itIf(NODE_MAJOR >= 12)("should work using when the `minify` option is `lightningCssMinify`", async () => {
-    const compiler = getCompiler({
-      entry: path.resolve(__dirname, "./fixtures/css.js"),
-    });
+  (NODE_MAJOR >= 12 ? it : it.skip)(
+    "should work using when the `minify` option is `lightningCssMinify`",
+    async () => {
+      const compiler = getCompiler({
+        entry: path.resolve(__dirname, "./fixtures/css.js"),
+      });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
-      test: /\.css(\?.*)?$/i,
-      minify: TerserPlugin.lightningCssMinify,
-    }).apply(compiler);
+      new TerserPlugin().apply(compiler);
+      new TerserPlugin({
+        test: /\.css(\?.*)?$/i,
+        minify: TerserPlugin.lightningCssMinify,
+      }).apply(compiler);
 
-    const stats = await compile(compiler);
+      const stats = await compile(compiler);
 
-    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
-    expect(getErrors(stats)).toMatchSnapshot("errors");
-    expect(getWarnings(stats)).toMatchSnapshot("warnings");
-  });
+      expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+      expect(getErrors(stats)).toMatchSnapshot("errors");
+      expect(getWarnings(stats)).toMatchSnapshot("warnings");
+    },
+  );
 
   // `@swc/css` requires Node >=14.
-  itIf(NODE_MAJOR >= 14)("should work using when the `minify` option is `swcMinifyCss`", async () => {
-    const compiler = getCompiler({
-      entry: path.resolve(__dirname, "./fixtures/css.js"),
-    });
+  (NODE_MAJOR >= 14 ? it : it.skip)(
+    "should work using when the `minify` option is `swcMinifyCss`",
+    async () => {
+      const compiler = getCompiler({
+        entry: path.resolve(__dirname, "./fixtures/css.js"),
+      });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
-      test: /\.css(\?.*)?$/i,
-      minify: TerserPlugin.swcMinifyCss,
-    }).apply(compiler);
+      new TerserPlugin().apply(compiler);
+      new TerserPlugin({
+        test: /\.css(\?.*)?$/i,
+        minify: TerserPlugin.swcMinifyCss,
+      }).apply(compiler);
 
-    const stats = await compile(compiler);
+      const stats = await compile(compiler);
 
-    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
-    expect(getErrors(stats)).toMatchSnapshot("errors");
-    expect(getWarnings(stats)).toMatchSnapshot("warnings");
-  });
+      expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+      expect(getErrors(stats)).toMatchSnapshot("errors");
+      expect(getWarnings(stats)).toMatchSnapshot("warnings");
+    },
+  );
 
-  itIf(NODE_MAJOR >= 18)("should work when `minify` is an array of functions using `cssnanoMinify`", async () => {
-    const compiler = getCompiler({
-      entry: path.resolve(__dirname, "./fixtures/css.js"),
-    });
+  (NODE_MAJOR >= 18 ? it : it.skip)(
+    "should work when `minify` is an array of functions using `cssnanoMinify`",
+    async () => {
+      const compiler = getCompiler({
+        entry: path.resolve(__dirname, "./fixtures/css.js"),
+      });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
-      test: /\.css(\?.*)?$/i,
-      minify: [
-        TerserPlugin.cssnanoMinify,
-        // Second pass: pass-through that asserts the previous minimizer
-        // produced a string we can keep working with.
-        (data) => {
-          const [[, code]] = Object.entries(data);
+      new TerserPlugin().apply(compiler);
+      new TerserPlugin({
+        test: /\.css(\?.*)?$/i,
+        minify: [
+          TerserPlugin.cssnanoMinify,
+          // Second pass: pass-through that asserts the previous minimizer
+          // produced a string we can keep working with.
+          (data) => {
+            const [[, code]] = Object.entries(data);
 
-          return { code };
+            return { code };
+          },
+        ],
+        minimizerOptions: [{ preset: "default" }, {}],
+      }).apply(compiler);
+
+      const stats = await compile(compiler);
+
+      expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+      expect(getErrors(stats)).toMatchSnapshot("errors");
+      expect(getWarnings(stats)).toMatchSnapshot("warnings");
+    },
+  );
+
+  (NODE_MAJOR >= 18 ? it : it.skip)(
+    "should work and merge source maps when `minify` is an array of `terserMinify` minimizers",
+    async () => {
+      const compiler = getCompiler({
+        devtool: "source-map",
+        entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+        output: {
+          path: path.resolve(__dirname, "./dist-terser"),
+          filename: "[name].js",
+          chunkFilename: "[id].[name].js",
         },
-      ],
-      minimizerOptions: [{ preset: "default" }, {}],
-    }).apply(compiler);
+      });
 
-    const stats = await compile(compiler);
+      new TerserPlugin({
+        minify: [TerserPlugin.terserMinify, TerserPlugin.terserMinify],
+        minimizerOptions: [{ mangle: false }, { mangle: true }],
+      }).apply(compiler);
 
-    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
-    expect(getErrors(stats)).toMatchSnapshot("errors");
-    expect(getWarnings(stats)).toMatchSnapshot("warnings");
-  });
+      const stats = await compile(compiler);
 
-  it("should work and merge source maps when `minify` is an array of `terserMinify` minimizers", async () => {
-    const compiler = getCompiler({
-      devtool: "source-map",
-      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
-      output: {
-        path: path.resolve(__dirname, "./dist-terser"),
-        filename: "[name].js",
-        chunkFilename: "[id].[name].js",
-      },
-    });
+      expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+      expect(getErrors(stats)).toMatchSnapshot("errors");
+      expect(getWarnings(stats)).toMatchSnapshot("warnings");
+    },
+  );
 
-    new TerserPlugin({
-      minify: [TerserPlugin.terserMinify, TerserPlugin.terserMinify],
-      minimizerOptions: [{ mangle: false }, { mangle: true }],
-    }).apply(compiler);
+  (NODE_MAJOR >= 18 ? it : it.skip)(
+    "should work and merge source maps when `minify` mixes `terserMinify` with `uglifyJsMinify`",
+    async () => {
+      const compiler = getCompiler({
+        devtool: "source-map",
+        entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+        output: {
+          path: path.resolve(__dirname, "./dist-terser"),
+          filename: "[name].js",
+          chunkFilename: "[id].[name].js",
+        },
+      });
 
-    const stats = await compile(compiler);
+      new TerserPlugin({
+        minify: [TerserPlugin.terserMinify, TerserPlugin.uglifyJsMinify],
+        minimizerOptions: [{ mangle: false }, { mangle: true }],
+      }).apply(compiler);
 
-    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
-    expect(getErrors(stats)).toMatchSnapshot("errors");
-    expect(getWarnings(stats)).toMatchSnapshot("warnings");
-  });
+      const stats = await compile(compiler);
 
-  it("should work and merge source maps when `minify` mixes `terserMinify` with `uglifyJsMinify`", async () => {
-    const compiler = getCompiler({
-      devtool: "source-map",
-      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
-      output: {
-        path: path.resolve(__dirname, "./dist-terser"),
-        filename: "[name].js",
-        chunkFilename: "[id].[name].js",
-      },
-    });
+      expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+      expect(getErrors(stats)).toMatchSnapshot("errors");
+      expect(getWarnings(stats)).toMatchSnapshot("warnings");
+    },
+  );
 
-    new TerserPlugin({
-      minify: [TerserPlugin.terserMinify, TerserPlugin.uglifyJsMinify],
-      minimizerOptions: [{ mangle: false }, { mangle: true }],
-    }).apply(compiler);
+  (NODE_MAJOR >= 18 ? it : it.skip)(
+    "should work and merge source maps when `minify` is an array of CSS minimizers",
+    async () => {
+      const compiler = getCompiler({
+        devtool: "source-map",
+        entry: path.resolve(__dirname, "./fixtures/css.js"),
+      });
 
-    const stats = await compile(compiler);
+      new TerserPlugin().apply(compiler);
+      new TerserPlugin({
+        test: /\.css(\?.*)?$/i,
+        minify: [TerserPlugin.cssnanoMinify, TerserPlugin.cssnanoMinify],
+        minimizerOptions: [{ preset: "default" }, { preset: "default" }],
+      }).apply(compiler);
 
-    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
-    expect(getErrors(stats)).toMatchSnapshot("errors");
-    expect(getWarnings(stats)).toMatchSnapshot("warnings");
-  });
+      const stats = await compile(compiler);
 
-  itIf(NODE_MAJOR >= 18)("should work and merge source maps when `minify` is an array of CSS minimizers", async () => {
-    const compiler = getCompiler({
-      devtool: "source-map",
-      entry: path.resolve(__dirname, "./fixtures/css.js"),
-    });
+      expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+      expect(getErrors(stats)).toMatchSnapshot("errors");
+      expect(getWarnings(stats)).toMatchSnapshot("warnings");
+    },
+  );
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
-      test: /\.css(\?.*)?$/i,
-      minify: [TerserPlugin.cssnanoMinify, TerserPlugin.cssnanoMinify],
-      minimizerOptions: [{ preset: "default" }, { preset: "default" }],
-    }).apply(compiler);
+  (NODE_MAJOR >= 18 ? it : it.skip)(
+    "should work and merge source maps when `minify` mixes `terserMinify` with `swcMinify`",
+    async () => {
+      const compiler = getCompiler({
+        devtool: "source-map",
+        entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+        output: {
+          path: path.resolve(__dirname, "./dist-terser"),
+          filename: "[name].js",
+          chunkFilename: "[id].[name].js",
+        },
+      });
 
-    const stats = await compile(compiler);
+      new TerserPlugin({
+        minify: [TerserPlugin.terserMinify, TerserPlugin.swcMinify],
+        minimizerOptions: [{ mangle: false }, {}],
+      }).apply(compiler);
 
-    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
-    expect(getErrors(stats)).toMatchSnapshot("errors");
-    expect(getWarnings(stats)).toMatchSnapshot("warnings");
-  });
+      const stats = await compile(compiler);
 
-  it("should work and merge source maps when `minify` mixes `terserMinify` with `swcMinify`", async () => {
-    const compiler = getCompiler({
-      devtool: "source-map",
-      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
-      output: {
-        path: path.resolve(__dirname, "./dist-terser"),
-        filename: "[name].js",
-        chunkFilename: "[id].[name].js",
-      },
-    });
+      expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+      expect(getErrors(stats)).toMatchSnapshot("errors");
+      expect(getWarnings(stats)).toMatchSnapshot("warnings");
+    },
+  );
 
-    new TerserPlugin({
-      minify: [TerserPlugin.terserMinify, TerserPlugin.swcMinify],
-      minimizerOptions: [{ mangle: false }, {}],
-    }).apply(compiler);
+  (NODE_MAJOR >= 18 ? it : it.skip)(
+    "should work and merge source maps when `minify` mixes `terserMinify` with `esbuildMinify`",
+    async () => {
+      const compiler = getCompiler({
+        devtool: "source-map",
+        entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+        output: {
+          path: path.resolve(__dirname, "./dist-terser"),
+          filename: "[name].js",
+          chunkFilename: "[id].[name].js",
+        },
+      });
 
-    const stats = await compile(compiler);
+      new TerserPlugin({
+        minify: [TerserPlugin.terserMinify, TerserPlugin.esbuildMinify],
+        minimizerOptions: [{ mangle: false }, {}],
+      }).apply(compiler);
 
-    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
-    expect(getErrors(stats)).toMatchSnapshot("errors");
-    expect(getWarnings(stats)).toMatchSnapshot("warnings");
-  });
+      const stats = await compile(compiler);
 
-  itIf(NODE_MAJOR >= 18)("should work and merge source maps when `minify` mixes `terserMinify` with `esbuildMinify`", async () => {
-    const compiler = getCompiler({
-      devtool: "source-map",
-      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
-      output: {
-        path: path.resolve(__dirname, "./dist-terser"),
-        filename: "[name].js",
-        chunkFilename: "[id].[name].js",
-      },
-    });
-
-    new TerserPlugin({
-      minify: [TerserPlugin.terserMinify, TerserPlugin.esbuildMinify],
-      minimizerOptions: [{ mangle: false }, {}],
-    }).apply(compiler);
-
-    const stats = await compile(compiler);
-
-    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
-    expect(getErrors(stats)).toMatchSnapshot("errors");
-    expect(getWarnings(stats)).toMatchSnapshot("warnings");
-  });
+      expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+      expect(getErrors(stats)).toMatchSnapshot("errors");
+      expect(getWarnings(stats)).toMatchSnapshot("warnings");
+    },
+  );
 
   // The chain runs through every CSS minimizer; `esbuild` is the
   // tightest constraint at Node >=18.
-  itIf(NODE_MAJOR >= 18)("should work and merge source maps when `minify` mixes CSS minimizers using `cssnano`, `csso`, `cleanCss`, `lightningCss`, `swcCss`, and `esbuild`", async () => {
-    const compiler = getCompiler({
-      devtool: "source-map",
-      entry: path.resolve(__dirname, "./fixtures/css.js"),
-    });
+  (NODE_MAJOR >= 18 ? it : it.skip)(
+    "should work and merge source maps when `minify` mixes CSS minimizers using `cssnano`, `csso`, `cleanCss`, `lightningCss`, `swcCss`, and `esbuild`",
+    async () => {
+      const compiler = getCompiler({
+        devtool: "source-map",
+        entry: path.resolve(__dirname, "./fixtures/css.js"),
+      });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
-      test: /\.css(\?.*)?$/i,
-      minify: [
-        TerserPlugin.cssnanoMinify,
-        TerserPlugin.cssoMinify,
-        TerserPlugin.cleanCssMinify,
-        TerserPlugin.lightningCssMinify,
-        TerserPlugin.swcMinifyCss,
-        TerserPlugin.esbuildMinifyCss,
-      ],
-      minimizerOptions: [{ preset: "default" }, {}, {}, {}, {}, {}],
-    }).apply(compiler);
+      new TerserPlugin().apply(compiler);
+      new TerserPlugin({
+        test: /\.css(\?.*)?$/i,
+        minify: [
+          TerserPlugin.cssnanoMinify,
+          TerserPlugin.cssoMinify,
+          TerserPlugin.cleanCssMinify,
+          TerserPlugin.lightningCssMinify,
+          TerserPlugin.swcMinifyCss,
+          TerserPlugin.esbuildMinifyCss,
+        ],
+        minimizerOptions: [{ preset: "default" }, {}, {}, {}, {}, {}],
+      }).apply(compiler);
 
-    const stats = await compile(compiler);
+      const stats = await compile(compiler);
 
-    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
-    expect(getErrors(stats)).toMatchSnapshot("errors");
-    expect(getWarnings(stats)).toMatchSnapshot("warnings");
-  });
+      expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+      expect(getErrors(stats)).toMatchSnapshot("errors");
+      expect(getWarnings(stats)).toMatchSnapshot("warnings");
+    },
+  );
 });
