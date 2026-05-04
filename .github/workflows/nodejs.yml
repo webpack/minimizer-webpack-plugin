@@ -65,27 +65,12 @@ jobs:
     name: Test - ${{ matrix.os }} - Node v${{ matrix.node-version }}, Webpack ${{ matrix.webpack-version }}
 
     strategy:
-      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         node-version: [10.x, 12.x, 14.x, 16.x, 18.x, 20.x, 22.x, 24.x]
         webpack-version: [latest]
 
     runs-on: ${{ matrix.os }}
-
-    # The bundled CSS minimizers (`@swc/css`, `lightningcss`, `esbuild`,
-    # `cssnano@7`) require modern Node and don't reliably install on
-    # the Windows agents. Let the rows that exercise them run for
-    # visibility, but don't gate the workflow on them — only ubuntu
-    # and macOS at Node 18+ are required to pass.
-    continue-on-error: >-
-      ${{
-        matrix.os == 'windows-latest'
-        || matrix.node-version == '10.x'
-        || matrix.node-version == '12.x'
-        || matrix.node-version == '14.x'
-        || matrix.node-version == '16.x'
-      }}
 
     concurrency:
       group: test-${{ matrix.os }}-v${{ matrix.node-version }}-${{ matrix.webpack-version }}-${{ github.ref }}
