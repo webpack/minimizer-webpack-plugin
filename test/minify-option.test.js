@@ -1137,7 +1137,7 @@ describe("minify option", () => {
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
 
-  it("should work using when the `minify` option is `htmlMinifierTerser` and the `parallel` option is `true`", async () => {
+  it('should work using when the `minify` option is `htmlMinifierTerser` and the "parallel" option is "true"', async () => {
     const compiler = getCompiler({
       entry: path.resolve(__dirname, "./fixtures/html.js"),
     });
@@ -1156,7 +1156,7 @@ describe("minify option", () => {
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
 
-  it("should work using when the `minify` option is `htmlMinifierTerser` and the `parallel` option is `false`", async () => {
+  it('should work using when the `minify` option is `htmlMinifierTerser` and the "parallel" option is "false"', async () => {
     const compiler = getCompiler({
       entry: path.resolve(__dirname, "./fixtures/html.js"),
     });
@@ -1271,7 +1271,7 @@ describe("minify option", () => {
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
 
-  it("should work when chaining HTML minimizers via an array of `minify` functions", async () => {
+  it("should work when `minify` is an array of functions using `htmlMinifierTerser`", async () => {
     const compiler = getCompiler({
       entry: path.resolve(__dirname, "./fixtures/html.js"),
     });
