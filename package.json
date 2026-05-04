@@ -96,7 +96,7 @@
     "copy-webpack-plugin": "^9.0.1",
     "cross-env": "^7.0.3",
     "cspell": "^6.31.2",
-    "cssnano": "^7.1.8",
+    "cssnano": "^6.1.2",
     "csso": "^5.0.5",
     "del": "^6.0.0",
     "del-cli": "^3.0.1",
