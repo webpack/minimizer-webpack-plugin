@@ -8,11 +8,6 @@
 /** @typedef {import("./index.js").EXPECTED_OBJECT} EXPECTED_OBJECT */
 
 /**
- * @template T
- * @typedef {import("./index.js").PredefinedOptions<T>} PredefinedOptions
- */
-
-/**
  * @typedef {string[]} ExtractedComments
  */
 
@@ -246,7 +241,7 @@ async function terserMinify(
   };
 
   /**
-   * @param {PredefinedOptions<import("terser").MinifyOptions> & import("terser").MinifyOptions=} terserOptions terser options
+   * @param {import("terser").MinifyOptions=} terserOptions terser options
    * @returns {import("terser").MinifyOptions & { sourceMap: import("terser").SourceMapOptions | undefined } & { compress: import("terser").CompressOptions } & ({ output: import("terser").FormatOptions & { beautify: boolean } } | { format: import("terser").FormatOptions & { beautify: boolean } })} built terser options
    */
   const buildTerserOptions = (terserOptions = {}) =>
@@ -493,7 +488,7 @@ async function uglifyJsMinify(
   };
 
   /**
-   * @param {PredefinedOptions<import("uglify-js").MinifyOptions> & import("uglify-js").MinifyOptions=} uglifyJsOptions uglify-js options
+   * @param {import("uglify-js").MinifyOptions & { ecma?: number | string }=} uglifyJsOptions uglify-js options
    * @returns {import("uglify-js").MinifyOptions & { sourceMap: boolean | import("uglify-js").SourceMapOptions | undefined } & { output: import("uglify-js").OutputOptions & { beautify: boolean } }} uglify-js options
    */
   const buildUglifyJsOptions = (uglifyJsOptions = {}) => {
@@ -698,7 +693,7 @@ async function swcMinify(input, sourceMap, minimizerOptions, extractComments) {
   };
 
   /**
-   * @param {PredefinedOptions<import("@swc/core").JsMinifyOptions> & import("@swc/core").JsMinifyOptions=} swcOptions swc options
+   * @param {import("@swc/core").JsMinifyOptions=} swcOptions swc options
    * @returns {import("@swc/core").JsMinifyOptions & { extractComments?: false | true | "some" | "all" | { regex: string } } & { sourceMap: undefined | boolean } & { compress: import("@swc/core").TerserCompressOptions }} built swc options
    */
   const buildSwcOptions = (swcOptions = {}) =>
@@ -829,7 +824,7 @@ swcMinify.supportsWorkerThreads = () => false;
  */
 async function esbuildMinify(input, sourceMap, minimizerOptions) {
   /**
-   * @param {PredefinedOptions<import("esbuild").TransformOptions> & import("esbuild").TransformOptions=} esbuildOptions esbuild options
+   * @param {import("esbuild").TransformOptions & { ecma?: string | number, module?: boolean }=} esbuildOptions esbuild options
    * @returns {import("esbuild").TransformOptions} built esbuild options
    */
   const buildEsbuildOptions = (esbuildOptions = {}) => {

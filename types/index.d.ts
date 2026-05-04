@@ -90,7 +90,6 @@ declare namespace TerserPlugin {
     Input,
     CustomOptions,
     InferDefaultType,
-    PredefinedOptions,
     MinimizerOptions,
     BasicMinimizerImplementation,
     MinimizeFunctionHelpers,
@@ -208,31 +207,9 @@ type CustomOptions = {
   [key: string]: EXPECTED_ANY;
 };
 type InferDefaultType<T> = T extends infer U ? U : CustomOptions;
-type PredefinedOptions<T> = {
-  /**
-   * true when code is a EC module, otherwise false
-   */
-  module?:
-    | (T extends {
-        module?: infer P;
-      }
-        ? P
-        : boolean | string)
-    | undefined;
-  /**
-   * ecma version
-   */
-  ecma?:
-    | (T extends {
-        ecma?: infer P;
-      }
-        ? P
-        : number | string)
-    | undefined;
-};
 type MinimizerOptions<T> = T extends EXPECTED_ANY[]
-  ? { [P in keyof T]?: PredefinedOptions<T[P]> & InferDefaultType<T[P]> }
-  : PredefinedOptions<T> & InferDefaultType<T>;
+  ? { [P in keyof T]?: T[P] & InferDefaultType<T[P]> }
+  : T & InferDefaultType<T>;
 type BasicMinimizerImplementation<T> = (
   input: Input,
   sourceMap: RawSourceMap | undefined,
@@ -283,6 +260,14 @@ type InternalOptions<T> = {
     implementation: MinimizerImplementation<T>;
     options: MinimizerOptions<T>;
   };
+  /**
+   * true when code is a EC module, otherwise false
+   */
+  module?: boolean | undefined;
+  /**
+   * ecma version
+   */
+  ecma?: (number | string) | undefined;
 };
 type MinimizerWorker<T> = JestWorker & {
   transform: (options: string) => Promise<MinimizedResult>;

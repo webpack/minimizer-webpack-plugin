@@ -96,14 +96,7 @@ const {
 
 /**
  * @template T
- * @typedef {object} PredefinedOptions
- * @property {T extends { module?: infer P } ? P : boolean | string=} module true when code is a EC module, otherwise false
- * @property {T extends { ecma?: infer P } ? P : number | string=} ecma ecma version
- */
-
-/**
- * @template T
- * @typedef {T extends EXPECTED_ANY[] ? { [P in keyof T]?: PredefinedOptions<T[P]> & InferDefaultType<T[P]> } : PredefinedOptions<T> & InferDefaultType<T>} MinimizerOptions
+ * @typedef {T extends EXPECTED_ANY[] ? { [P in keyof T]?: T[P] & InferDefaultType<T[P]> } : T & InferDefaultType<T>} MinimizerOptions
  */
 
 /**
@@ -136,6 +129,8 @@ const {
  * @property {RawSourceMap | undefined} inputSourceMap input source map
  * @property {ExtractCommentsOptions | undefined} extractComments extract comments option
  * @property {{ implementation: MinimizerImplementation<T>, options: MinimizerOptions<T> }} minimizer minimizer
+ * @property {boolean=} module true when code is a EC module, otherwise false
+ * @property {number | string=} ecma ecma version
  */
 
 /**
@@ -507,10 +502,11 @@ class TerserPlugin {
             input = input.toString();
           }
 
-          const originalMinimizerOptions = this.options.minimizer.options;
-          const clonedMinimizerOptions = Array.isArray(originalMinimizerOptions)
-            ? originalMinimizerOptions.map((item) => ({ ...item }))
-            : { ...originalMinimizerOptions };
+          const clonedMinimizerOptions = Array.isArray(
+            this.options.minimizer.options,
+          )
+            ? this.options.minimizer.options.map((item) => ({ ...item }))
+            : { .../** @type {T} */ (this.options.minimizer.options) };
 
           /**
            * @type {InternalOptions<T>}
@@ -528,34 +524,15 @@ class TerserPlugin {
             extractComments: this.options.extractComments,
           };
 
-          const ecmaVersion =
-            /** @type {PredefinedOptions<T>["ecma"]} */
-            (getEcmaVersion(compiler.options.output.environment || {}));
-          const optionsList = Array.isArray(options.minimizer.options)
-            ? /** @type {PredefinedOptions<T>[]} */ (options.minimizer.options)
-            : [/** @type {PredefinedOptions<T>} */ (options.minimizer.options)];
-
-          for (const item of optionsList) {
-            if (typeof item.module === "undefined") {
-              if (typeof info.javascriptModule !== "undefined") {
-                item.module =
-                  /** @type {PredefinedOptions<T>["module"]} */
-                  (info.javascriptModule);
-              } else if (/\.mjs(\?.*)?$/i.test(name)) {
-                item.module = /** @type {PredefinedOptions<T>["module"]} */ (
-                  true
-                );
-              } else if (/\.cjs(\?.*)?$/i.test(name)) {
-                item.module = /** @type {PredefinedOptions<T>["module"]} */ (
-                  false
-                );
-              }
-            }
-
-            if (typeof item.ecma === "undefined") {
-              item.ecma = ecmaVersion;
-            }
+          if (typeof info.javascriptModule !== "undefined") {
+            options.module = info.javascriptModule;
+          } else if (/\.mjs(\?.*)?$/i.test(name)) {
+            options.module = true;
+          } else if (/\.cjs(\?.*)?$/i.test(name)) {
+            options.module = false;
           }
+
+          options.ecma = getEcmaVersion(compiler.options.output.environment);
 
           try {
             output = await (getWorker
@@ -582,6 +559,14 @@ class TerserPlugin {
             );
 
             return;
+          }
+
+          if (typeof output.code === "undefined") {
+            compilation.errors.push(
+              new Error(
+                `${name} from Terser plugin\nMinimizer doesn't return result`,
+              ),
+            );
           }
 
           if (output.warnings && output.warnings.length > 0) {

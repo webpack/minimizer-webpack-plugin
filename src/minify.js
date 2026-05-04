@@ -1,6 +1,10 @@
 /** @typedef {import("./index.js").MinimizedResult} MinimizedResult */
 /** @typedef {import("./index.js").CustomOptions} CustomOptions */
 /** @typedef {import("./index.js").RawSourceMap} RawSourceMap */
+/**
+ * @template T
+ * @typedef {import("./index.js").MinimizerOptions<T>} MinimizerOptions
+ */
 
 /**
  * @template T
@@ -8,7 +12,8 @@
  * @returns {Promise<MinimizedResult>} minified result
  */
 async function minify(options) {
-  const { name, input, inputSourceMap, extractComments } = options;
+  const { name, input, inputSourceMap, extractComments, module, ecma } =
+    options;
   const { implementation, options: minimizerOptions } = options.minimizer;
   const implementations = Array.isArray(implementation)
     ? implementation
@@ -36,6 +41,11 @@ async function minify(options) {
       );
     const currentInput = typeof lastCode === "string" ? lastCode : input;
     const currentMap = typeof lastCode === "string" ? lastMap : inputSourceMap;
+
+    /** @type {MinimizerOptions<T & { module?: boolean }>} */
+    (currentOptions).module = module;
+    /** @type {MinimizerOptions<T & { ecma?: number | string }>} */
+    (currentOptions).ecma = ecma;
 
     const result = await currentImplementation(
       { [name]: currentInput },

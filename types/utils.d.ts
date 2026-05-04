@@ -9,7 +9,6 @@ export type MinimizedResult = import("./index.js").MinimizedResult;
 export type CustomOptions = import("./index.js").CustomOptions;
 export type RawSourceMap = import("./index.js").RawSourceMap;
 export type EXPECTED_OBJECT = import("./index.js").EXPECTED_OBJECT;
-export type PredefinedOptions<T> = import("./index.js").PredefinedOptions<T>;
 export type ExtractedComments = string[];
 export type Task<T> = () => Promise<T>;
 export type FunctionReturning<T> = () => T;
@@ -43,15 +42,14 @@ export namespace esbuildMinify {
 /** @typedef {import("./index.js").RawSourceMap} RawSourceMap */
 /** @typedef {import("./index.js").EXPECTED_OBJECT} EXPECTED_OBJECT */
 /**
- * @template T
- * @typedef {import("./index.js").PredefinedOptions<T>} PredefinedOptions
- */
-/**
  * @typedef {string[]} ExtractedComments
  */
 /**
+ * Map a webpack `output.environment` configuration to the highest
+ * ECMAScript version that the target is known to support. Returns `5`
+ * when no ES2015+ features are flagged.
  * @param {NonNullable<NonNullable<import("webpack").Configuration["output"]>["environment"]>} environment environment
- * @returns {number} ecma version
+ * @returns {number} ecma version (5, 2015, 2017 or 2020)
  */
 export function getEcmaVersion(
   environment: NonNullable<

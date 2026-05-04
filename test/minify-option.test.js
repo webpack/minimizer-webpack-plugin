@@ -162,6 +162,7 @@ describe("minify option", () => {
 
     new TerserPlugin({
       minify: () => ({
+        code: "1",
         errors: ["error"],
         warnings: ["warning"],
       }),
@@ -1019,10 +1020,12 @@ describe("minify option", () => {
         async (file) => ({
           code: Object.values(file)[0],
           warnings: ["warning from first"],
+          errors: ["error from first"],
         }),
         async (file) => ({
           code: Object.values(file)[0],
           warnings: ["warning from second"],
+          errors: ["error from second"],
         }),
       ],
     }).apply(compiler);
@@ -1033,7 +1036,7 @@ describe("minify option", () => {
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
 
-  it("should not error when the minimizer returns only warnings (no code)", async () => {
+  it("should error when the minimizer returns only warnings (no code)", async () => {
     const compiler = getCompiler({
       entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
     });
@@ -1047,10 +1050,9 @@ describe("minify option", () => {
 
     expect(getErrors(stats)).toMatchSnapshot("errors");
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
-    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
   });
 
-  it("should not error when the minimizer returns only extracted comments (no code)", async () => {
+  it("should error when the minimizer returns only extracted comments (no code)", async () => {
     const compiler = getCompiler({
       entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
     });
@@ -1066,7 +1068,6 @@ describe("minify option", () => {
 
     expect(getErrors(stats)).toMatchSnapshot("errors");
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
-    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
   });
 
   it("should carry the last good code forward when a step in the array returns no code", async () => {
