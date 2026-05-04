@@ -11,6 +11,13 @@ import {
   readsAssets,
 } from "./helpers";
 
+// Some bundled minimizers require a newer Node than the test matrix
+// covers (`@swc/css` >=14, `cssnano@7` >=18, `esbuild@0.27` >=18, etc.).
+// Skip the rows that exercise them on older Node so snapshot-based
+// assertions don't drift between versions of those tools.
+const NODE_MAJOR = Number(process.versions.node.split(".")[0]);
+const itIf = (condition) => (condition ? it : it.skip);
+
 describe("minify option", () => {
   it("should work", async () => {
     const compiler = getCompiler({
@@ -1302,7 +1309,8 @@ describe("minify option", () => {
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
 
-  it("should work using when the `minify` option is `cssnanoMinify`", async () => {
+  // cssnano@7 requires Node >=18 — older Node rows install older cssnano via CI.
+  itIf(NODE_MAJOR >= 18)("should work using when the `minify` option is `cssnanoMinify`", async () => {
     const compiler = getCompiler({
       entry: path.resolve(__dirname, "./fixtures/css.js"),
     });
@@ -1320,7 +1328,7 @@ describe("minify option", () => {
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
 
-  it("should work using when the `minify` option is `cssnanoMinify` and allows to set `cssnano` options", async () => {
+  itIf(NODE_MAJOR >= 18)("should work using when the `minify` option is `cssnanoMinify` and allows to set `cssnano` options", async () => {
     const compiler = getCompiler({
       entry: path.resolve(__dirname, "./fixtures/css.js"),
     });
@@ -1413,7 +1421,8 @@ describe("minify option", () => {
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
 
-  it("should work using when the `minify` option is `esbuildMinifyCss`", async () => {
+  // esbuild@0.27 requires Node >=18.
+  itIf(NODE_MAJOR >= 18)("should work using when the `minify` option is `esbuildMinifyCss`", async () => {
     const compiler = getCompiler({
       entry: path.resolve(__dirname, "./fixtures/css.js"),
     });
@@ -1431,7 +1440,8 @@ describe("minify option", () => {
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
 
-  it("should work using when the `minify` option is `lightningCssMinify`", async () => {
+  // `lightningcss` requires Node >=12.
+  itIf(NODE_MAJOR >= 12)("should work using when the `minify` option is `lightningCssMinify`", async () => {
     const compiler = getCompiler({
       entry: path.resolve(__dirname, "./fixtures/css.js"),
     });
@@ -1449,7 +1459,8 @@ describe("minify option", () => {
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
 
-  it("should work using when the `minify` option is `swcMinifyCss`", async () => {
+  // `@swc/css` requires Node >=14.
+  itIf(NODE_MAJOR >= 14)("should work using when the `minify` option is `swcMinifyCss`", async () => {
     const compiler = getCompiler({
       entry: path.resolve(__dirname, "./fixtures/css.js"),
     });
@@ -1467,7 +1478,7 @@ describe("minify option", () => {
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
 
-  it("should work when `minify` is an array of functions using `cssnanoMinify`", async () => {
+  itIf(NODE_MAJOR >= 18)("should work when `minify` is an array of functions using `cssnanoMinify`", async () => {
     const compiler = getCompiler({
       entry: path.resolve(__dirname, "./fixtures/css.js"),
     });
@@ -1541,7 +1552,7 @@ describe("minify option", () => {
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
 
-  it("should work and merge source maps when `minify` is an array of CSS minimizers", async () => {
+  itIf(NODE_MAJOR >= 18)("should work and merge source maps when `minify` is an array of CSS minimizers", async () => {
     const compiler = getCompiler({
       devtool: "source-map",
       entry: path.resolve(__dirname, "./fixtures/css.js"),
@@ -1584,7 +1595,7 @@ describe("minify option", () => {
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
 
-  it("should work and merge source maps when `minify` mixes `terserMinify` with `esbuildMinify`", async () => {
+  itIf(NODE_MAJOR >= 18)("should work and merge source maps when `minify` mixes `terserMinify` with `esbuildMinify`", async () => {
     const compiler = getCompiler({
       devtool: "source-map",
       entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
@@ -1607,7 +1618,9 @@ describe("minify option", () => {
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
 
-  it("should work and merge source maps when `minify` mixes CSS minimizers using `cssnano`, `csso`, `cleanCss`, `lightningCss`, `swcCss`, and `esbuild`", async () => {
+  // The chain runs through every CSS minimizer; `esbuild` is the
+  // tightest constraint at Node >=18.
+  itIf(NODE_MAJOR >= 18)("should work and merge source maps when `minify` mixes CSS minimizers using `cssnano`, `csso`, `cleanCss`, `lightningCss`, `swcCss`, and `esbuild`", async () => {
     const compiler = getCompiler({
       devtool: "source-map",
       entry: path.resolve(__dirname, "./fixtures/css.js"),
