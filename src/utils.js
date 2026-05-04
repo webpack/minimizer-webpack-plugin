@@ -8,13 +8,48 @@
 /** @typedef {import("./index.js").EXPECTED_OBJECT} EXPECTED_OBJECT */
 
 /**
- * @template T
- * @typedef {import("./index.js").PredefinedOptions<T>} PredefinedOptions
+ * @typedef {string[]} ExtractedComments
  */
 
 /**
- * @typedef {string[]} ExtractedComments
+ * Map a webpack `output.environment` configuration to the highest
+ * ECMAScript version that the target is known to support. Returns `5`
+ * when no ES2015+ features are flagged.
+ * @param {NonNullable<NonNullable<import("webpack").Configuration["output"]>["environment"]>} environment environment
+ * @returns {number} ecma version (5, 2015, 2017 or 2020)
  */
+function getEcmaVersion(environment) {
+  // ES2020 (11th edition)
+  if (
+    environment.bigIntLiteral ||
+    environment.dynamicImport ||
+    environment.dynamicImportInWorker ||
+    environment.globalThis ||
+    environment.optionalChaining
+  ) {
+    return 2020;
+  }
+
+  // ES2017 (8th edition)
+  if (environment.asyncFunction) {
+    return 2017;
+  }
+
+  // ES2015 (6th edition)
+  if (
+    environment.arrowFunction ||
+    environment.const ||
+    environment.destructuring ||
+    environment.forOf ||
+    environment.methodShorthand ||
+    environment.module ||
+    environment.templateLiteral
+  ) {
+    return 2015;
+  }
+
+  return 5;
+}
 
 const notSettled = Symbol("not-settled");
 
@@ -206,7 +241,7 @@ async function terserMinify(
   };
 
   /**
-   * @param {PredefinedOptions<import("terser").MinifyOptions> & import("terser").MinifyOptions=} terserOptions terser options
+   * @param {import("terser").MinifyOptions=} terserOptions terser options
    * @returns {import("terser").MinifyOptions & { sourceMap: import("terser").SourceMapOptions | undefined } & { compress: import("terser").CompressOptions } & ({ output: import("terser").FormatOptions & { beautify: boolean } } | { format: import("terser").FormatOptions & { beautify: boolean } })} built terser options
    */
   const buildTerserOptions = (terserOptions = {}) =>
@@ -453,7 +488,7 @@ async function uglifyJsMinify(
   };
 
   /**
-   * @param {PredefinedOptions<import("uglify-js").MinifyOptions> & import("uglify-js").MinifyOptions=} uglifyJsOptions uglify-js options
+   * @param {import("uglify-js").MinifyOptions & { ecma?: number | string }=} uglifyJsOptions uglify-js options
    * @returns {import("uglify-js").MinifyOptions & { sourceMap: boolean | import("uglify-js").SourceMapOptions | undefined } & { output: import("uglify-js").OutputOptions & { beautify: boolean } }} uglify-js options
    */
   const buildUglifyJsOptions = (uglifyJsOptions = {}) => {
@@ -658,7 +693,7 @@ async function swcMinify(input, sourceMap, minimizerOptions, extractComments) {
   };
 
   /**
-   * @param {PredefinedOptions<import("@swc/core").JsMinifyOptions> & import("@swc/core").JsMinifyOptions=} swcOptions swc options
+   * @param {import("@swc/core").JsMinifyOptions=} swcOptions swc options
    * @returns {import("@swc/core").JsMinifyOptions & { extractComments?: false | true | "some" | "all" | { regex: string } } & { sourceMap: undefined | boolean } & { compress: import("@swc/core").TerserCompressOptions }} built swc options
    */
   const buildSwcOptions = (swcOptions = {}) =>
@@ -789,7 +824,7 @@ swcMinify.supportsWorkerThreads = () => false;
  */
 async function esbuildMinify(input, sourceMap, minimizerOptions) {
   /**
-   * @param {PredefinedOptions<import("esbuild").TransformOptions> & import("esbuild").TransformOptions=} esbuildOptions esbuild options
+   * @param {import("esbuild").TransformOptions & { ecma?: string | number, module?: boolean }=} esbuildOptions esbuild options
    * @returns {import("esbuild").TransformOptions} built esbuild options
    */
   const buildEsbuildOptions = (esbuildOptions = {}) => {
@@ -952,6 +987,7 @@ function memoize(fn) {
 
 module.exports = {
   esbuildMinify,
+  getEcmaVersion,
   jsonMinify,
   memoize,
   swcMinify,

@@ -7,6 +7,7 @@ const { minify } = require("./minify");
 const schema = require("./options.json");
 const {
   esbuildMinify,
+  getEcmaVersion,
   jsonMinify,
   memoize,
   swcMinify,
@@ -18,7 +19,6 @@ const {
 /** @typedef {import("schema-utils/declarations/validate").Schema} Schema */
 /** @typedef {import("webpack").Compiler} Compiler */
 /** @typedef {import("webpack").Compilation} Compilation */
-/** @typedef {import("webpack").Configuration} Configuration */
 /** @typedef {import("webpack").Asset} Asset */
 /** @typedef {import("webpack").AssetInfo} AssetInfo */
 /** @typedef {import("webpack").TemplatePath} TemplatePath */
@@ -96,14 +96,7 @@ const {
 
 /**
  * @template T
- * @typedef {object} PredefinedOptions
- * @property {T extends { module?: infer P } ? P : boolean | string=} module true when code is a EC module, otherwise false
- * @property {T extends { ecma?: infer P } ? P : number | string=} ecma ecma version
- */
-
-/**
- * @template T
- * @typedef {PredefinedOptions<T> & InferDefaultType<T>} MinimizerOptions
+ * @typedef {T extends EXPECTED_ANY[] ? { [P in keyof T]?: T[P] & InferDefaultType<T[P]> } : T & InferDefaultType<T>} MinimizerOptions
  */
 
 /**
@@ -125,7 +118,7 @@ const {
 
 /**
  * @template T
- * @typedef {BasicMinimizerImplementation<T> & MinimizeFunctionHelpers} MinimizerImplementation
+ * @typedef {T extends EXPECTED_ANY[] ? { [P in keyof T]: BasicMinimizerImplementation<T[P]> & MinimizeFunctionHelpers } : BasicMinimizerImplementation<T> & MinimizeFunctionHelpers} MinimizerImplementation
  */
 
 /**
@@ -136,6 +129,8 @@ const {
  * @property {RawSourceMap | undefined} inputSourceMap input source map
  * @property {ExtractCommentsOptions | undefined} extractComments extract comments option
  * @property {{ implementation: MinimizerImplementation<T>, options: MinimizerOptions<T> }} minimizer minimizer
+ * @property {boolean=} module true when code is a EC module, otherwise false
+ * @property {number | string=} ecma ecma version
  */
 
 /**
@@ -185,7 +180,9 @@ class TerserPlugin {
     // TODO handle json and etc in the next major release
     // TODO make `minimizer` option instead `minify` and `terserOptions` in the next major release, also rename `terserMinify` to `terserMinimize`
     const {
-      minify = /** @type {MinimizerImplementation<T>} */ (terserMinify),
+      minify = /** @type {MinimizerImplementation<T>} */ (
+        /** @type {unknown} */ (terserMinify)
+      ),
       terserOptions = /** @type {MinimizerOptions<T>} */ ({}),
       test = /\.[cm]?js(\?.*)?$/i,
       extractComments = true,
@@ -412,13 +409,17 @@ class TerserPlugin {
     /** @type {undefined | number} */
     let numberOfWorkers;
 
+    const implementations = Array.isArray(this.options.minimizer.implementation)
+      ? this.options.minimizer.implementation
+      : [this.options.minimizer.implementation];
+
     const needCreateWorker =
       optimizeOptions.availableNumberOfCores > 0 &&
-      (typeof this.options.minimizer.implementation.supportsWorker ===
-        "undefined" ||
-        (typeof this.options.minimizer.implementation.supportsWorker ===
-          "function" &&
-          this.options.minimizer.implementation.supportsWorker()));
+      implementations.every(
+        (impl) =>
+          typeof impl.supportsWorker === "undefined" ||
+          (typeof impl.supportsWorker === "function" && impl.supportsWorker()),
+      );
 
     if (needCreateWorker) {
       // Do not create unnecessary workers when the number of files is less than the available cores, it saves memory
@@ -439,12 +440,11 @@ class TerserPlugin {
           (
             new Worker(require.resolve("./minify"), {
               numWorkers: numberOfWorkers,
-              enableWorkerThreads:
-                typeof this.options.minimizer.implementation
-                  .supportsWorkerThreads !== "undefined"
-                  ? this.options.minimizer.implementation.supportsWorkerThreads() !==
-                    false
-                  : true,
+              enableWorkerThreads: implementations.every(
+                (impl) =>
+                  typeof impl.supportsWorkerThreads === "undefined" ||
+                  impl.supportsWorkerThreads() !== false,
+              ),
             })
           );
 
@@ -502,6 +502,12 @@ class TerserPlugin {
             input = input.toString();
           }
 
+          const clonedMinimizerOptions = Array.isArray(
+            this.options.minimizer.options,
+          )
+            ? this.options.minimizer.options.map((item) => ({ ...item }))
+            : { .../** @type {T} */ (this.options.minimizer.options) };
+
           /**
            * @type {InternalOptions<T>}
            */
@@ -511,34 +517,22 @@ class TerserPlugin {
             inputSourceMap,
             minimizer: {
               implementation: this.options.minimizer.implementation,
-              options: { ...this.options.minimizer.options },
+              options:
+                /** @type {MinimizerOptions<T>} */
+                (clonedMinimizerOptions),
             },
             extractComments: this.options.extractComments,
           };
 
-          if (typeof options.minimizer.options.module === "undefined") {
-            if (typeof info.javascriptModule !== "undefined") {
-              options.minimizer.options.module =
-                /** @type {PredefinedOptions<T>["module"]} */
-                (info.javascriptModule);
-            } else if (/\.mjs(\?.*)?$/i.test(name)) {
-              options.minimizer.options.module =
-                /** @type {PredefinedOptions<T>["module"]} */ (true);
-            } else if (/\.cjs(\?.*)?$/i.test(name)) {
-              options.minimizer.options.module =
-                /** @type {PredefinedOptions<T>["module"]} */ (false);
-            }
+          if (typeof info.javascriptModule !== "undefined") {
+            options.module = info.javascriptModule;
+          } else if (/\.mjs(\?.*)?$/i.test(name)) {
+            options.module = true;
+          } else if (/\.cjs(\?.*)?$/i.test(name)) {
+            options.module = false;
           }
 
-          if (typeof options.minimizer.options.ecma === "undefined") {
-            options.minimizer.options.ecma =
-              /** @type {PredefinedOptions<T>["ecma"]} */
-              (
-                TerserPlugin.getEcmaVersion(
-                  compiler.options.output.environment || {},
-                )
-              );
-          }
+          options.ecma = getEcmaVersion(compiler.options.output.environment);
 
           try {
             output = await (getWorker
@@ -610,10 +604,11 @@ class TerserPlugin {
             );
           }
 
-          // Custom functions can return `undefined` or `null`
-          if (typeof output.code !== "undefined" && output.code !== null) {
-            let shebang;
+          let shebang;
 
+          // Custom functions can return `undefined` or `null` when the
+          // minimizer only produced warnings, errors or extracted comments
+          if (typeof output.code !== "undefined" && output.code !== null) {
             if (
               /** @type {ExtractCommentsObject} */
               (this.options.extractComments).banner !== false &&
@@ -642,73 +637,69 @@ class TerserPlugin {
             } else {
               output.source = new RawSource(output.code);
             }
+          }
 
-            if (
-              output.extractedComments &&
-              output.extractedComments.length > 0
-            ) {
-              const commentsFilename =
-                /** @type {ExtractCommentsObject} */
-                (this.options.extractComments).filename ||
-                "[file].LICENSE.txt[query]";
+          if (output.extractedComments && output.extractedComments.length > 0) {
+            const commentsFilename =
+              /** @type {ExtractCommentsObject} */
+              (this.options.extractComments).filename ||
+              "[file].LICENSE.txt[query]";
 
-              let query = "";
-              let filename = name;
+            let query = "";
+            let filename = name;
 
-              const querySplit = filename.indexOf("?");
+            const querySplit = filename.indexOf("?");
 
-              if (querySplit >= 0) {
-                query = filename.slice(querySplit);
-                filename = filename.slice(0, querySplit);
-              }
-
-              const lastSlashIndex = filename.lastIndexOf("/");
-              const basename =
-                lastSlashIndex === -1
-                  ? filename
-                  : filename.slice(lastSlashIndex + 1);
-              const data = { filename, basename, query };
-
-              output.commentsFilename = compilation.getPath(
-                commentsFilename,
-                data,
-              );
-
-              let banner;
-
-              // Add a banner to the original file
-              if (
-                /** @type {ExtractCommentsObject} */
-                (this.options.extractComments).banner !== false
-              ) {
-                banner =
-                  /** @type {ExtractCommentsObject} */
-                  (this.options.extractComments).banner ||
-                  `For license information please see ${path
-                    .relative(path.dirname(name), output.commentsFilename)
-                    .replace(/\\/g, "/")}`;
-
-                if (typeof banner === "function") {
-                  banner = banner(output.commentsFilename);
-                }
-
-                if (banner) {
-                  output.source = new ConcatSource(
-                    shebang ? `${shebang}\n` : "",
-                    `/*! ${banner} */\n`,
-                    output.source,
-                  );
-                }
-              }
-
-              const extractedCommentsString = output.extractedComments
-                .sort()
-                .join("\n\n");
-
-              output.extractedCommentsSource = new RawSource(
-                `${extractedCommentsString}\n`,
-              );
+            if (querySplit >= 0) {
+              query = filename.slice(querySplit);
+              filename = filename.slice(0, querySplit);
             }
+
+            const lastSlashIndex = filename.lastIndexOf("/");
+            const basename =
+              lastSlashIndex === -1
+                ? filename
+                : filename.slice(lastSlashIndex + 1);
+            const data = { filename, basename, query };
+
+            output.commentsFilename = compilation.getPath(
+              commentsFilename,
+              data,
+            );
+
+            // Banner only applies when we have a new source to prepend to
+            if (
+              output.source &&
+              /** @type {ExtractCommentsObject} */
+              (this.options.extractComments).banner !== false
+            ) {
+              let banner =
+                /** @type {ExtractCommentsObject} */
+                (this.options.extractComments).banner ||
+                `For license information please see ${path
+                  .relative(path.dirname(name), output.commentsFilename)
+                  .replace(/\\/g, "/")}`;
+
+              if (typeof banner === "function") {
+                banner = banner(output.commentsFilename);
+              }
+
+              if (banner) {
+                output.source = new ConcatSource(
+                  shebang ? `${shebang}\n` : "",
+                  `/*! ${banner} */\n`,
+                  output.source,
+                );
+              }
+            }
+
+            const extractedCommentsString = output.extractedComments
+              .sort()
+              .join("\n\n");
+
+            output.extractedCommentsSource = new RawSource(
+              `${extractedCommentsString}\n`,
+            );
           }
 
           await cacheItem.storePromise({
@@ -732,27 +723,29 @@ class TerserPlugin {
           }
         }
 
+        // Emit extracted comments file even if the main asset was not
+        // rewritten (some minimizers only produce comments / warnings / errors)
+        if (output.extractedCommentsSource) {
+          allExtractedComments.set(name, {
+            extractedCommentsSource: output.extractedCommentsSource,
+            commentsFilename: /** @type {string} */ (output.commentsFilename),
+          });
+        }
+
         if (!output.source) {
           return;
         }
 
         /** @type {AssetInfo} */
         const newInfo = { minimized: true };
-        const { source, extractedCommentsSource } = output;
 
-        // Write extracted comments to commentsFilename
-        if (extractedCommentsSource) {
-          const { commentsFilename } = output;
-
-          newInfo.related = { license: commentsFilename };
-
-          allExtractedComments.set(name, {
-            extractedCommentsSource,
-            commentsFilename,
-          });
+        if (output.extractedCommentsSource) {
+          newInfo.related = {
+            license: /** @type {string} */ (output.commentsFilename),
+          };
         }
 
-        compilation.updateAsset(name, source, newInfo);
+        compilation.updateAsset(name, output.source, newInfo);
       });
     }
 
@@ -833,31 +826,6 @@ class TerserPlugin {
   }
 
   /**
-   * @private
-   * @param {NonNullable<NonNullable<Configuration["output"]>["environment"]>} environment environment
-   * @returns {number} ecma version
-   */
-  static getEcmaVersion(environment) {
-    // ES 6th
-    if (
-      environment.arrowFunction ||
-      environment.const ||
-      environment.destructuring ||
-      environment.forOf ||
-      environment.module
-    ) {
-      return 2015;
-    }
-
-    // ES 11th
-    if (environment.bigIntLiteral || environment.dynamicImport) {
-      return 2020;
-    }
-
-    return 5;
-  }
-
-  /**
    * @param {Compiler} compiler compiler
    * @returns {void}
    */
@@ -872,13 +840,21 @@ class TerserPlugin {
         compiler.webpack.javascript.JavascriptModulesPlugin.getCompilationHooks(
           compilation,
         );
+      /**
+       * @param {BasicMinimizerImplementation<EXPECTED_ANY> & MinimizeFunctionHelpers} impl implementation
+       * @returns {string} minimizer version or "0.0.0"
+       */
+      const getVersion = (impl) =>
+        typeof impl.getMinimizerVersion !== "undefined"
+          ? impl.getMinimizerVersion() || "0.0.0"
+          : "0.0.0";
       const data = getSerializeJavascript()({
-        minimizer:
-          typeof this.options.minimizer.implementation.getMinimizerVersion !==
-          "undefined"
-            ? this.options.minimizer.implementation.getMinimizerVersion() ||
-              "0.0.0"
-            : "0.0.0",
+        minimizer: Array.isArray(this.options.minimizer.implementation)
+          ? this.options.minimizer.implementation.map(getVersion)
+          : getVersion(
+              /** @type {BasicMinimizerImplementation<EXPECTED_ANY> & MinimizeFunctionHelpers} */
+              (this.options.minimizer.implementation),
+            ),
         options: this.options.minimizer.options,
       });
 

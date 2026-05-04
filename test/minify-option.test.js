@@ -162,6 +162,7 @@ describe("minify option", () => {
 
     new TerserPlugin({
       minify: () => ({
+        code: "1",
         errors: ["error"],
         warnings: ["warning"],
       }),
@@ -937,6 +938,156 @@ describe("minify option", () => {
 
     new TerserPlugin({
       minify: TerserPlugin.esbuildMinify,
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should work when `minify` is an array of functions", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+      output: {
+        path: path.resolve(__dirname, "./dist-terser"),
+        filename: "[name].js",
+        chunkFilename: "[id].[name].js",
+      },
+    });
+
+    new TerserPlugin({
+      minify: [
+        (file, sourceMap, minimizerOptions) =>
+          require("terser").minify(file, minimizerOptions),
+        async (file) => {
+          const [code] = Object.values(file);
+
+          return { code: `${code}\n/* Appended by second minimizer */` };
+        },
+      ],
+      terserOptions: {
+        mangle: false,
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should work when `minify` and `terserOptions` are both arrays", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+      output: {
+        path: path.resolve(__dirname, "./dist-terser"),
+        filename: "[name].js",
+        chunkFilename: "[id].[name].js",
+      },
+    });
+
+    new TerserPlugin({
+      minify: [
+        (file, sourceMap, minimizerOptions) =>
+          require("terser").minify(file, minimizerOptions),
+        (file, sourceMap, minimizerOptions) =>
+          require("terser").minify(file, minimizerOptions),
+      ],
+      terserOptions: [
+        { mangle: false },
+        { mangle: true, compress: { passes: 2 } },
+      ],
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should merge warnings and errors from all minimizers in an array", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+    });
+
+    new TerserPlugin({
+      parallel: false,
+      minify: [
+        async (file) => ({
+          code: Object.values(file)[0],
+          warnings: ["warning from first"],
+          errors: ["error from first"],
+        }),
+        async (file) => ({
+          code: Object.values(file)[0],
+          warnings: ["warning from second"],
+          errors: ["error from second"],
+        }),
+      ],
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should error when the minimizer returns only warnings (no code)", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+    });
+
+    new TerserPlugin({
+      parallel: false,
+      minify: async () => ({ warnings: ["just a warning, no code"] }),
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should error when the minimizer returns only extracted comments (no code)", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+    });
+
+    new TerserPlugin({
+      parallel: false,
+      minify: async () => ({
+        extractedComments: ["/*! @license from no-code minimizer */"],
+      }),
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should carry the last good code forward when a step in the array returns no code", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+    });
+
+    new TerserPlugin({
+      parallel: false,
+      minify: [
+        (file, sourceMap, minimizerOptions) =>
+          require("terser").minify(file, minimizerOptions),
+        // Middle step returns only a warning - next step must get the previous code
+        async () => ({ warnings: ["middle step did nothing"] }),
+        async (file) => {
+          const [code] = Object.values(file);
+
+          return { code: `${code}\n/* Appended after skipped middle step */` };
+        },
+      ],
     }).apply(compiler);
 
     const stats = await compile(compiler);

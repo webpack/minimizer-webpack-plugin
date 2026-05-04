@@ -32,12 +32,6 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    */
   private static getAvailableNumberOfCores;
   /**
-   * @private
-   * @param {NonNullable<NonNullable<Configuration["output"]>["environment"]>} environment environment
-   * @returns {number} ecma version
-   */
-  private static getEcmaVersion;
-  /**
    * @param {BasePluginOptions & DefinedDefaultMinimizerAndOptions<T>=} options options
    */
   constructor(
@@ -75,7 +69,6 @@ declare namespace TerserPlugin {
     Schema,
     Compiler,
     Compilation,
-    Configuration,
     Asset,
     AssetInfo,
     TemplatePath,
@@ -97,7 +90,6 @@ declare namespace TerserPlugin {
     Input,
     CustomOptions,
     InferDefaultType,
-    PredefinedOptions,
     MinimizerOptions,
     BasicMinimizerImplementation,
     MinimizeFunctionHelpers,
@@ -118,7 +110,6 @@ import { jsonMinify } from "./utils";
 type Schema = import("schema-utils/declarations/validate").Schema;
 type Compiler = import("webpack").Compiler;
 type Compilation = import("webpack").Compilation;
-type Configuration = import("webpack").Configuration;
 type Asset = import("webpack").Asset;
 type AssetInfo = import("webpack").AssetInfo;
 type TemplatePath = import("webpack").TemplatePath;
@@ -216,29 +207,9 @@ type CustomOptions = {
   [key: string]: EXPECTED_ANY;
 };
 type InferDefaultType<T> = T extends infer U ? U : CustomOptions;
-type PredefinedOptions<T> = {
-  /**
-   * true when code is a EC module, otherwise false
-   */
-  module?:
-    | (T extends {
-        module?: infer P;
-      }
-        ? P
-        : boolean | string)
-    | undefined;
-  /**
-   * ecma version
-   */
-  ecma?:
-    | (T extends {
-        ecma?: infer P;
-      }
-        ? P
-        : number | string)
-    | undefined;
-};
-type MinimizerOptions<T> = PredefinedOptions<T> & InferDefaultType<T>;
+type MinimizerOptions<T> = T extends EXPECTED_ANY[]
+  ? { [P in keyof T]?: T[P] & InferDefaultType<T[P]> }
+  : T & InferDefaultType<T>;
 type BasicMinimizerImplementation<T> = (
   input: Input,
   sourceMap: RawSourceMap | undefined,
@@ -259,8 +230,12 @@ type MinimizeFunctionHelpers = {
    */
   supportsWorker?: (() => boolean | undefined) | undefined;
 };
-type MinimizerImplementation<T> = BasicMinimizerImplementation<T> &
-  MinimizeFunctionHelpers;
+type MinimizerImplementation<T> = T extends EXPECTED_ANY[]
+  ? {
+      [P in keyof T]: BasicMinimizerImplementation<T[P]> &
+        MinimizeFunctionHelpers;
+    }
+  : BasicMinimizerImplementation<T> & MinimizeFunctionHelpers;
 type InternalOptions<T> = {
   /**
    * name
@@ -285,6 +260,14 @@ type InternalOptions<T> = {
     implementation: MinimizerImplementation<T>;
     options: MinimizerOptions<T>;
   };
+  /**
+   * true when code is a EC module, otherwise false
+   */
+  module?: boolean | undefined;
+  /**
+   * ecma version
+   */
+  ecma?: (number | string) | undefined;
 };
 type MinimizerWorker<T> = JestWorker & {
   transform: (options: string) => Promise<MinimizedResult>;

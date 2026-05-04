@@ -6,179 +6,221 @@ Object {
 // Comment
 /* duplicate */
 /* duplicate */",
+  "errors": Array [],
   "extractedComments": Array [],
   "map": undefined,
+  "warnings": Array [],
 }
 `;
 
 exports[`worker should match snapshot when minimizerOptions.compress.comments is boolean 1`] = `
 Object {
   "code": "var foo=1;",
+  "errors": Array [],
   "extractedComments": Array [],
   "map": undefined,
+  "warnings": Array [],
 }
 `;
 
 exports[`worker should match snapshot when minimizerOptions.compress.comments is object 1`] = `
 Object {
   "code": "var foo=1;",
+  "errors": Array [],
   "extractedComments": Array [],
   "map": undefined,
+  "warnings": Array [],
 }
 `;
 
 exports[`worker should match snapshot when minimizerOptions.extractComments is number 1`] = `
 Object {
   "code": "var foo=1;",
+  "errors": Array [],
   "extractedComments": Array [],
   "map": undefined,
+  "warnings": Array [],
 }
 `;
 
 exports[`worker should match snapshot when minimizerOptions.mangle is "null" 1`] = `
 Object {
   "code": "var foo=1;",
+  "errors": Array [],
   "extractedComments": Array [],
   "map": undefined,
+  "warnings": Array [],
 }
 `;
 
 exports[`worker should match snapshot when minimizerOptions.mangle is boolean 1`] = `
 Object {
   "code": "var foo=1;",
+  "errors": Array [],
   "extractedComments": Array [],
   "map": undefined,
+  "warnings": Array [],
 }
 `;
 
 exports[`worker should match snapshot when minimizerOptions.mangle is object 1`] = `
 Object {
   "code": "var a=1;",
+  "errors": Array [],
   "extractedComments": Array [],
   "map": undefined,
+  "warnings": Array [],
 }
 `;
 
 exports[`worker should match snapshot when minimizerOptions.output.comments is string: some 1`] = `
 Object {
   "code": "var foo=1;",
+  "errors": Array [],
   "extractedComments": Array [],
   "map": undefined,
+  "warnings": Array [],
 }
 `;
 
 exports[`worker should match snapshot when options.extractComments is "all" value 1`] = `
 Object {
   "code": "var foo=1;",
+  "errors": Array [],
   "extractedComments": Array [
     "/* hello */",
     "// Comment",
     "/* duplicate */",
   ],
   "map": undefined,
+  "warnings": Array [],
 }
 `;
 
 exports[`worker should match snapshot when options.extractComments is "false" 1`] = `
 Object {
   "code": "var foo=1;",
+  "errors": Array [],
   "extractedComments": Array [],
   "map": undefined,
+  "warnings": Array [],
 }
 `;
 
 exports[`worker should match snapshot when options.extractComments is "some" value 1`] = `
 Object {
   "code": "var foo=1;",
+  "errors": Array [],
   "extractedComments": Array [],
   "map": undefined,
+  "warnings": Array [],
 }
 `;
 
 exports[`worker should match snapshot when options.extractComments is "true" 1`] = `
 Object {
   "code": "var foo=1;",
+  "errors": Array [],
   "extractedComments": Array [],
   "map": undefined,
+  "warnings": Array [],
 }
 `;
 
 exports[`worker should match snapshot when options.extractComments is Function 1`] = `
 Object {
   "code": "var foo=1;",
+  "errors": Array [],
   "extractedComments": Array [
     "/* hello */",
     "// Comment",
     "/* duplicate */",
   ],
   "map": undefined,
+  "warnings": Array [],
 }
 `;
 
 exports[`worker should match snapshot when options.extractComments is Object with "all" value 1`] = `
 Object {
   "code": "var foo=1;",
+  "errors": Array [],
   "extractedComments": Array [
     "/* hello */",
     "// Comment",
     "/* duplicate */",
   ],
   "map": undefined,
+  "warnings": Array [],
 }
 `;
 
 exports[`worker should match snapshot when options.extractComments is Object with "some" value 1`] = `
 Object {
   "code": "var foo=1;",
+  "errors": Array [],
   "extractedComments": Array [],
   "map": undefined,
+  "warnings": Array [],
 }
 `;
 
 exports[`worker should match snapshot when options.extractComments is Object with "true" value 1`] = `
 Object {
   "code": "var foo=1;",
+  "errors": Array [],
   "extractedComments": Array [],
   "map": undefined,
+  "warnings": Array [],
 }
 `;
 
 exports[`worker should match snapshot when options.extractComments is RegExp 1`] = `
 Object {
   "code": "var foo=1;",
+  "errors": Array [],
   "extractedComments": Array [
     "/* hello */",
   ],
   "map": undefined,
+  "warnings": Array [],
 }
 `;
 
 exports[`worker should match snapshot when options.extractComments is empty Object 1`] = `
 Object {
   "code": "var foo=1;",
+  "errors": Array [],
   "extractedComments": Array [],
   "map": undefined,
+  "warnings": Array [],
 }
 `;
 
 exports[`worker should match snapshot when options.output.comments is "some" 1`] = `
-"var foo = 1;/* hello */
-// Comment
-/* duplicate */
-/* duplicate */"
+Object {
+  "code": undefined,
+  "errors": Array [],
+  "extractedComments": Array [],
+  "map": undefined,
+  "warnings": Array [],
+}
 `;
 
 exports[`worker should match snapshot with extract option set to a single file 1`] = `
 Object {
   "code": "/******/function hello(o){console.log(o)}",
+  "errors": Array [],
   "extractedComments": Array [],
   "map": undefined,
+  "warnings": Array [],
 }
 `;
 
 exports[`worker should match snapshot with options.inputSourceMap 1`] = `
 Object {
   "code": "function foo(f){if(f)return bar()}",
+  "errors": Array [],
   "extractedComments": Array [],
   "map": Object {
     "ignoreList": Array [],
@@ -193,5 +235,6 @@ Object {
     ],
     "version": 3,
   },
+  "warnings": Array [],
 }
 `;

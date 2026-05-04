@@ -1,5 +1,3 @@
-export type Task<T> = () => Promise<T>;
-export type FunctionReturning<T> = () => T;
 export type ExtractCommentsOptions =
   import("./index.js").ExtractCommentsOptions;
 export type ExtractCommentsFunction =
@@ -11,8 +9,9 @@ export type MinimizedResult = import("./index.js").MinimizedResult;
 export type CustomOptions = import("./index.js").CustomOptions;
 export type RawSourceMap = import("./index.js").RawSourceMap;
 export type EXPECTED_OBJECT = import("./index.js").EXPECTED_OBJECT;
-export type PredefinedOptions<T> = import("./index.js").PredefinedOptions<T>;
 export type ExtractedComments = string[];
+export type Task<T> = () => Promise<T>;
+export type FunctionReturning<T> = () => T;
 /**
  * @param {Input} input input
  * @param {RawSourceMap=} sourceMap source map
@@ -34,6 +33,29 @@ export namespace esbuildMinify {
    */
   function supportsWorkerThreads(): boolean | undefined;
 }
+/** @typedef {import("./index.js").ExtractCommentsOptions} ExtractCommentsOptions */
+/** @typedef {import("./index.js").ExtractCommentsFunction} ExtractCommentsFunction */
+/** @typedef {import("./index.js").ExtractCommentsCondition} ExtractCommentsCondition */
+/** @typedef {import("./index.js").Input} Input */
+/** @typedef {import("./index.js").MinimizedResult} MinimizedResult */
+/** @typedef {import("./index.js").CustomOptions} CustomOptions */
+/** @typedef {import("./index.js").RawSourceMap} RawSourceMap */
+/** @typedef {import("./index.js").EXPECTED_OBJECT} EXPECTED_OBJECT */
+/**
+ * @typedef {string[]} ExtractedComments
+ */
+/**
+ * Map a webpack `output.environment` configuration to the highest
+ * ECMAScript version that the target is known to support. Returns `5`
+ * when no ES2015+ features are flagged.
+ * @param {NonNullable<NonNullable<import("webpack").Configuration["output"]>["environment"]>} environment environment
+ * @returns {number} ecma version (5, 2015, 2017 or 2020)
+ */
+export function getEcmaVersion(
+  environment: NonNullable<
+    NonNullable<import("webpack").Configuration["output"]>["environment"]
+  >,
+): number;
 /**
  * @param {Input} input input
  * @param {RawSourceMap=} sourceMap source map

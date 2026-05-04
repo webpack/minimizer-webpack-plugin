@@ -223,7 +223,7 @@ module.exports = {
 Type:
 
 ```ts
-type minify = (
+type minifyFn = (
   input: Record<string, string>,
   sourceMap: import("@jridgewell/trace-mapping").SourceMapInput | undefined,
   minifyOptions: {
@@ -277,6 +277,8 @@ type minify = (
   warnings?: (string | Error)[] | undefined;
   extractedComments?: string[] | undefined;
 }>;
+
+type minify = minifyFn | minifyFn[];
 ```
 
 Default: `TerserPlugin.terserMinify`
@@ -285,9 +287,13 @@ Allows you to override the default minify function.
 By default plugin uses [terser](https://github.com/terser/terser) package.
 Useful for using and testing unpublished versions or forks.
 
+An array of functions can also be provided to chain multiple minimizers — the output of each minimizer is fed as input to the next. When an array is used, the [`terserOptions`](#terseroptions) option may also be an array (index-paired with `minify`) or a single object that is reused for every minimizer.
+
 > **Warning**
 >
 > **Always use `require` inside `minify` function when `parallel` option enabled**.
+
+#### `function`
 
 **webpack.config.js**
 
@@ -337,6 +343,36 @@ module.exports = {
 };
 ```
 
+#### `array`
+
+If an array of functions is passed to the `minify` option, the output of each
+minimizer is fed as input to the next one. The `terserOptions` option can be
+either an array of option objects (index-paired with `minify`) or a single
+object that will be shared by all minimizers. Warnings, errors and extracted
+comments from all minimizers are merged together.
+
+**webpack.config.js**
+
+```js
+module.exports = {
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        minify: [TerserPlugin.terserMinify, TerserPlugin.swcMinify],
+        // `terserOptions` can be an array of options, one per `minify` entry
+        terserOptions: [
+          // Options for `TerserPlugin.terserMinify`
+          { mangle: false },
+          // Options for `TerserPlugin.swcMinify`
+          {},
+        ],
+      }),
+    ],
+  },
+};
+```
+
 ### `terserOptions`
 
 Type:
@@ -360,11 +396,18 @@ interface terserOptions {
   sourceMap?: boolean | SourceMapOptions;
   toplevel?: boolean;
 }
+
+type options = terserOptions | terserOptions[];
 ```
 
 Default: [default](https://github.com/terser/terser#minify-options)
 
 Terser [options](https://github.com/terser/terser#minify-options).
+
+When the [`minify`](#minify) option is an array of minimizers, `terserOptions`
+can also be an array. Each element is passed to the minimizer at the same
+index in the `minify` array. If a single object is provided instead, it is
+reused for every minimizer.
 
 **webpack.config.js**
 
