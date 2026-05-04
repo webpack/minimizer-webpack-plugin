@@ -93,6 +93,11 @@ function encodeMappings(decoded) {
  * the minimizer. `currentMap` represents `name → step-output` and
  * `prevMap` represents `original → name`; the result represents
  * `original → step-output`.
+ *
+ * TODO: replace with a webpack-sources helper once one is exposed —
+ * `SourceMapSource` already composes one level via `innerSourceMap`,
+ * see https://github.com/webpack/webpack-sources for the proposal to
+ * expose it as a public `composeSourceMaps` (or n-step `SourceMapSource`).
  * @param {RawSourceMap | undefined} currentMap map produced by the minimizer
  * @param {RawSourceMap | undefined} prevMap input source map fed to the minimizer
  * @param {string} name name of the asset that the current map points to
