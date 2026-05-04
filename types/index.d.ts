@@ -300,10 +300,12 @@ type DefinedDefaultMinimizerAndOptions<T> =
   T extends import("terser").MinifyOptions
     ? {
         minify?: MinimizerImplementation<T> | undefined;
+        minimizerOptions?: MinimizerOptions<T> | undefined;
         terserOptions?: MinimizerOptions<T> | undefined;
       }
     : {
         minify: MinimizerImplementation<T>;
+        minimizerOptions?: MinimizerOptions<T> | undefined;
         terserOptions?: MinimizerOptions<T> | undefined;
       };
 type InternalPluginOptions<T> = BasePluginOptions & {

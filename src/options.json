@@ -64,8 +64,26 @@
         }
       ]
     },
-    "terserOptions": {
+    "minimizerOptions": {
       "description": "Options for `terser` (by default) or custom `minify` function.",
+      "link": "https://github.com/webpack/terser-webpack-plugin#minimizeroptions",
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          }
+        }
+      ]
+    },
+    "terserOptions": {
+      "description": "Deprecated alias for `minimizerOptions`. Options for `terser` (by default) or custom `minify` function.",
       "link": "https://github.com/webpack/terser-webpack-plugin#terseroptions",
       "anyOf": [
         {
