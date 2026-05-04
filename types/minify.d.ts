@@ -2,6 +2,7 @@ export type MinimizedResult = import("./index.js").MinimizedResult;
 export type CustomOptions = import("./index.js").CustomOptions;
 export type RawSourceMap = import("./index.js").RawSourceMap;
 export type MinimizerOptions<T> = import("./index.js").MinimizerOptions<T>;
+export type DecodedSegment = number[];
 /**
  * @template T
  * @param {import("./index.js").InternalOptions<T>} options options

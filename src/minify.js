@@ -6,16 +6,61 @@
  * @typedef {import("./index.js").MinimizerOptions<T>} MinimizerOptions
  */
 
+/**
+ * @typedef {number[]} DecodedSegment
+ */
+
+/* eslint-disable prefer-destructuring */
+
 const VLQ_BASE64 =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
+/** @type {Record<string, number>} */
+const VLQ_BASE64_INDEX = {};
+
+for (let i = 0; i < VLQ_BASE64.length; i++) {
+  VLQ_BASE64_INDEX[VLQ_BASE64[i]] = i;
+}
+
+/**
+ * Decode a Base64 VLQ string into a list of integers.
+ * @param {string} str VLQ-encoded segment
+ * @returns {number[]} decoded integers
+ */
+function decodeVlq(str) {
+  /** @type {number[]} */
+  const result = [];
+  let value = 0;
+  let shift = 0;
+
+  for (let i = 0; i < str.length; i++) {
+    const digit = VLQ_BASE64_INDEX[str[i]];
+
+    if (typeof digit === "undefined") {
+      throw new Error(`Invalid Base64 VLQ character "${str[i]}"`);
+    }
+
+    const continuation = digit & 0b100000;
+
+    value += (digit & 0b11111) << shift;
+
+    if (continuation) {
+      shift += 5;
+    } else {
+      const isNegative = value & 1;
+
+      value >>>= 1;
+      result.push(isNegative ? -value : value);
+      value = 0;
+      shift = 0;
+    }
+  }
+
+  return result;
+}
+
 /**
  * Encode a single integer as Base64 VLQ as used by the source-map spec.
- * @param {number} value integer to encode
- * @returns {string} encoded VLQ characters
- */
-/* eslint-disable prefer-destructuring, no-eq-null, eqeqeq */
-/**
  * @param {number} value integer to encode
  * @returns {string} encoded VLQ characters
  */
@@ -39,9 +84,72 @@ function encodeVlq(value) {
 }
 
 /**
+ * Decode a source-map `mappings` string into per-line arrays of segments.
+ * @param {string} mappings encoded `mappings` field
+ * @returns {DecodedSegment[][]} decoded mappings
+ */
+function decodeMappings(mappings) {
+  /** @type {DecodedSegment[][]} */
+  const lines = [];
+  let prevSourceIdx = 0;
+  let prevOriginalLine = 0;
+  let prevOriginalColumn = 0;
+  let prevNameIdx = 0;
+
+  const lineStrings = mappings.split(";");
+
+  for (let lineIndex = 0; lineIndex < lineStrings.length; lineIndex++) {
+    const lineStr = lineStrings[lineIndex];
+    /** @type {DecodedSegment[]} */
+    const segments = [];
+    let prevGeneratedColumn = 0;
+
+    if (lineStr.length > 0) {
+      const segmentStrings = lineStr.split(",");
+
+      for (let segIdx = 0; segIdx < segmentStrings.length; segIdx++) {
+        const decoded = decodeVlq(segmentStrings[segIdx]);
+
+        prevGeneratedColumn += decoded[0];
+
+        if (decoded.length === 1) {
+          segments.push([prevGeneratedColumn]);
+        } else if (decoded.length === 4) {
+          prevSourceIdx += decoded[1];
+          prevOriginalLine += decoded[2];
+          prevOriginalColumn += decoded[3];
+          segments.push([
+            prevGeneratedColumn,
+            prevSourceIdx,
+            prevOriginalLine,
+            prevOriginalColumn,
+          ]);
+        } else if (decoded.length === 5) {
+          prevSourceIdx += decoded[1];
+          prevOriginalLine += decoded[2];
+          prevOriginalColumn += decoded[3];
+          prevNameIdx += decoded[4];
+          segments.push([
+            prevGeneratedColumn,
+            prevSourceIdx,
+            prevOriginalLine,
+            prevOriginalColumn,
+            prevNameIdx,
+          ]);
+        }
+      }
+    }
+
+    lines.push(segments);
+  }
+
+  return lines;
+}
+
+/**
  * Encode decoded source-map mappings (per-line arrays of segments) back into
  * the spec's `mappings` string.
- * @param {number[][][]} decoded mappings as nested arrays of segments
+ * @param {DecodedSegment[][]} decoded mappings as nested arrays of segments
  * @returns {string} encoded `mappings` field
  */
 function encodeMappings(decoded) {
@@ -89,6 +197,61 @@ function encodeMappings(decoded) {
 }
 
 /**
+ * Look up the original source position for a generated `(line, column)`
+ * within decoded mappings. Returns `null` when no mapping covers the
+ * requested position.
+ * @param {DecodedSegment[][]} decoded decoded mappings
+ * @param {number} lineIndex 0-based generated line
+ * @param {number} columnIndex 0-based generated column
+ * @returns {{ sourceIdx: number, originalLine: number, originalColumn: number, nameIdx: number } | null} mapped position
+ */
+function originalPositionFor(decoded, lineIndex, columnIndex) {
+  if (lineIndex < 0 || lineIndex >= decoded.length) {
+    return null;
+  }
+
+  const segments = decoded[lineIndex];
+
+  if (segments.length === 0) {
+    return null;
+  }
+
+  // Binary-search for the largest segment whose generated column is `<=`
+  // the requested column.
+  let low = 0;
+  let high = segments.length;
+
+  while (low < high) {
+    const mid = (low + high) >>> 1;
+
+    if (segments[mid][0] <= columnIndex) {
+      low = mid + 1;
+    } else {
+      high = mid;
+    }
+  }
+
+  const idx = low - 1;
+
+  if (idx < 0) {
+    return null;
+  }
+
+  const seg = segments[idx];
+
+  if (seg.length < 4) {
+    return null;
+  }
+
+  return {
+    sourceIdx: /** @type {number} */ (seg[1]),
+    originalLine: /** @type {number} */ (seg[2]),
+    originalColumn: /** @type {number} */ (seg[3]),
+    nameIdx: seg.length >= 5 ? /** @type {number} */ (seg[4]) : -1,
+  };
+}
+
+/**
  * Compose a freshly-produced source map with the input source map fed to
  * the minimizer. `currentMap` represents `name → step-output` and
  * `prevMap` represents `original → name`; the result represents
@@ -103,23 +266,46 @@ function composeSourceMaps(currentMap, prevMap, name) {
     return currentMap;
   }
 
-  const {
-    TraceMap,
-    decodedMappings,
-    originalPositionFor,
-    sourceContentFor,
-  } = require("@jridgewell/trace-mapping");
+  // Custom minimizers may return the map as a JSON string (e.g. terser's
+  // default output). Parse so downstream code can rely on object access.
+  const current =
+    typeof currentMap === "string"
+      ? /** @type {RawSourceMap} */ (JSON.parse(currentMap))
+      : currentMap;
+  const previous =
+    typeof prevMap === "string"
+      ? /** @type {RawSourceMap} */ (JSON.parse(prevMap))
+      : prevMap;
 
-  const current = new TraceMap(
-    /** @type {import("@jridgewell/trace-mapping").SourceMapInput} */ (
-      /** @type {unknown} */ (currentMap)
-    ),
+  if (
+    !current ||
+    typeof current.mappings !== "string" ||
+    !previous ||
+    typeof previous.mappings !== "string"
+  ) {
+    return currentMap;
+  }
+
+  const currentDecoded = decodeMappings(current.mappings);
+  const previousDecoded = decodeMappings(previous.mappings);
+  const currentSources = (current.sources || []).map(
+    /**
+     * @param {string | null} source source name
+     * @returns {string} normalized source name
+     */
+    (source) => source || "",
   );
-  const previous = new TraceMap(
-    /** @type {import("@jridgewell/trace-mapping").SourceMapInput} */ (
-      /** @type {unknown} */ (prevMap)
-    ),
+  const currentSourcesContent = current.sourcesContent || [];
+  const currentNames = current.names || [];
+  const previousSources = (previous.sources || []).map(
+    /**
+     * @param {string | null} source source name
+     * @returns {string} normalized source name
+     */
+    (source) => source || "",
   );
+  const previousSourcesContent = previous.sourcesContent || [];
+  const previousNames = previous.names || [];
 
   /** @type {string[]} */
   const sources = [];
@@ -133,19 +319,18 @@ function composeSourceMaps(currentMap, prevMap, name) {
   const nameIdx = new Map();
 
   /**
-   * @param {string | null | undefined} source source identifier
+   * @param {string} source source identifier
    * @param {string | undefined} content source content (when available)
    * @returns {number} index assigned in the composed map
    */
   const getSourceIdx = (source, content) => {
-    const key = source || "";
-    let idx = sourceIdx.get(key);
+    let idx = sourceIdx.get(source);
 
     if (typeof idx === "undefined") {
       idx = sources.length;
-      sources.push(key);
+      sources.push(source);
       sourcesContent.push(typeof content === "string" ? content : null);
-      sourceIdx.set(key, idx);
+      sourceIdx.set(source, idx);
     } else if (typeof content === "string" && sourcesContent[idx] === null) {
       sourcesContent[idx] = content;
     }
@@ -154,14 +339,10 @@ function composeSourceMaps(currentMap, prevMap, name) {
   };
 
   /**
-   * @param {string | null | undefined} value name
+   * @param {string} value name
    * @returns {number} index assigned in the composed map
    */
   const getNameIdx = (value) => {
-    if (typeof value !== "string") {
-      return -1;
-    }
-
     let idx = nameIdx.get(value);
 
     if (typeof idx === "undefined") {
@@ -173,25 +354,15 @@ function composeSourceMaps(currentMap, prevMap, name) {
     return idx;
   };
 
-  const decoded = decodedMappings(current);
-  const currentSources = current.sources.map(
-    /**
-     * @param {string | null} source source from current map
-     * @returns {string} normalized source string
-     */
-    (source) => source || "",
-  );
-  const currentNames = current.names;
-
-  /** @type {number[][][]} */
+  /** @type {DecodedSegment[][]} */
   const composed = [];
 
-  for (let line = 0; line < decoded.length; line++) {
-    /** @type {number[][]} */
+  for (let line = 0; line < currentDecoded.length; line++) {
+    /** @type {DecodedSegment[]} */
     const newSegments = [];
 
-    for (const rawSeg of decoded[line]) {
-      const seg = /** @type {number[]} */ (rawSeg);
+    for (let i = 0; i < currentDecoded[line].length; i++) {
+      const seg = currentDecoded[line][i];
 
       // Single-element segment is just a generated column with no source info
       if (seg.length < 4) {
@@ -199,49 +370,62 @@ function composeSourceMaps(currentMap, prevMap, name) {
         continue;
       }
 
-      const sourceName = currentSources[seg[1]];
+      const sourceName = currentSources[/** @type {number} */ (seg[1])];
       const origLine = /** @type {number} */ (seg[2]);
       const origCol = /** @type {number} */ (seg[3]);
       const segName =
-        seg.length >= 5
-          ? currentNames[seg[4]]
-          : /** @type {string | null} */ (null);
+        seg.length >= 5 ? currentNames[/** @type {number} */ (seg[4])] : null;
 
       // When the segment points back at our intermediate `name`, look up
       // the original position in the previous map and emit a mapping that
       // points all the way back. Otherwise keep the segment as-is.
       if (sourceName === name) {
-        const orig = originalPositionFor(previous, {
-          line: origLine + 1,
-          column: origCol,
-        });
+        const orig = originalPositionFor(previousDecoded, origLine, origCol);
 
-        if (
-          typeof orig.source !== "string" ||
-          orig.line == null ||
-          orig.column == null
-        ) {
+        if (!orig) {
           continue;
         }
 
-        const content = sourceContentFor(previous, orig.source) || undefined;
-        const newSrcIdx = getSourceIdx(orig.source, content);
+        const previousSource = previousSources[orig.sourceIdx];
+
+        if (typeof previousSource !== "string") {
+          continue;
+        }
+
+        const content =
+          typeof previousSourcesContent[orig.sourceIdx] === "string"
+            ? /** @type {string} */
+              (previousSourcesContent[orig.sourceIdx])
+            : undefined;
+        const newSrcIdx = getSourceIdx(previousSource, content);
         const finalName =
-          typeof orig.name === "string" && orig.name ? orig.name : segName;
+          orig.nameIdx >= 0 && previousNames[orig.nameIdx]
+            ? previousNames[orig.nameIdx]
+            : segName;
 
         if (typeof finalName === "string") {
           newSegments.push([
             seg[0],
             newSrcIdx,
-            orig.line - 1,
-            orig.column,
+            orig.originalLine,
+            orig.originalColumn,
             getNameIdx(finalName),
           ]);
         } else {
-          newSegments.push([seg[0], newSrcIdx, orig.line - 1, orig.column]);
+          newSegments.push([
+            seg[0],
+            newSrcIdx,
+            orig.originalLine,
+            orig.originalColumn,
+          ]);
         }
       } else {
-        const content = sourceContentFor(current, sourceName) || undefined;
+        const content =
+          typeof currentSourcesContent[/** @type {number} */ (seg[1])] ===
+          "string"
+            ? /** @type {string} */
+              (currentSourcesContent[/** @type {number} */ (seg[1])])
+            : undefined;
         const newSrcIdx = getSourceIdx(sourceName, content);
 
         if (typeof segName === "string") {
@@ -261,6 +445,7 @@ function composeSourceMaps(currentMap, prevMap, name) {
     composed.push(newSegments);
   }
 
+  /** @type {RawSourceMap} */
   const result =
     /** @type {RawSourceMap} */
     (
@@ -272,8 +457,8 @@ function composeSourceMaps(currentMap, prevMap, name) {
       })
     );
 
-  if (currentMap.file) {
-    result.file = currentMap.file;
+  if (current.file) {
+    result.file = current.file;
   }
 
   if (sourcesContent.some((value) => typeof value === "string")) {
@@ -284,7 +469,7 @@ function composeSourceMaps(currentMap, prevMap, name) {
 
   return result;
 }
-/* eslint-enable no-bitwise, prefer-destructuring, no-eq-null, eqeqeq */
+/* eslint-enable prefer-destructuring */
 
 /**
  * @template T
