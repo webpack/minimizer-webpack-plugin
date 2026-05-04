@@ -109,6 +109,14 @@ jobs:
         run: npm ci
         if: matrix.node-version != '10.x' && matrix.node-version != '12.x' && matrix.node-version != '14.x' && matrix.node-version != '16.x' && matrix.node-version != '18.x'
 
+      - name: Install older cssnano (Node 10/12)
+        if: matrix.node-version == '10.x' || matrix.node-version == '12.x'
+        run: npm install -D --no-save cssnano@^5 --force
+
+      - name: Install older cssnano (Node 14/16)
+        if: matrix.node-version == '14.x' || matrix.node-version == '16.x'
+        run: npm install -D --no-save cssnano@^6 --force
+
       - name: Install webpack ${{ matrix.webpack-version }}
         if: matrix.webpack-version != 'latest'
         run: npm i webpack@${{ matrix.webpack-version }}
