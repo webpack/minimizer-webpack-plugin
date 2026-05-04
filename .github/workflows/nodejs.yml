@@ -73,11 +73,19 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
-    # Some of the bundled CSS minimizers (`@swc/css`, `esbuild`, etc.)
-    # require Node 14+; let those rows run for visibility but don't fail
-    # the workflow when they break on the legacy Node versions we still
-    # try to support for the JS minimizers.
-    continue-on-error: ${{ matrix.node-version == '10.x' || matrix.node-version == '12.x' }}
+    # The bundled CSS minimizers (`@swc/css`, `lightningcss`, `esbuild`,
+    # `cssnano@7`) require modern Node and don't reliably install on
+    # the Windows agents. Let the rows that exercise them run for
+    # visibility, but don't gate the workflow on them — only ubuntu
+    # and macOS at Node 18+ are required to pass.
+    continue-on-error: >-
+      ${{
+        matrix.os == 'windows-latest'
+        || matrix.node-version == '10.x'
+        || matrix.node-version == '12.x'
+        || matrix.node-version == '14.x'
+        || matrix.node-version == '16.x'
+      }}
 
     concurrency:
       group: test-${{ matrix.os }}-v${{ matrix.node-version }}-${{ matrix.webpack-version }}-${{ github.ref }}
