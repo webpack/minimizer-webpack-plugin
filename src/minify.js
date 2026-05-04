@@ -37,15 +37,21 @@ async function minify(options) {
     const currentOptions =
       /** @type {import("./index.js").MinimizerOptions<T>} */
       (
-        Array.isArray(minimizerOptions) ? minimizerOptions[i] : minimizerOptions
+        Array.isArray(minimizerOptions)
+          ? minimizerOptions[i] || {}
+          : minimizerOptions || {}
       );
     const currentInput = typeof lastCode === "string" ? lastCode : input;
     const currentMap = typeof lastCode === "string" ? lastMap : inputSourceMap;
 
     /** @type {MinimizerOptions<T & { module?: boolean }>} */
-    (currentOptions).module = module;
+    (currentOptions).module =
+      /** @type {MinimizerOptions<T & { module?: boolean }>} */
+      (currentOptions).module || module;
     /** @type {MinimizerOptions<T & { ecma?: number | string }>} */
-    (currentOptions).ecma = ecma;
+    (currentOptions).ecma =
+      /** @type {MinimizerOptions<T & { ecma?: number | string }>} */
+      (currentOptions).ecma || ecma;
 
     const result = await currentImplementation(
       { [name]: currentInput },
