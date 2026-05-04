@@ -307,6 +307,33 @@ describe("validation", () => {
     expect(() => {
       new TerserPlugin({ unknown: true });
     }).toThrowErrorMatchingSnapshot();
+
+    expect(() => {
+      new TerserPlugin({ minimizerOptions: {} });
+    }).not.toThrow();
+
+    expect(() => {
+      new TerserPlugin({ minimizerOptions: [{}] });
+    }).not.toThrow();
+
+    expect(() => {
+      new TerserPlugin({ minimizerOptions: [{}, {}] });
+    }).not.toThrow();
+
+    expect(() => {
+      new TerserPlugin({ minimizerOptions: [] });
+    }).toThrowErrorMatchingSnapshot();
+
+    expect(() => {
+      new TerserPlugin({ minimizerOptions: null });
+    }).toThrowErrorMatchingSnapshot();
+
+    expect(() => {
+      new TerserPlugin({
+        minimizerOptions: { ecma: 5 },
+        terserOptions: { ecma: 5 },
+      });
+    }).not.toThrow();
   });
 });
 /* eslint-enable no-new */

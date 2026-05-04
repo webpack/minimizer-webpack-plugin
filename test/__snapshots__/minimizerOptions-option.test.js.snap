@@ -1,0 +1,54 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`minimizerOptions option should accept \`minimizerOptions\` and apply them like \`terserOptions\`: assets 1`] = `
+Object {
+  "main.js": "!function() {
+    var __webpack_modules__ = {
+        326: function(module) {
+            var abc, Person = {
+                firstName: null,
+                lastName: null
+            }, Employee = Object.create(Person, {
+                id: {
+                    value: null,
+                    enumerable: !0,
+                    configurable: !0,
+                    writable: !0
+                }
+            }), Manager = Object.create(Employee, {
+                department: {
+                    value: null,
+                    enumerable: !0,
+                    configurable: !0,
+                    writable: !0
+                }
+            });
+            module.exports = {
+                Person: Person,
+                Employee: Employee,
+                Manager: Manager
+            }, abc = {
+                data() {
+                    return {
+                        a: 2
+                    };
+                }
+            }, console.log(abc);
+        }
+    }, __webpack_module_cache__ = {};
+    (function __webpack_require__(moduleId) {
+        var cachedModule = __webpack_module_cache__[moduleId];
+        if (void 0 !== cachedModule) return cachedModule.exports;
+        var module = __webpack_module_cache__[moduleId] = {
+            exports: {}
+        };
+        return __webpack_modules__[moduleId](module, module.exports, __webpack_require__), 
+        module.exports;
+    })(326);
+}();",
+}
+`;
+
+exports[`minimizerOptions option should accept \`minimizerOptions\` and apply them like \`terserOptions\`: errors 1`] = `Array []`;
+
+exports[`minimizerOptions option should accept \`minimizerOptions\` and apply them like \`terserOptions\`: warnings 1`] = `Array []`;

@@ -153,7 +153,7 @@ const {
 
 /**
  * @template T
- * @typedef {T extends import("terser").MinifyOptions ? { minify?: MinimizerImplementation<T> | undefined, terserOptions?: MinimizerOptions<T> | undefined } : { minify: MinimizerImplementation<T>, terserOptions?: MinimizerOptions<T> | undefined }} DefinedDefaultMinimizerAndOptions
+ * @typedef {T extends import("terser").MinifyOptions ? { minify?: MinimizerImplementation<T> | undefined, minimizerOptions?: MinimizerOptions<T> | undefined, terserOptions?: MinimizerOptions<T> | undefined } : { minify: MinimizerImplementation<T>, minimizerOptions?: MinimizerOptions<T> | undefined, terserOptions?: MinimizerOptions<T> | undefined }} DefinedDefaultMinimizerAndOptions
  */
 
 /**
@@ -183,13 +183,24 @@ class TerserPlugin {
       minify = /** @type {MinimizerImplementation<T>} */ (
         /** @type {unknown} */ (terserMinify)
       ),
-      terserOptions = /** @type {MinimizerOptions<T>} */ ({}),
+      minimizerOptions,
+      terserOptions,
       test = /\.[cm]?js(\?.*)?$/i,
       extractComments = true,
       parallel = true,
       include,
       exclude,
     } = options || {};
+
+    // `terserOptions` is a deprecated alias of `minimizerOptions`; prefer the
+    // new name when both are provided.
+    const resolvedMinimizerOptions =
+      /** @type {MinimizerOptions<T>} */
+      (
+        typeof minimizerOptions !== "undefined"
+          ? minimizerOptions
+          : terserOptions || {}
+      );
 
     /**
      * @private
@@ -203,7 +214,7 @@ class TerserPlugin {
       exclude,
       minimizer: {
         implementation: minify,
-        options: terserOptions,
+        options: resolvedMinimizerOptions,
       },
     };
   }

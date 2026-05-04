@@ -74,7 +74,7 @@ Using supported `devtool` values enable source map generation.
 - **[`exclude`](#exclude)**
 - **[`parallel`](#parallel)**
 - **[`minify`](#minify)**
-- **[`terserOptions`](#terseroptions)**
+- **[`minimizerOptions`](#minimizeroptions)**
 - **[`extractComments`](#extractcomments)**
 
 ### `test`
@@ -287,7 +287,7 @@ Allows you to override the default minify function.
 By default plugin uses [terser](https://github.com/terser/terser) package.
 Useful for using and testing unpublished versions or forks.
 
-An array of functions can also be provided to chain multiple minimizers — the output of each minimizer is fed as input to the next. When an array is used, the [`terserOptions`](#terseroptions) option may also be an array (index-paired with `minify`) or a single object that is reused for every minimizer.
+An array of functions can also be provided to chain multiple minimizers — the output of each minimizer is fed as input to the next. When an array is used, the [`minimizerOptions`](#minimizeroptions) option may also be an array (index-paired with `minify`) or a single object that is reused for every minimizer.
 
 > **Warning**
 >
@@ -300,7 +300,7 @@ An array of functions can also be provided to chain multiple minimizers — the 
 ```js
 // Can be async
 const minify = (input, sourceMap, minimizerOptions, extractsComments) => {
-  // The `minimizerOptions` option contains option from the `terserOptions` option
+  // The `minimizerOptions` argument contains options from the `minimizerOptions` plugin option
   // You can use `minimizerOptions.myCustomOption`
 
   // Custom logic for extract comments
@@ -333,7 +333,7 @@ module.exports = {
     minimize: true,
     minimizer: [
       new TerserPlugin({
-        terserOptions: {
+        minimizerOptions: {
           myCustomOption: true,
         },
         minify,
@@ -346,7 +346,7 @@ module.exports = {
 #### `array`
 
 If an array of functions is passed to the `minify` option, the output of each
-minimizer is fed as input to the next one. The `terserOptions` option can be
+minimizer is fed as input to the next one. The `minimizerOptions` option can be
 either an array of option objects (index-paired with `minify`) or a single
 object that will be shared by all minimizers. Warnings, errors and extracted
 comments from all minimizers are merged together.
@@ -360,8 +360,8 @@ module.exports = {
     minimizer: [
       new TerserPlugin({
         minify: [TerserPlugin.terserMinify, TerserPlugin.swcMinify],
-        // `terserOptions` can be an array of options, one per `minify` entry
-        terserOptions: [
+        // `minimizerOptions` can be an array of options, one per `minify` entry
+        minimizerOptions: [
           // Options for `TerserPlugin.terserMinify`
           { mangle: false },
           // Options for `TerserPlugin.swcMinify`
@@ -373,12 +373,12 @@ module.exports = {
 };
 ```
 
-### `terserOptions`
+### `minimizerOptions`
 
 Type:
 
 ```ts
-interface terserOptions {
+interface minimizerOptions {
   compress?: boolean | CompressOptions;
   ecma?: ECMA;
   enclose?: boolean | string;
@@ -397,17 +397,24 @@ interface terserOptions {
   toplevel?: boolean;
 }
 
-type options = terserOptions | terserOptions[];
+type options = minimizerOptions | minimizerOptions[];
 ```
 
 Default: [default](https://github.com/terser/terser#minify-options)
 
-Terser [options](https://github.com/terser/terser#minify-options).
+Options for the active minimizer. With the default Terser minify, see Terser's
+[minify options](https://github.com/terser/terser#minify-options).
 
-When the [`minify`](#minify) option is an array of minimizers, `terserOptions`
+When the [`minify`](#minify) option is an array of minimizers, `minimizerOptions`
 can also be an array. Each element is passed to the minimizer at the same
 index in the `minify` array. If a single object is provided instead, it is
 reused for every minimizer.
+
+> **Note**
+>
+> `terserOptions` is kept as a deprecated alias of `minimizerOptions` for
+> backwards compatibility — passing either is equivalent. If both are set,
+> `minimizerOptions` wins. Prefer `minimizerOptions` in new code.
 
 **webpack.config.js**
 
@@ -417,7 +424,7 @@ module.exports = {
     minimize: true,
     minimizer: [
       new TerserPlugin({
-        terserOptions: {
+        minimizerOptions: {
           ecma: undefined,
           parse: {},
           compress: {},
@@ -492,7 +499,7 @@ By default, extract only comments using `/^\**!|@preserve|@license|@cc_on/i` Reg
 
 If the original file is named `foo.js`, then the comments will be stored to `foo.js.LICENSE.txt`.
 
-The `terserOptions.format.comments` option specifies whether the comment will be preserved - i.e., it is possible to preserve some comments (e.g. annotations) while extracting others, or even preserve comments that have already been extracted.
+The `minimizerOptions.format.comments` option specifies whether the comment will be preserved - i.e., it is possible to preserve some comments (e.g. annotations) while extracting others, or even preserve comments that have already been extracted.
 
 #### `boolean`
 
@@ -741,7 +748,7 @@ module.exports = {
     minimize: true,
     minimizer: [
       new TerserPlugin({
-        terserOptions: {
+        minimizerOptions: {
           format: {
             comments: /@license/i,
           },
@@ -765,7 +772,7 @@ module.exports = {
     minimize: true,
     minimizer: [
       new TerserPlugin({
-        terserOptions: {
+        minimizerOptions: {
           format: {
             comments: false,
           },
@@ -790,9 +797,9 @@ module.exports = {
     minimizer: [
       new TerserPlugin({
         minify: TerserPlugin.uglifyJsMinify,
-        // `terserOptions` options will be passed to `uglify-js`
+        // `minimizerOptions` will be passed to `uglify-js`
         // Link to options - https://github.com/mishoo/UglifyJS#minify-options
-        terserOptions: {},
+        minimizerOptions: {},
       }),
     ],
   },
@@ -818,9 +825,9 @@ module.exports = {
     minimizer: [
       new TerserPlugin({
         minify: TerserPlugin.swcMinify,
-        // `terserOptions` options will be passed to `swc` (`@swc/core`)
+        // `minimizerOptions` will be passed to `swc` (`@swc/core`)
         // Link to options - https://swc.rs/docs/config-js-minify
-        terserOptions: {},
+        minimizerOptions: {},
       }),
     ],
   },
@@ -844,16 +851,16 @@ module.exports = {
     minimizer: [
       new TerserPlugin({
         minify: TerserPlugin.esbuildMinify,
-        // `terserOptions` options will be passed to `esbuild`
+        // `minimizerOptions` will be passed to `esbuild`
         // Link to options - https://esbuild.github.io/api/#minify
         // Note: the `minify` options is true by default (and override other `minify*` options), so if you want to disable the `minifyIdentifiers` option (or other `minify*` options) please use:
-        // terserOptions: {
+        // minimizerOptions: {
         //   minify: false,
         //   minifyWhitespace: true,
         //   minifyIdentifiers: false,
         //   minifySyntax: true,
         // },
-        terserOptions: {},
+        minimizerOptions: {},
       }),
     ],
   },
@@ -878,7 +885,7 @@ module.exports = {
         test: /\.json$/,
         minify: TerserPlugin.jsonMinify,
         // We are supporting `space` and `replacer` options, you can set them below
-        terserOptions: {},
+        minimizerOptions: {},
       }),
     ],
   },
@@ -927,7 +934,7 @@ module.exports = {
     minimize: true,
     minimizer: [
       new TerserPlugin({
-        terserOptions: {
+        minimizerOptions: {
           compress: true,
         },
       }),
@@ -950,19 +957,19 @@ module.exports = {
     minimizer: [
       new TerserPlugin<SwcOptions>({
         minify: TerserPlugin.swcMinify,
-        terserOptions: {
+        minimizerOptions: {
           // `swc` options
         },
       }),
       new TerserPlugin<UglifyJSOptions>({
         minify: TerserPlugin.uglifyJsMinify,
-        terserOptions: {
+        minimizerOptions: {
           // `uglif-js` options
         },
       }),
       new TerserPlugin<EsbuildOptions>({
         minify: TerserPlugin.esbuildMinify,
-        terserOptions: {
+        minimizerOptions: {
           // `esbuild` options
         },
       }),
@@ -970,7 +977,7 @@ module.exports = {
       // Alternative usage:
       new TerserPlugin<TerserOptions>({
         minify: TerserPlugin.terserMinify,
-        terserOptions: {
+        minimizerOptions: {
           // `terser` options
         },
       }),
