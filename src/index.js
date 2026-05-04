@@ -192,18 +192,15 @@ class TerserPlugin {
       exclude,
     } = options || {};
 
-    if (
-      typeof minimizerOptions !== "undefined" &&
-      typeof terserOptions !== "undefined"
-    ) {
-      throw new Error(
-        "The `minimizerOptions` and `terserOptions` options can't be used together. Please use only `minimizerOptions` (`terserOptions` is a deprecated alias).",
-      );
-    }
-
+    // `terserOptions` is a deprecated alias of `minimizerOptions`; prefer the
+    // new name when both are provided.
     const resolvedMinimizerOptions =
       /** @type {MinimizerOptions<T>} */
-      (minimizerOptions || terserOptions || {});
+      (
+        typeof minimizerOptions !== "undefined"
+          ? minimizerOptions
+          : terserOptions || {}
+      );
 
     /**
      * @private

@@ -413,8 +413,8 @@ reused for every minimizer.
 > **Note**
 >
 > `terserOptions` is kept as a deprecated alias of `minimizerOptions` for
-> backwards compatibility — passing either is equivalent. Passing both at the
-> same time throws an error. Prefer `minimizerOptions` in new code.
+> backwards compatibility — passing either is equivalent. If both are set,
+> `minimizerOptions` wins. Prefer `minimizerOptions` in new code.
 
 **webpack.config.js**
 

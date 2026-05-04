@@ -46,14 +46,13 @@ describe("minimizerOptions option", () => {
     );
   });
 
-  it("should throw when both `minimizerOptions` and `terserOptions` are provided", () => {
-    expect(
-      () =>
-        new TerserPlugin({
-          minimizerOptions: { mangle: false },
-          terserOptions: { mangle: false },
-        }),
-    ).toThrow(/can't be used together/);
+  it("should prefer `minimizerOptions` when both `minimizerOptions` and `terserOptions` are provided", () => {
+    const plugin = new TerserPlugin({
+      minimizerOptions: { mangle: false },
+      terserOptions: { mangle: true, compress: false },
+    });
+
+    expect(plugin.options.minimizer.options).toEqual({ mangle: false });
   });
 
   it("should default to an empty object when neither option is provided", () => {

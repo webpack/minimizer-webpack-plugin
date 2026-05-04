@@ -333,7 +333,7 @@ describe("validation", () => {
         minimizerOptions: { ecma: 5 },
         terserOptions: { ecma: 5 },
       });
-    }).toThrowErrorMatchingSnapshot();
+    }).not.toThrow();
   });
 });
 /* eslint-enable no-new */

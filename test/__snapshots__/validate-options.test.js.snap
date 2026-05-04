@@ -233,5 +233,3 @@ exports[`validation validate 19`] = `
     * options.minimizerOptions should be an array:
       [object { … }, ...] (should not have fewer than 1 item)"
 `;
-
-exports[`validation validate 20`] = `"The \`minimizerOptions\` and \`terserOptions\` options can't be used together. Please use only \`minimizerOptions\` (\`terserOptions\` is a deprecated alias)."`;
