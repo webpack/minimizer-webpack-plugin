@@ -1494,4 +1494,70 @@ describe("minify option", () => {
     expect(getErrors(stats)).toMatchSnapshot("errors");
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
+
+  it("should work and merge source maps when `minify` is an array of `terserMinify` minimizers", async () => {
+    const compiler = getCompiler({
+      devtool: "source-map",
+      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+      output: {
+        path: path.resolve(__dirname, "./dist-terser"),
+        filename: "[name].js",
+        chunkFilename: "[id].[name].js",
+      },
+    });
+
+    new TerserPlugin({
+      minify: [TerserPlugin.terserMinify, TerserPlugin.terserMinify],
+      minimizerOptions: [{ mangle: false }, { mangle: true }],
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should work and merge source maps when `minify` mixes `terserMinify` with `uglifyJsMinify`", async () => {
+    const compiler = getCompiler({
+      devtool: "source-map",
+      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+      output: {
+        path: path.resolve(__dirname, "./dist-terser"),
+        filename: "[name].js",
+        chunkFilename: "[id].[name].js",
+      },
+    });
+
+    new TerserPlugin({
+      minify: [TerserPlugin.terserMinify, TerserPlugin.uglifyJsMinify],
+      minimizerOptions: [{ mangle: false }, { mangle: true }],
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should work and merge source maps when `minify` is an array of CSS minimizers", async () => {
+    const compiler = getCompiler({
+      devtool: "source-map",
+      entry: path.resolve(__dirname, "./fixtures/css.js"),
+    });
+
+    new TerserPlugin().apply(compiler);
+    new TerserPlugin({
+      test: /\.css(\?.*)?$/i,
+      minify: [TerserPlugin.cssnanoMinify, TerserPlugin.cssnanoMinify],
+      minimizerOptions: [{ preset: "default" }, { preset: "default" }],
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
 });

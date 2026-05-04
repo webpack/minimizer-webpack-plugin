@@ -289,9 +289,14 @@ async function terserMinify(
   // Copy `terser` options
   const terserOptions = buildTerserOptions(minimizerOptions);
 
-  // Let terser generate a SourceMap
+  // Let terser generate a SourceMap. Pass the input source map so that
+  // chained minimizers produce a map back to the original sources.
   if (sourceMap) {
-    terserOptions.sourceMap = { asObject: true };
+    terserOptions.sourceMap =
+      /** @type {import("terser").SourceMapOptions} */ ({
+        asObject: true,
+        content: sourceMap,
+      });
   }
 
   /** @type {ExtractedComments} */
@@ -538,9 +543,13 @@ async function uglifyJsMinify(
   // Copy `uglify-js` options
   const uglifyJsOptions = buildUglifyJsOptions(minimizerOptions);
 
-  // Let terser generate a SourceMap
+  // Let `uglify-js` generate a SourceMap, chaining through the input
+  // map so that combined minimizers map back to original sources.
   if (sourceMap) {
-    uglifyJsOptions.sourceMap = true;
+    uglifyJsOptions.sourceMap =
+      /** @type {import("uglify-js").SourceMapOptions} */ (
+        /** @type {unknown} */ ({ content: sourceMap })
+      );
   }
 
   /** @type {ExtractedComments} */
@@ -740,7 +749,7 @@ async function swcMinify(input, sourceMap, minimizerOptions, extractComments) {
     swcOptions.format = {};
   }
 
-  // Let `swc` generate a SourceMap
+  // Let `swc` generate a SourceMap.
   if (sourceMap) {
     swcOptions.sourceMap = true;
   }
@@ -1301,7 +1310,7 @@ async function cssnanoMinify(
   }
 
   if (sourceMap) {
-    postcssOptions.map = { annotation: false };
+    postcssOptions.map = { annotation: false, prev: sourceMap };
   }
 
   const result = await postcss
