@@ -1,0 +1,11 @@
+/* a comment */
+.foo {
+  color: red;
+
+  background: blue;
+}
+
+.bar {
+  margin: 10px;
+  padding: 10px;
+}
