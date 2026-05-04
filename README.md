@@ -13,7 +13,31 @@
 
 # terser-webpack-plugin
 
-This plugin uses [terser](https://github.com/terser/terser) to minify/minimize your JavaScript.
+This plugin minifies your assets in a webpack build. It ships with several
+built-in minimizers covering JavaScript, JSON, and HTML — pick one with the
+[`minify`](#minify) option and target the right files with [`test`](#test).
+
+JavaScript minimizers:
+
+- [`terser`](https://github.com/terser/terser) — `TerserPlugin.terserMinify` (default). The same JavaScript-based minifier that webpack uses out of the box; produces small, well-tested output and supports the full set of `extractComments` modes.
+- [`uglify-js`](https://github.com/mishoo/UglifyJS) — `TerserPlugin.uglifyJsMinify`. ES5-only minifier, useful when you specifically need UglifyJS-compatible output. Requires `npm install --save-dev uglify-js`.
+- [`@swc/core`](https://github.com/swc-project/swc) — `TerserPlugin.swcMinify`. A very fast Rust-based JavaScript/TypeScript minifier. Requires `npm install --save-dev @swc/core`.
+- [`esbuild`](https://github.com/evanw/esbuild) — `TerserPlugin.esbuildMinify`. An extremely fast JS bundler/minifier; legal comments are always preserved (no `extractComments` support). Requires `npm install --save-dev esbuild`.
+
+JSON minimizer:
+
+- `JSON.stringify` — `TerserPlugin.jsonMinify`. Built in (no extra dependency); supports `space` and `replacer` options.
+
+HTML minimizers:
+
+- [`html-minifier-terser`](https://github.com/terser/html-minifier-terser) — `TerserPlugin.htmlMinifierTerser`. The default HTML minimizer. JavaScript-based, no native dependency. Requires `npm install --save-dev html-minifier-terser`.
+- [`@swc/html`](https://github.com/swc-project/swc) — `TerserPlugin.swcMinifyHtml` (full HTML documents) and `TerserPlugin.swcMinifyHtmlFragment` (HTML fragments, e.g. `<template>` content). Very fast Rust-based platform for the Web. Requires `npm install --save-dev @swc/html`.
+- [`@minify-html/node`](https://github.com/wilsonzlin/minify-html) — `TerserPlugin.minifyHtmlNode`. A Rust HTML minifier optimised for speed and effectiveness. Requires `npm install --save-dev @minify-html/node`.
+
+All of the non-default minimizers are declared as **optional** peer
+dependencies — install only the ones you actually use. You can also stack
+multiple `TerserPlugin` instances in the same build to handle different
+file types with different minimizers (see [Examples](#examples)).
 
 ## Getting Started
 
@@ -892,6 +916,155 @@ module.exports = {
 };
 ```
 
+### HTML
+
+The plugin can minify HTML assets too. Pick one of the bundled HTML
+minimizers and set `test` to match your HTML files.
+
+Available HTML minimizers:
+
+- `TerserPlugin.htmlMinifierTerser` — uses [`html-minifier-terser`](https://github.com/terser/html-minifier-terser).
+- `TerserPlugin.swcMinifyHtml` — uses [`@swc/html`](https://github.com/swc-project/swc) for full HTML documents (with doctype and `<html>`/`<head>`/`<body>` tags).
+- `TerserPlugin.swcMinifyHtmlFragment` — uses [`@swc/html`](https://github.com/swc-project/swc) for HTML fragments (e.g. content inside `<template></template>` or partial HTML strings).
+- `TerserPlugin.minifyHtmlNode` — uses [`@minify-html/node`](https://github.com/wilsonzlin/minify-html).
+
+The HTML minimizers are optional peer dependencies — install only the one
+you actually use:
+
+```console
+npm install --save-dev html-minifier-terser
+# or
+npm install --save-dev @swc/html
+# or
+npm install --save-dev @minify-html/node
+```
+
+> **Note**
+>
+> HTML assets typically come from plugins like
+> [`copy-webpack-plugin`](https://github.com/webpack-contrib/copy-webpack-plugin),
+> [`html-webpack-plugin`](https://github.com/jantimon/html-webpack-plugin),
+> or webpack's [asset modules](https://webpack.js.org/guides/asset-modules/).
+
+> **Note**
+>
+> Whitespace handling differs between tools (defaults):
+>
+> - `@swc/html` — removes/collapses whitespace only in safe places (around `html`/`body`, inside `<head>`, between `<meta>`/`<script>`/`<link>` etc.).
+> - `html-minifier-terser` — always collapses multiple whitespaces to a single space (never removes entirely); configurable via [its options](https://github.com/terser/html-minifier-terser#options-quick-reference).
+> - `@minify-html/node` — see [its whitespace docs](https://github.com/wilsonzlin/minify-html#whitespace).
+
+#### `html-minifier-terser`
+
+[`html-minifier-terser`](https://github.com/terser/html-minifier-terser) is a JavaScript-based HTML minifier with no native dependency. It's the default HTML minimizer.
+
+**webpack.config.js**
+
+```js
+const TerserPlugin = require("terser-webpack-plugin");
+
+module.exports = {
+  optimization: {
+    minimize: true,
+    minimizer: [
+      // Keeps the default Terser plugin for JS files
+      "...",
+      new TerserPlugin({
+        test: /\.html(\?.*)?$/i,
+        minify: TerserPlugin.htmlMinifierTerser,
+        // Options - https://github.com/terser/html-minifier-terser#options-quick-reference
+        minimizerOptions: {
+          collapseWhitespace: true,
+          removeComments: true,
+        },
+      }),
+    ],
+  },
+};
+```
+
+#### `@swc/html` — HTML documents
+
+Use `swcMinifyHtml` for complete HTML documents (i.e. with a doctype and `<html>`/`<head>`/`<body>` tags).
+
+**webpack.config.js**
+
+```js
+const TerserPlugin = require("terser-webpack-plugin");
+
+module.exports = {
+  optimization: {
+    minimize: true,
+    minimizer: [
+      "...",
+      new TerserPlugin({
+        test: /\.html(\?.*)?$/i,
+        minify: TerserPlugin.swcMinifyHtml,
+        // Options - https://github.com/swc-project/bindings/blob/main/packages/html/index.ts
+        minimizerOptions: {},
+      }),
+    ],
+  },
+};
+```
+
+#### `@swc/html` — HTML fragments
+
+Use `swcMinifyHtmlFragment` for partial HTML — for example, content of `<template></template>` tags or HTML strings that get injected into another document.
+
+**webpack.config.js**
+
+```js
+const TerserPlugin = require("terser-webpack-plugin");
+
+module.exports = {
+  optimization: {
+    minimize: true,
+    minimizer: [
+      "...",
+      new TerserPlugin({
+        test: /\.template\.html$/i,
+        minify: TerserPlugin.swcMinifyHtmlFragment,
+        // Options - https://github.com/swc-project/bindings/blob/main/packages/html/index.ts
+        minimizerOptions: {},
+      }),
+    ],
+  },
+};
+```
+
+> **Note**
+>
+> The difference between `swcMinifyHtml` and `swcMinifyHtmlFragment` is the
+> error reporting — invalid or broken syntax is reported at build time.
+
+#### `@minify-html/node`
+
+[`@minify-html/node`](https://github.com/wilsonzlin/minify-html) is a Rust HTML minifier.
+
+**webpack.config.js**
+
+```js
+const TerserPlugin = require("terser-webpack-plugin");
+
+module.exports = {
+  optimization: {
+    minimize: true,
+    minimizer: [
+      "...",
+      new TerserPlugin({
+        test: /\.html(\?.*)?$/i,
+        minify: TerserPlugin.minifyHtmlNode,
+        // Options - https://github.com/wilsonzlin/minify-html#minification
+        minimizerOptions: {},
+      }),
+    ],
+  },
+};
+```
+
+You can also stack multiple `TerserPlugin` instances to compress different files with different `minify` functions in the same build (e.g. JS with `terserMinify`, HTML with `htmlMinifierTerser`, JSON with `jsonMinify`).
+
 ### Custom Minify Function
 
 Override the default minify function - use `uglify-js` for minification.
@@ -947,7 +1120,12 @@ With built-in minify functions:
 
 ```ts
 import { type JsMinifyOptions as SwcOptions } from "@swc/core";
+import {
+  type FragmentOptions as SwcHtmlFragmentOptions,
+  type Options as SwcHtmlOptions,
+} from "@swc/html";
 import { type TransformOptions as EsbuildOptions } from "esbuild";
+import { type Options as HtmlMinifierTerserOptions } from "html-minifier-terser";
 import { type MinifyOptions as TerserOptions } from "terser";
 import { type MinifyOptions as UglifyJSOptions } from "uglify-js";
 
@@ -979,6 +1157,29 @@ module.exports = {
         minify: TerserPlugin.terserMinify,
         minimizerOptions: {
           // `terser` options
+        },
+      }),
+
+      // HTML minimizers
+      new TerserPlugin<HtmlMinifierTerserOptions>({
+        test: /\.html(\?.*)?$/i,
+        minify: TerserPlugin.htmlMinifierTerser,
+        minimizerOptions: {
+          // `html-minifier-terser` options
+        },
+      }),
+      new TerserPlugin<SwcHtmlOptions>({
+        test: /\.html(\?.*)?$/i,
+        minify: TerserPlugin.swcMinifyHtml,
+        minimizerOptions: {
+          // `@swc/html` options
+        },
+      }),
+      new TerserPlugin<SwcHtmlFragmentOptions>({
+        test: /\.template\.html$/i,
+        minify: TerserPlugin.swcMinifyHtmlFragment,
+        minimizerOptions: {
+          // `@swc/html` fragment options
         },
       }),
     ],

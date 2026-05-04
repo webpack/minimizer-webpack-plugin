@@ -7,6 +7,11 @@
     "uglify-js",
     "uglify-es",
     "terser",
+    "swc",
+    "esbuild",
+    "html",
+    "html-minifier",
+    "html-minifier-terser",
     "webpack",
     "webpack-plugin",
     "minification",
@@ -72,7 +77,10 @@
     "@babel/preset-env": "^7.24.7",
     "@commitlint/cli": "^17.7.1",
     "@commitlint/config-conventional": "^17.7.0",
+    "@minify-html/node": "^0.16.4",
     "@swc/core": "^1.15.30",
+    "@swc/html": "^1.15.30",
+    "@types/html-minifier-terser": "^7.0.2",
     "@types/node": "^24.2.1",
     "@types/serialize-javascript": "^5.0.2",
     "@types/uglify-js": "^3.17.5",
@@ -83,6 +91,7 @@
     "del-cli": "^3.0.1",
     "esbuild": "^0.27.3",
     "eslint": "^9.29.0",
+    "html-minifier-terser": "^7.2.0",
     "eslint-config-webpack": "^4.5.1",
     "file-loader": "^6.2.0",
     "husky": "^7.0.2",
@@ -104,13 +113,22 @@
     "webpack": "^5.1.0"
   },
   "peerDependenciesMeta": {
+    "@minify-html/node": {
+      "optional": true
+    },
     "@swc/core": {
       "optional": true
     },
-    "uglify-js": {
+    "@swc/html": {
       "optional": true
     },
     "esbuild": {
+      "optional": true
+    },
+    "html-minifier-terser": {
+      "optional": true
+    },
+    "uglify-js": {
       "optional": true
     }
   },

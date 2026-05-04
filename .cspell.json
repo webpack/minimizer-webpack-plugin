@@ -37,7 +37,10 @@
     "toplevel",
     "commitlint",
     "tapable",
-    "nocheck"
+    "nocheck",
+    "dont",
+    "doctype",
+    "wilsonzlin"
   ],
   "ignorePaths": [
     "CHANGELOG.md",
