@@ -223,8 +223,7 @@ Object {
   "errors": Array [],
   "extractedComments": Array [],
   "map": Object {
-    "ignoreList": Array [],
-    "mappings": "AAAA,SAASA,IAAIC,GACT,GACIA,EAAA,OACAC",
+    "mappings": "AAAA,SAASA,IAAIC,GACT,GACIA,EAAA,OACAC,KAAAA",
     "names": Array [
       "foo",
       "x",

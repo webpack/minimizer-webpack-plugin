@@ -289,14 +289,10 @@ async function terserMinify(
   // Copy `terser` options
   const terserOptions = buildTerserOptions(minimizerOptions);
 
-  // Let terser generate a SourceMap. Pass the input source map so that
-  // chained minimizers produce a map back to the original sources.
+  // Let terser generate a SourceMap. The dispatcher in `minify.js`
+  // chains the previous step's map onto this one.
   if (sourceMap) {
-    terserOptions.sourceMap =
-      /** @type {import("terser").SourceMapOptions} */ ({
-        asObject: true,
-        content: sourceMap,
-      });
+    terserOptions.sourceMap = { asObject: true };
   }
 
   /** @type {ExtractedComments} */
@@ -543,13 +539,10 @@ async function uglifyJsMinify(
   // Copy `uglify-js` options
   const uglifyJsOptions = buildUglifyJsOptions(minimizerOptions);
 
-  // Let `uglify-js` generate a SourceMap, chaining through the input
-  // map so that combined minimizers map back to original sources.
+  // Let `uglify-js` generate a SourceMap. The dispatcher in `minify.js`
+  // chains the previous step's map onto this one.
   if (sourceMap) {
-    uglifyJsOptions.sourceMap =
-      /** @type {import("uglify-js").SourceMapOptions} */ (
-        /** @type {unknown} */ ({ content: sourceMap })
-      );
+    uglifyJsOptions.sourceMap = true;
   }
 
   /** @type {ExtractedComments} */
@@ -1310,7 +1303,7 @@ async function cssnanoMinify(
   }
 
   if (sourceMap) {
-    postcssOptions.map = { annotation: false, prev: sourceMap };
+    postcssOptions.map = { annotation: false };
   }
 
   const result = await postcss
@@ -1624,7 +1617,8 @@ async function lightningCssMinify(input, sourceMap, minimizerOptions) {
   // Copy `lightningCss` options
   const lightningCssOptions = buildLightningCssOptions(minimizerOptions);
 
-  // Let `lightningcss` generate a SourceMap
+  // Let `lightningcss` generate a SourceMap. The dispatcher in
+  // `minify.js` chains the previous step's map onto this one.
   if (sourceMap) {
     lightningCssOptions.sourceMap = true;
   }
