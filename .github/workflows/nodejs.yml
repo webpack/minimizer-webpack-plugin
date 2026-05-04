@@ -65,12 +65,19 @@ jobs:
     name: Test - ${{ matrix.os }} - Node v${{ matrix.node-version }}, Webpack ${{ matrix.webpack-version }}
 
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         node-version: [10.x, 12.x, 14.x, 16.x, 18.x, 20.x, 22.x, 24.x]
         webpack-version: [latest]
 
     runs-on: ${{ matrix.os }}
+
+    # Some of the bundled CSS minimizers (`@swc/css`, `esbuild`, etc.)
+    # require Node 14+; let those rows run for visibility but don't fail
+    # the workflow when they break on the legacy Node versions we still
+    # try to support for the JS minimizers.
+    continue-on-error: ${{ matrix.node-version == '10.x' || matrix.node-version == '12.x' }}
 
     concurrency:
       group: test-${{ matrix.os }}-v${{ matrix.node-version }}-${{ matrix.webpack-version }}-${{ github.ref }}
