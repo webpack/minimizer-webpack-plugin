@@ -1,133 +1,218 @@
+import path from "path";
+
 import TerserPlugin from "../src";
+
 import {
-  htmlMinifierTerser,
-  minifyHtmlNode,
-  swcMinifyHtml,
-  swcMinifyHtmlFragment,
-} from "../src/utils.js";
-
-const HTML_DOCUMENT = `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Hello</title>
-  </head>
-  <body>
-    <!-- a comment -->
-    <h1>Hello, World!</h1>
-  </body>
-</html>`;
-
-const HTML_FRAGMENT = `<div class="x">
-  <!-- comment -->
-  <p>   hello   </p>
-</div>`;
+  compile,
+  getCompiler,
+  getErrors,
+  getWarnings,
+  readsAssets,
+} from "./helpers";
 
 describe("HTML minimizers", () => {
-  it("exposes the HTML minimizers as static properties on TerserPlugin", () => {
-    expect(TerserPlugin.htmlMinifierTerser).toBe(htmlMinifierTerser);
-    expect(TerserPlugin.swcMinifyHtml).toBe(swcMinifyHtml);
-    expect(TerserPlugin.swcMinifyHtmlFragment).toBe(swcMinifyHtmlFragment);
-    expect(TerserPlugin.minifyHtmlNode).toBe(minifyHtmlNode);
-  });
-
-  it("htmlMinifierTerser supports worker threads", () => {
-    expect(htmlMinifierTerser.supportsWorkerThreads()).toBe(true);
-  });
-
-  it.each([swcMinifyHtml, swcMinifyHtmlFragment, minifyHtmlNode])(
-    "%p does not support worker threads (native binding)",
-    (impl) => {
-      expect(impl.supportsWorkerThreads()).toBe(false);
-    },
-  );
-
-  it("htmlMinifierTerser reports the package version", () => {
-    expect(typeof htmlMinifierTerser.getMinimizerVersion()).toBe("string");
-  });
-
-  it("htmlMinifierTerser minifies an HTML document with default options", async () => {
-    const result = await htmlMinifierTerser(
-      { "index.html": HTML_DOCUMENT },
-      undefined,
-      undefined,
-    );
-
-    expect(result.code).toBeDefined();
-    expect(result.code).not.toContain("<!-- a comment -->");
-    expect(result.code.length).toBeLessThan(HTML_DOCUMENT.length);
-  });
-
-  it("htmlMinifierTerser respects user-provided minimizerOptions", async () => {
-    const result = await htmlMinifierTerser(
-      { "index.html": "<!-- keep me --><p>hi</p>" },
-      undefined,
-      { removeComments: false },
-    );
-
-    expect(result.code).toContain("<!-- keep me -->");
-  });
-
-  it("htmlMinifierTerser returns errors when the package is not installed", async () => {
-    jest.isolateModules(() => {
-      jest.doMock("html-minifier-terser", () => {
-        throw new Error("Cannot find module 'html-minifier-terser'");
-      });
+  it("should work using when the `minify` option is `htmlMinifierTerser`", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/html.js"),
     });
 
-    // Re-require utils after mocking
-    let utils;
-    jest.isolateModules(() => {
-      jest.doMock("html-minifier-terser", () => {
-        throw new Error("Cannot find module 'html-minifier-terser'");
-      });
-      utils = require("../src/utils.js");
-    });
+    new TerserPlugin().apply(compiler);
+    new TerserPlugin({
+      test: /\.html(\?.*)?$/i,
+      minify: TerserPlugin.htmlMinifierTerser,
+    }).apply(compiler);
 
-    const result = await utils.htmlMinifierTerser(
-      { "index.html": HTML_DOCUMENT },
-      undefined,
-      undefined,
-    );
+    const stats = await compile(compiler);
 
-    expect(result.errors).toBeDefined();
-    expect(result.errors.length).toBeGreaterThan(0);
-    expect(result.errors[0].message).toContain("html-minifier-terser");
-
-    jest.dontMock("html-minifier-terser");
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
 
-  // We don't run swc / @minify-html/node end-to-end here because they ship
-  // native bindings that may not be available on every test environment.
-  // Type/return contract is exercised by the worker thread support checks
-  // and `getMinimizerVersion` calls below.
+  it("should work using when the `minify` option is `htmlMinifierTerser` and allows to set `html-minifier-terser` options", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/html.js"),
+    });
 
-  it.each([swcMinifyHtml, swcMinifyHtmlFragment, minifyHtmlNode])(
-    "%p exposes getMinimizerVersion()",
-    (impl) => {
-      expect(typeof impl.getMinimizerVersion).toBe("function");
-    },
-  );
+    new TerserPlugin().apply(compiler);
+    new TerserPlugin({
+      test: /\.html(\?.*)?$/i,
+      minify: TerserPlugin.htmlMinifierTerser,
+      minimizerOptions: {
+        collapseWhitespace: false,
+        removeComments: false,
+      },
+    }).apply(compiler);
 
-  it("swcMinifyHtmlFragment minifies an HTML fragment without erroring out", async () => {
-    let result;
-    try {
-      result = await swcMinifyHtmlFragment(
-        { "fragment.html": HTML_FRAGMENT },
-        undefined,
-        undefined,
-      );
-    } catch (_err) {
-      // Native binding might not be loadable in this environment — skip silently.
-      return;
-    }
+    const stats = await compile(compiler);
 
-    if (result.errors && result.errors.length > 0) {
-      // Skip when the diagnostic comes from the native binding rather than
-      // the input itself (e.g. binding not available in this CI environment).
-      return;
-    }
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
 
-    expect(typeof result.code).toBe("string");
+  it("should work using when the `minify` option is `htmlMinifierTerser` and the `parallel` option is `true`", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/html.js"),
+    });
+
+    new TerserPlugin().apply(compiler);
+    new TerserPlugin({
+      test: /\.html(\?.*)?$/i,
+      minify: TerserPlugin.htmlMinifierTerser,
+      parallel: true,
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should work using when the `minify` option is `htmlMinifierTerser` and the `parallel` option is `false`", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/html.js"),
+    });
+
+    new TerserPlugin().apply(compiler);
+    new TerserPlugin({
+      test: /\.html(\?.*)?$/i,
+      minify: TerserPlugin.htmlMinifierTerser,
+      parallel: false,
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should work using when the `minify` option is `swcMinifyHtml`", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/html.js"),
+    });
+
+    new TerserPlugin().apply(compiler);
+    new TerserPlugin({
+      test: /\.html(\?.*)?$/i,
+      minify: TerserPlugin.swcMinifyHtml,
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should work using when the `minify` option is `swcMinifyHtml` and allows to set `@swc/html` options", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/html.js"),
+    });
+
+    new TerserPlugin().apply(compiler);
+    new TerserPlugin({
+      test: /\.html(\?.*)?$/i,
+      minify: TerserPlugin.swcMinifyHtml,
+      minimizerOptions: {
+        removeComments: false,
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should work using when the `minify` option is `swcMinifyHtmlFragment`", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/html-fragment.js"),
+    });
+
+    new TerserPlugin().apply(compiler);
+    new TerserPlugin({
+      test: /\.html(\?.*)?$/i,
+      minify: TerserPlugin.swcMinifyHtmlFragment,
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should work using when the `minify` option is `minifyHtmlNode`", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/html.js"),
+    });
+
+    new TerserPlugin().apply(compiler);
+    new TerserPlugin({
+      test: /\.html(\?.*)?$/i,
+      minify: TerserPlugin.minifyHtmlNode,
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should work using when the `minify` option is `minifyHtmlNode` and allows to set `@minify-html/node` options", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/html.js"),
+    });
+
+    new TerserPlugin().apply(compiler);
+    new TerserPlugin({
+      test: /\.html(\?.*)?$/i,
+      minify: TerserPlugin.minifyHtmlNode,
+      minimizerOptions: {
+        keep_comments: true,
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should work when chaining HTML minimizers via an array of `minify` functions", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/html.js"),
+    });
+
+    new TerserPlugin().apply(compiler);
+    new TerserPlugin({
+      test: /\.html(\?.*)?$/i,
+      minify: [
+        TerserPlugin.htmlMinifierTerser,
+        // Second pass: pass-through that asserts the previous minimizer
+        // produced a string we can keep working with.
+        (data) => {
+          const [[, code]] = Object.entries(data);
+
+          return { code };
+        },
+      ],
+      minimizerOptions: [
+        { collapseWhitespace: true, removeComments: true },
+        {},
+      ],
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
 });
