@@ -14,9 +14,13 @@ import {
 
 // Some bundled minimizers require a newer Node than the test matrix
 // covers (`@swc/css` >=14, `cssnano@7` >=18, `esbuild@0.27` >=18, etc.).
-// Skip the rows that exercise them on older Node so snapshot-based
-// assertions don't drift between versions of those tools.
+// On top of that, `@swc/css`, `lightningcss`, `esbuild`, and the
+// cssnano native-binary deps don't reliably install on Windows agents.
+// Skip the rows that exercise them when the environment isn't a fit
+// so snapshot-based assertions don't drift.
 const NODE_MAJOR = Number(process.versions.node.split(".")[0]);
+const IS_WINDOWS = process.platform === "win32";
+const RUN_CSS_TESTS = NODE_MAJOR >= 18 && !IS_WINDOWS;
 
 describe("minify option", () => {
   it("should work", async () => {
@@ -1310,7 +1314,7 @@ describe("minify option", () => {
   });
 
   // cssnano@7 requires Node >=18 — older Node rows install older cssnano via CI.
-  (NODE_MAJOR >= 18 ? it : it.skip)(
+  (RUN_CSS_TESTS ? it : it.skip)(
     "should work using when the `minify` option is `cssnanoMinify`",
     async () => {
       const compiler = getCompiler({
@@ -1331,7 +1335,7 @@ describe("minify option", () => {
     },
   );
 
-  (NODE_MAJOR >= 18 ? it : it.skip)(
+  (RUN_CSS_TESTS ? it : it.skip)(
     "should work using when the `minify` option is `cssnanoMinify` and allows to set `cssnano` options",
     async () => {
       const compiler = getCompiler({
@@ -1353,7 +1357,7 @@ describe("minify option", () => {
     },
   );
 
-  (NODE_MAJOR >= 18 ? it : it.skip)(
+  (RUN_CSS_TESTS ? it : it.skip)(
     "should work using when the `minify` option is `cssoMinify`",
     async () => {
       const compiler = getCompiler({
@@ -1374,7 +1378,7 @@ describe("minify option", () => {
     },
   );
 
-  (NODE_MAJOR >= 18 ? it : it.skip)(
+  (RUN_CSS_TESTS ? it : it.skip)(
     "should work using when the `minify` option is `cssoMinify` and allows to set `csso` options",
     async () => {
       const compiler = getCompiler({
@@ -1396,7 +1400,7 @@ describe("minify option", () => {
     },
   );
 
-  (NODE_MAJOR >= 18 ? it : it.skip)(
+  (RUN_CSS_TESTS ? it : it.skip)(
     "should work using when the `minify` option is `cleanCssMinify`",
     async () => {
       const compiler = getCompiler({
@@ -1417,7 +1421,7 @@ describe("minify option", () => {
     },
   );
 
-  (NODE_MAJOR >= 18 ? it : it.skip)(
+  (RUN_CSS_TESTS ? it : it.skip)(
     "should work using when the `minify` option is `cleanCssMinify` and allows to set `clean-css` options",
     async () => {
       const compiler = getCompiler({
@@ -1440,7 +1444,7 @@ describe("minify option", () => {
   );
 
   // esbuild@0.27 requires Node >=18.
-  (NODE_MAJOR >= 18 ? it : it.skip)(
+  (RUN_CSS_TESTS ? it : it.skip)(
     "should work using when the `minify` option is `esbuildMinifyCss`",
     async () => {
       const compiler = getCompiler({
@@ -1462,7 +1466,7 @@ describe("minify option", () => {
   );
 
   // `lightningcss` requires Node >=12.
-  (NODE_MAJOR >= 12 ? it : it.skip)(
+  (RUN_CSS_TESTS ? it : it.skip)(
     "should work using when the `minify` option is `lightningCssMinify`",
     async () => {
       const compiler = getCompiler({
@@ -1484,7 +1488,7 @@ describe("minify option", () => {
   );
 
   // `@swc/css` requires Node >=14.
-  (NODE_MAJOR >= 14 ? it : it.skip)(
+  (RUN_CSS_TESTS ? it : it.skip)(
     "should work using when the `minify` option is `swcMinifyCss`",
     async () => {
       const compiler = getCompiler({
@@ -1505,7 +1509,7 @@ describe("minify option", () => {
     },
   );
 
-  (NODE_MAJOR >= 18 ? it : it.skip)(
+  (RUN_CSS_TESTS ? it : it.skip)(
     "should work when `minify` is an array of functions using `cssnanoMinify`",
     async () => {
       const compiler = getCompiler({
@@ -1536,7 +1540,7 @@ describe("minify option", () => {
     },
   );
 
-  (NODE_MAJOR >= 18 ? it : it.skip)(
+  (RUN_CSS_TESTS ? it : it.skip)(
     "should work and merge source maps when `minify` is an array of `terserMinify` minimizers",
     async () => {
       const compiler = getCompiler({
@@ -1562,7 +1566,7 @@ describe("minify option", () => {
     },
   );
 
-  (NODE_MAJOR >= 18 ? it : it.skip)(
+  (RUN_CSS_TESTS ? it : it.skip)(
     "should work and merge source maps when `minify` mixes `terserMinify` with `uglifyJsMinify`",
     async () => {
       const compiler = getCompiler({
@@ -1588,7 +1592,7 @@ describe("minify option", () => {
     },
   );
 
-  (NODE_MAJOR >= 18 ? it : it.skip)(
+  (RUN_CSS_TESTS ? it : it.skip)(
     "should work and merge source maps when `minify` is an array of CSS minimizers",
     async () => {
       const compiler = getCompiler({
@@ -1611,7 +1615,7 @@ describe("minify option", () => {
     },
   );
 
-  (NODE_MAJOR >= 18 ? it : it.skip)(
+  (RUN_CSS_TESTS ? it : it.skip)(
     "should work and merge source maps when `minify` mixes `terserMinify` with `swcMinify`",
     async () => {
       const compiler = getCompiler({
@@ -1637,7 +1641,7 @@ describe("minify option", () => {
     },
   );
 
-  (NODE_MAJOR >= 18 ? it : it.skip)(
+  (RUN_CSS_TESTS ? it : it.skip)(
     "should work and merge source maps when `minify` mixes `terserMinify` with `esbuildMinify`",
     async () => {
       const compiler = getCompiler({
@@ -1665,7 +1669,7 @@ describe("minify option", () => {
 
   // The chain runs through every CSS minimizer; `esbuild` is the
   // tightest constraint at Node >=18.
-  (NODE_MAJOR >= 18 ? it : it.skip)(
+  (RUN_CSS_TESTS ? it : it.skip)(
     "should work and merge source maps when `minify` mixes CSS minimizers using `cssnano`, `csso`, `cleanCss`, `lightningCss`, `swcCss`, and `esbuild`",
     async () => {
       const compiler = getCompiler({
