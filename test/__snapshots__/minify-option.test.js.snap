@@ -210,6 +210,62 @@ exports[`minify option should work using when the \`minify\` option is \`esbuild
 
 exports[`minify option should work using when the \`minify\` option is \`esbuildMinify\`: warnings 1`] = `Array []`;
 
+exports[`minify option should work using when the \`minify\` option is \`htmlMinifierTerser\` and allows to set \`html-minifier-terser\` options: assets 1`] = `
+Object {
+  "d7a05bcd54a33a5a2432.html": "<!doctype html>
+<html lang=\\"en\\">
+  <head>
+    <meta charset=\\"utf-8\\"/>
+    <title>Hello</title>
+  </head>
+  <body>
+    <!-- a comment -->
+    <h1>Hello,    World!</h1>
+    <p>     Hello there      </p>
+  </body>
+</html>
+",
+  "main.js": "(()=>{var t={740(t,r,e){\\"use strict\\";t.exports=e.p+\\"d7a05bcd54a33a5a2432.html\\"}},r={};function e(o){var n=r[o];if(void 0!==n)return n.exports;var c=r[o]={exports:{}};return t[o](c,c.exports,e),c.exports}e.m=t,e.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(t){if(\\"object\\"==typeof window)return window}}(),e.o=(t,r)=>Object.prototype.hasOwnProperty.call(t,r),(()=>{var t;e.g.importScripts&&(t=e.g.location+\\"\\");var r=e.g.document;if(!t&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(t=r.currentScript.src),!t)){var o=r.getElementsByTagName(\\"script\\");if(o.length)for(var n=o.length-1;n>-1&&(!t||!/^http(s?):/.test(t));)t=o[n--].src}if(!t)throw new Error(\\"Automatic publicPath is not supported in this browser\\");t=t.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),e.p=t})(),e.b=\\"undefined\\"!=typeof document&&document.baseURI||self.location.href,console.log(new URL(e(740),e.b))})();",
+}
+`;
+
+exports[`minify option should work using when the \`minify\` option is \`htmlMinifierTerser\` and allows to set \`html-minifier-terser\` options: errors 1`] = `Array []`;
+
+exports[`minify option should work using when the \`minify\` option is \`htmlMinifierTerser\` and allows to set \`html-minifier-terser\` options: warnings 1`] = `Array []`;
+
+exports[`minify option should work using when the \`minify\` option is \`htmlMinifierTerser\` and the \`parallel\` option is \`false\`: assets 1`] = `
+Object {
+  "1d477fcae4c6c3852830.html": "<!doctype html> <html lang=\\"en\\"> <head> <meta charset=\\"utf-8\\"/> <title>Hello</title> </head> <body> <h1>Hello, World!</h1> <p> Hello there </p> </body> </html> ",
+  "main.js": "(()=>{var t={740(t,r,e){\\"use strict\\";t.exports=e.p+\\"1d477fcae4c6c3852830.html\\"}},r={};function e(o){var n=r[o];if(void 0!==n)return n.exports;var c=r[o]={exports:{}};return t[o](c,c.exports,e),c.exports}e.m=t,e.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(t){if(\\"object\\"==typeof window)return window}}(),e.o=(t,r)=>Object.prototype.hasOwnProperty.call(t,r),(()=>{var t;e.g.importScripts&&(t=e.g.location+\\"\\");var r=e.g.document;if(!t&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(t=r.currentScript.src),!t)){var o=r.getElementsByTagName(\\"script\\");if(o.length)for(var n=o.length-1;n>-1&&(!t||!/^http(s?):/.test(t));)t=o[n--].src}if(!t)throw new Error(\\"Automatic publicPath is not supported in this browser\\");t=t.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),e.p=t})(),e.b=\\"undefined\\"!=typeof document&&document.baseURI||self.location.href,console.log(new URL(e(740),e.b))})();",
+}
+`;
+
+exports[`minify option should work using when the \`minify\` option is \`htmlMinifierTerser\` and the \`parallel\` option is \`false\`: errors 1`] = `Array []`;
+
+exports[`minify option should work using when the \`minify\` option is \`htmlMinifierTerser\` and the \`parallel\` option is \`false\`: warnings 1`] = `Array []`;
+
+exports[`minify option should work using when the \`minify\` option is \`htmlMinifierTerser\` and the \`parallel\` option is \`true\`: assets 1`] = `
+Object {
+  "1d477fcae4c6c3852830.html": "<!doctype html> <html lang=\\"en\\"> <head> <meta charset=\\"utf-8\\"/> <title>Hello</title> </head> <body> <h1>Hello, World!</h1> <p> Hello there </p> </body> </html> ",
+  "main.js": "(()=>{var t={740(t,r,e){\\"use strict\\";t.exports=e.p+\\"1d477fcae4c6c3852830.html\\"}},r={};function e(o){var n=r[o];if(void 0!==n)return n.exports;var c=r[o]={exports:{}};return t[o](c,c.exports,e),c.exports}e.m=t,e.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(t){if(\\"object\\"==typeof window)return window}}(),e.o=(t,r)=>Object.prototype.hasOwnProperty.call(t,r),(()=>{var t;e.g.importScripts&&(t=e.g.location+\\"\\");var r=e.g.document;if(!t&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(t=r.currentScript.src),!t)){var o=r.getElementsByTagName(\\"script\\");if(o.length)for(var n=o.length-1;n>-1&&(!t||!/^http(s?):/.test(t));)t=o[n--].src}if(!t)throw new Error(\\"Automatic publicPath is not supported in this browser\\");t=t.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),e.p=t})(),e.b=\\"undefined\\"!=typeof document&&document.baseURI||self.location.href,console.log(new URL(e(740),e.b))})();",
+}
+`;
+
+exports[`minify option should work using when the \`minify\` option is \`htmlMinifierTerser\` and the \`parallel\` option is \`true\`: errors 1`] = `Array []`;
+
+exports[`minify option should work using when the \`minify\` option is \`htmlMinifierTerser\` and the \`parallel\` option is \`true\`: warnings 1`] = `Array []`;
+
+exports[`minify option should work using when the \`minify\` option is \`htmlMinifierTerser\`: assets 1`] = `
+Object {
+  "1d477fcae4c6c3852830.html": "<!doctype html> <html lang=\\"en\\"> <head> <meta charset=\\"utf-8\\"/> <title>Hello</title> </head> <body> <h1>Hello, World!</h1> <p> Hello there </p> </body> </html> ",
+  "main.js": "(()=>{var t={740(t,r,e){\\"use strict\\";t.exports=e.p+\\"1d477fcae4c6c3852830.html\\"}},r={};function e(o){var n=r[o];if(void 0!==n)return n.exports;var c=r[o]={exports:{}};return t[o](c,c.exports,e),c.exports}e.m=t,e.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(t){if(\\"object\\"==typeof window)return window}}(),e.o=(t,r)=>Object.prototype.hasOwnProperty.call(t,r),(()=>{var t;e.g.importScripts&&(t=e.g.location+\\"\\");var r=e.g.document;if(!t&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(t=r.currentScript.src),!t)){var o=r.getElementsByTagName(\\"script\\");if(o.length)for(var n=o.length-1;n>-1&&(!t||!/^http(s?):/.test(t));)t=o[n--].src}if(!t)throw new Error(\\"Automatic publicPath is not supported in this browser\\");t=t.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),e.p=t})(),e.b=\\"undefined\\"!=typeof document&&document.baseURI||self.location.href,console.log(new URL(e(740),e.b))})();",
+}
+`;
+
+exports[`minify option should work using when the \`minify\` option is \`htmlMinifierTerser\`: errors 1`] = `Array []`;
+
+exports[`minify option should work using when the \`minify\` option is \`htmlMinifierTerser\`: warnings 1`] = `Array []`;
+
 exports[`minify option should work using when the \`minify\` option is \`jsonMinify\` and allows to set \`JSON.stringify\` options: assets 1`] = `
 Object {
   "71be2c5d019f14d29bdd.json": "{
@@ -238,6 +294,28 @@ Object {
 exports[`minify option should work using when the \`minify\` option is \`jsonMinify\`: errors 1`] = `Array []`;
 
 exports[`minify option should work using when the \`minify\` option is \`jsonMinify\`: warnings 1`] = `Array []`;
+
+exports[`minify option should work using when the \`minify\` option is \`minifyHtmlNode\` and allows to set \`@minify-html/node\` options: assets 1`] = `
+Object {
+  "a8b98e927f5dd7bf3b5c.html": "<!doctype html><html lang=en><meta charset=utf-8><title>Hello</title><body><!-- a comment --><h1>Hello, World!</h1><p>Hello there",
+  "main.js": "(()=>{var t={740(t,r,e){\\"use strict\\";t.exports=e.p+\\"a8b98e927f5dd7bf3b5c.html\\"}},r={};function e(o){var n=r[o];if(void 0!==n)return n.exports;var c=r[o]={exports:{}};return t[o](c,c.exports,e),c.exports}e.m=t,e.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(t){if(\\"object\\"==typeof window)return window}}(),e.o=(t,r)=>Object.prototype.hasOwnProperty.call(t,r),(()=>{var t;e.g.importScripts&&(t=e.g.location+\\"\\");var r=e.g.document;if(!t&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(t=r.currentScript.src),!t)){var o=r.getElementsByTagName(\\"script\\");if(o.length)for(var n=o.length-1;n>-1&&(!t||!/^http(s?):/.test(t));)t=o[n--].src}if(!t)throw new Error(\\"Automatic publicPath is not supported in this browser\\");t=t.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),e.p=t})(),e.b=\\"undefined\\"!=typeof document&&document.baseURI||self.location.href,console.log(new URL(e(740),e.b))})();",
+}
+`;
+
+exports[`minify option should work using when the \`minify\` option is \`minifyHtmlNode\` and allows to set \`@minify-html/node\` options: errors 1`] = `Array []`;
+
+exports[`minify option should work using when the \`minify\` option is \`minifyHtmlNode\` and allows to set \`@minify-html/node\` options: warnings 1`] = `Array []`;
+
+exports[`minify option should work using when the \`minify\` option is \`minifyHtmlNode\`: assets 1`] = `
+Object {
+  "c0d53eff977a795a2b19.html": "<!doctype html><html lang=en><meta charset=utf-8><title>Hello</title><body><h1>Hello, World!</h1><p>Hello there",
+  "main.js": "(()=>{var t={740(t,r,e){\\"use strict\\";t.exports=e.p+\\"c0d53eff977a795a2b19.html\\"}},r={};function e(o){var n=r[o];if(void 0!==n)return n.exports;var c=r[o]={exports:{}};return t[o](c,c.exports,e),c.exports}e.m=t,e.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(t){if(\\"object\\"==typeof window)return window}}(),e.o=(t,r)=>Object.prototype.hasOwnProperty.call(t,r),(()=>{var t;e.g.importScripts&&(t=e.g.location+\\"\\");var r=e.g.document;if(!t&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(t=r.currentScript.src),!t)){var o=r.getElementsByTagName(\\"script\\");if(o.length)for(var n=o.length-1;n>-1&&(!t||!/^http(s?):/.test(t));)t=o[n--].src}if(!t)throw new Error(\\"Automatic publicPath is not supported in this browser\\");t=t.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),e.p=t})(),e.b=\\"undefined\\"!=typeof document&&document.baseURI||self.location.href,console.log(new URL(e(740),e.b))})();",
+}
+`;
+
+exports[`minify option should work using when the \`minify\` option is \`minifyHtmlNode\`: errors 1`] = `Array []`;
+
+exports[`minify option should work using when the \`minify\` option is \`minifyHtmlNode\`: warnings 1`] = `Array []`;
 
 exports[`minify option should work using when the \`minify\` option is \`swcMinify\` and ECMA modules output: assets 1`] = `
 Object {
@@ -518,6 +596,46 @@ exports[`minify option should work using when the \`minify\` option is \`swcMini
 
 exports[`minify option should work using when the \`minify\` option is \`swcMinify\`: warnings 1`] = `Array []`;
 
+exports[`minify option should work using when the \`minify\` option is \`swcMinifyHtml\` and allows to set \`@swc/html\` options: assets 1`] = `
+Object {
+  "9dc9caae68393b2c00dd.html": "<!doctype html><html lang=en><meta charset=utf-8><title>Hello</title><body><!-- a comment -->
+    <h1>Hello,    World!</h1>
+    <p>     Hello there      ",
+  "main.js": "(()=>{var t={740(t,r,e){\\"use strict\\";t.exports=e.p+\\"9dc9caae68393b2c00dd.html\\"}},r={};function e(o){var n=r[o];if(void 0!==n)return n.exports;var c=r[o]={exports:{}};return t[o](c,c.exports,e),c.exports}e.m=t,e.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(t){if(\\"object\\"==typeof window)return window}}(),e.o=(t,r)=>Object.prototype.hasOwnProperty.call(t,r),(()=>{var t;e.g.importScripts&&(t=e.g.location+\\"\\");var r=e.g.document;if(!t&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(t=r.currentScript.src),!t)){var o=r.getElementsByTagName(\\"script\\");if(o.length)for(var n=o.length-1;n>-1&&(!t||!/^http(s?):/.test(t));)t=o[n--].src}if(!t)throw new Error(\\"Automatic publicPath is not supported in this browser\\");t=t.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),e.p=t})(),e.b=\\"undefined\\"!=typeof document&&document.baseURI||self.location.href,console.log(new URL(e(740),e.b))})();",
+}
+`;
+
+exports[`minify option should work using when the \`minify\` option is \`swcMinifyHtml\` and allows to set \`@swc/html\` options: errors 1`] = `Array []`;
+
+exports[`minify option should work using when the \`minify\` option is \`swcMinifyHtml\` and allows to set \`@swc/html\` options: warnings 1`] = `Array []`;
+
+exports[`minify option should work using when the \`minify\` option is \`swcMinifyHtml\`: assets 1`] = `
+Object {
+  "4896dc2c417b8ac64625.html": "<!doctype html><html lang=en><meta charset=utf-8><title>Hello</title><h1>Hello,    World!</h1>
+    <p>     Hello there      ",
+  "main.js": "(()=>{var t={740(t,r,e){\\"use strict\\";t.exports=e.p+\\"4896dc2c417b8ac64625.html\\"}},r={};function e(o){var n=r[o];if(void 0!==n)return n.exports;var c=r[o]={exports:{}};return t[o](c,c.exports,e),c.exports}e.m=t,e.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(t){if(\\"object\\"==typeof window)return window}}(),e.o=(t,r)=>Object.prototype.hasOwnProperty.call(t,r),(()=>{var t;e.g.importScripts&&(t=e.g.location+\\"\\");var r=e.g.document;if(!t&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(t=r.currentScript.src),!t)){var o=r.getElementsByTagName(\\"script\\");if(o.length)for(var n=o.length-1;n>-1&&(!t||!/^http(s?):/.test(t));)t=o[n--].src}if(!t)throw new Error(\\"Automatic publicPath is not supported in this browser\\");t=t.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),e.p=t})(),e.b=\\"undefined\\"!=typeof document&&document.baseURI||self.location.href,console.log(new URL(e(740),e.b))})();",
+}
+`;
+
+exports[`minify option should work using when the \`minify\` option is \`swcMinifyHtml\`: errors 1`] = `Array []`;
+
+exports[`minify option should work using when the \`minify\` option is \`swcMinifyHtml\`: warnings 1`] = `Array []`;
+
+exports[`minify option should work using when the \`minify\` option is \`swcMinifyHtmlFragment\`: assets 1`] = `
+Object {
+  "55d2d4d24958302dc10d.html": "<div class=x>
+  
+  <p>     hello     </p>
+</div>
+",
+  "main.js": "(()=>{var t={806(t,r,e){\\"use strict\\";t.exports=e.p+\\"55d2d4d24958302dc10d.html\\"}},r={};function e(o){var c=r[o];if(void 0!==c)return c.exports;var n=r[o]={exports:{}};return t[o](n,n.exports,e),n.exports}e.m=t,e.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(t){if(\\"object\\"==typeof window)return window}}(),e.o=(t,r)=>Object.prototype.hasOwnProperty.call(t,r),(()=>{var t;e.g.importScripts&&(t=e.g.location+\\"\\");var r=e.g.document;if(!t&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(t=r.currentScript.src),!t)){var o=r.getElementsByTagName(\\"script\\");if(o.length)for(var c=o.length-1;c>-1&&(!t||!/^http(s?):/.test(t));)t=o[c--].src}if(!t)throw new Error(\\"Automatic publicPath is not supported in this browser\\");t=t.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),e.p=t})(),e.b=\\"undefined\\"!=typeof document&&document.baseURI||self.location.href,console.log(new URL(e(806),e.b))})();",
+}
+`;
+
+exports[`minify option should work using when the \`minify\` option is \`swcMinifyHtmlFragment\`: errors 1`] = `Array []`;
+
+exports[`minify option should work using when the \`minify\` option is \`swcMinifyHtmlFragment\`: warnings 1`] = `Array []`;
+
 exports[`minify option should work using when the \`minify\` option is \`terserMinify\` and ECMA modules output: assets 1`] = `
 Object {
   "main.js": "var e={d:(o,t)=>{for(var r in t)e.o(t,r)&&!e.o(o,r)&&Object.defineProperty(o,r,{enumerable:!0,get:t[r]})},o:(e,o)=>Object.prototype.hasOwnProperty.call(e,o)},o={};e.d(o,{A:()=>r});function t(){console.log(11)}t();const r=t,n=o.A;export{n as default};",
@@ -787,6 +905,17 @@ Object {
 exports[`minify option should work when \`minify\` is an array of functions: errors 1`] = `Array []`;
 
 exports[`minify option should work when \`minify\` is an array of functions: warnings 1`] = `Array []`;
+
+exports[`minify option should work when chaining HTML minimizers via an array of \`minify\` functions: assets 1`] = `
+Object {
+  "1d477fcae4c6c3852830.html": "<!doctype html> <html lang=\\"en\\"> <head> <meta charset=\\"utf-8\\"/> <title>Hello</title> </head> <body> <h1>Hello, World!</h1> <p> Hello there </p> </body> </html> ",
+  "main.js": "(()=>{var t={740(t,r,e){\\"use strict\\";t.exports=e.p+\\"1d477fcae4c6c3852830.html\\"}},r={};function e(o){var n=r[o];if(void 0!==n)return n.exports;var c=r[o]={exports:{}};return t[o](c,c.exports,e),c.exports}e.m=t,e.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(t){if(\\"object\\"==typeof window)return window}}(),e.o=(t,r)=>Object.prototype.hasOwnProperty.call(t,r),(()=>{var t;e.g.importScripts&&(t=e.g.location+\\"\\");var r=e.g.document;if(!t&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(t=r.currentScript.src),!t)){var o=r.getElementsByTagName(\\"script\\");if(o.length)for(var n=o.length-1;n>-1&&(!t||!/^http(s?):/.test(t));)t=o[n--].src}if(!t)throw new Error(\\"Automatic publicPath is not supported in this browser\\");t=t.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),e.p=t})(),e.b=\\"undefined\\"!=typeof document&&document.baseURI||self.location.href,console.log(new URL(e(740),e.b))})();",
+}
+`;
+
+exports[`minify option should work when chaining HTML minimizers via an array of \`minify\` functions: errors 1`] = `Array []`;
+
+exports[`minify option should work when chaining HTML minimizers via an array of \`minify\` functions: warnings 1`] = `Array []`;
 
 exports[`minify option should work when the "parallel" option is "false": assets 1`] = `
 Object {
