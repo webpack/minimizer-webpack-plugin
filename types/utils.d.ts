@@ -13,6 +13,72 @@ export type ExtractedComments = string[];
 export type Task<T> = () => Promise<T>;
 export type FunctionReturning<T> = () => T;
 /**
+ * Minify CSS using `clean-css`.
+ * @param {Input} input input
+ * @param {RawSourceMap=} sourceMap source map
+ * @param {CustomOptions=} minimizerOptions options
+ * @returns {Promise<MinimizedResult>} minimized result
+ */
+export function cleanCssMinify(
+  input: Input,
+  sourceMap?: RawSourceMap | undefined,
+  minimizerOptions?: CustomOptions | undefined,
+): Promise<MinimizedResult>;
+export namespace cleanCssMinify {
+  /**
+   * @returns {string | undefined} the minimizer version
+   */
+  function getMinimizerVersion(): string | undefined;
+  /**
+   * @returns {boolean | undefined} true if worker threads are supported
+   */
+  function supportsWorkerThreads(): boolean | undefined;
+}
+/**
+ * Minify CSS using `cssnano` (via `postcss`).
+ * @param {Input} input input
+ * @param {RawSourceMap=} sourceMap source map
+ * @param {CustomOptions=} minimizerOptions options
+ * @returns {Promise<MinimizedResult>} minimized result
+ */
+export function cssnanoMinify(
+  input: Input,
+  sourceMap?: RawSourceMap | undefined,
+  minimizerOptions?: CustomOptions | undefined,
+): Promise<MinimizedResult>;
+export namespace cssnanoMinify {
+  /**
+   * @returns {string | undefined} the minimizer version
+   */
+  function getMinimizerVersion(): string | undefined;
+  /**
+   * @returns {boolean | undefined} true if worker threads are supported
+   */
+  function supportsWorkerThreads(): boolean | undefined;
+}
+/**
+ * Minify CSS using `csso`.
+ * @param {Input} input input
+ * @param {RawSourceMap=} sourceMap source map
+ * @param {CustomOptions=} minimizerOptions options
+ * @returns {Promise<MinimizedResult>} minimized result
+ */
+export function cssoMinify(
+  input: Input,
+  sourceMap?: RawSourceMap | undefined,
+  minimizerOptions?: CustomOptions | undefined,
+): Promise<MinimizedResult>;
+export namespace cssoMinify {
+  /**
+   * @returns {string | undefined} the minimizer version
+   */
+  function getMinimizerVersion(): string | undefined;
+  /**
+   * @returns {boolean | undefined} true if worker threads are supported
+   */
+  function supportsWorkerThreads(): boolean | undefined;
+}
+/**
  * @param {Input} input input
  * @param {RawSourceMap=} sourceMap source map
  * @param {CustomOptions=} minimizerOptions options
@@ -30,6 +96,28 @@ export namespace esbuildMinify {
   function getMinimizerVersion(): string | undefined;
   /**
    * @returns {boolean | undefined} true if worker thread is supported, false otherwise
+   */
+  function supportsWorkerThreads(): boolean | undefined;
+}
+/**
+ * Minify CSS using `esbuild` (with the CSS loader).
+ * @param {Input} input input
+ * @param {RawSourceMap=} sourceMap source map
+ * @param {CustomOptions=} minimizerOptions options
+ * @returns {Promise<MinimizedResult>} minimized result
+ */
+export function esbuildMinifyCss(
+  input: Input,
+  sourceMap?: RawSourceMap | undefined,
+  minimizerOptions?: CustomOptions | undefined,
+): Promise<MinimizedResult>;
+export namespace esbuildMinifyCss {
+  /**
+   * @returns {string | undefined} the minimizer version
+   */
+  function getMinimizerVersion(): string | undefined;
+  /**
+   * @returns {boolean | undefined} false because `esbuild` is a native binding
    */
   function supportsWorkerThreads(): boolean | undefined;
 }
@@ -95,6 +183,28 @@ export namespace jsonMinify {
   function supportsWorkerThreads(): boolean;
 }
 /**
+ * Minify CSS using `lightningcss`.
+ * @param {Input} input input
+ * @param {RawSourceMap=} sourceMap source map
+ * @param {CustomOptions=} minimizerOptions options
+ * @returns {Promise<MinimizedResult>} minimized result
+ */
+export function lightningCssMinify(
+  input: Input,
+  sourceMap?: RawSourceMap | undefined,
+  minimizerOptions?: CustomOptions | undefined,
+): Promise<MinimizedResult>;
+export namespace lightningCssMinify {
+  /**
+   * @returns {string | undefined} the minimizer version
+   */
+  function getMinimizerVersion(): string | undefined;
+  /**
+   * @returns {boolean | undefined} false because `lightningcss` is a native binding
+   */
+  function supportsWorkerThreads(): boolean | undefined;
+}
+/**
  * @template T
  * @typedef {() => T} FunctionReturning
  */
@@ -146,6 +256,28 @@ export namespace swcMinify {
   function getMinimizerVersion(): string | undefined;
   /**
    * @returns {boolean | undefined} true if worker thread is supported, false otherwise
+   */
+  function supportsWorkerThreads(): boolean | undefined;
+}
+/**
+ * Minify CSS using `@swc/css`.
+ * @param {Input} input input
+ * @param {RawSourceMap=} sourceMap source map
+ * @param {CustomOptions=} minimizerOptions options
+ * @returns {Promise<MinimizedResult>} minimized result
+ */
+export function swcMinifyCss(
+  input: Input,
+  sourceMap?: RawSourceMap | undefined,
+  minimizerOptions?: CustomOptions | undefined,
+): Promise<MinimizedResult>;
+export namespace swcMinifyCss {
+  /**
+   * @returns {string | undefined} the minimizer version
+   */
+  function getMinimizerVersion(): string | undefined;
+  /**
+   * @returns {boolean | undefined} false because `@swc/css` is a native binding
    */
   function supportsWorkerThreads(): boolean | undefined;
 }

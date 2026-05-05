@@ -40,7 +40,13 @@
     "nocheck",
     "dont",
     "doctype",
-    "wilsonzlin"
+    "wilsonzlin",
+    "cssnano",
+    "csso",
+    "lightningcss",
+    "sourcefile",
+    "stringifier",
+    "sourcesContent"
   ],
   "ignorePaths": [
     "CHANGELOG.md",

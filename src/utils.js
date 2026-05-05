@@ -289,7 +289,8 @@ async function terserMinify(
   // Copy `terser` options
   const terserOptions = buildTerserOptions(minimizerOptions);
 
-  // Let terser generate a SourceMap
+  // Let terser generate a SourceMap. The dispatcher in `minify.js`
+  // chains the previous step's map onto this one.
   if (sourceMap) {
     terserOptions.sourceMap = { asObject: true };
   }
@@ -538,7 +539,8 @@ async function uglifyJsMinify(
   // Copy `uglify-js` options
   const uglifyJsOptions = buildUglifyJsOptions(minimizerOptions);
 
-  // Let terser generate a SourceMap
+  // Let `uglify-js` generate a SourceMap. The dispatcher in `minify.js`
+  // chains the previous step's map onto this one.
   if (sourceMap) {
     uglifyJsOptions.sourceMap = true;
   }
@@ -740,7 +742,7 @@ async function swcMinify(input, sourceMap, minimizerOptions, extractComments) {
     swcOptions.format = {};
   }
 
-  // Let `swc` generate a SourceMap
+  // Let `swc` generate a SourceMap.
   if (sourceMap) {
     swcOptions.sourceMap = true;
   }
@@ -1193,6 +1195,546 @@ swcMinifyHtmlFragment.getMinimizerVersion = () => {
  */
 swcMinifyHtmlFragment.supportsWorkerThreads = () => false;
 
+/* istanbul ignore next */
+/**
+ * Minify CSS using `cssnano` (via `postcss`).
+ * @param {Input} input input
+ * @param {RawSourceMap=} sourceMap source map
+ * @param {CustomOptions=} minimizerOptions options
+ * @returns {Promise<MinimizedResult>} minimized result
+ */
+async function cssnanoMinify(
+  input,
+  sourceMap,
+  minimizerOptions = { preset: "default" },
+) {
+  /**
+   * @template T
+   * @param {string} mod module to load
+   * @returns {Promise<T>} loaded module
+   */
+  const load = async (mod) => {
+    let exports;
+
+    try {
+      exports = require(mod);
+
+      return exports;
+    } catch (err) {
+      let importESM;
+
+      try {
+        // eslint-disable-next-line no-new-func
+        importESM = new Function("id", "return import(id);");
+      } catch (_err) {
+        importESM = null;
+      }
+
+      if (
+        /** @type {Error & { code: string }} */
+        (err).code === "ERR_REQUIRE_ESM" &&
+        importESM
+      ) {
+        exports = await importESM(mod);
+
+        return exports.default;
+      }
+
+      throw err;
+    }
+  };
+
+  let postcss;
+  let cssnano;
+
+  try {
+    postcss = require("postcss");
+    cssnano = require("cssnano");
+  } catch (err) {
+    return { errors: [/** @type {Error} */ (err)] };
+  }
+
+  const [[name, code]] = Object.entries(input);
+  /** @type {import("postcss").ProcessOptions} */
+  const postcssOptions = {
+    from: name,
+    .../** @type {{ processorOptions?: import("postcss").ProcessOptions }} */ (
+      minimizerOptions
+    ).processorOptions,
+  };
+
+  if (typeof postcssOptions.parser === "string") {
+    try {
+      postcssOptions.parser = await load(postcssOptions.parser);
+    } catch (error) {
+      throw new Error(
+        `Loading PostCSS "${postcssOptions.parser}" parser failed: ${
+          /** @type {Error} */ (error).message
+        }\n\n(@${name})`,
+        { cause: error },
+      );
+    }
+  }
+
+  if (typeof postcssOptions.stringifier === "string") {
+    try {
+      postcssOptions.stringifier = await load(postcssOptions.stringifier);
+    } catch (error) {
+      throw new Error(
+        `Loading PostCSS "${postcssOptions.stringifier}" stringifier failed: ${
+          /** @type {Error} */ (error).message
+        }\n\n(@${name})`,
+        { cause: error },
+      );
+    }
+  }
+
+  if (typeof postcssOptions.syntax === "string") {
+    try {
+      postcssOptions.syntax = await load(postcssOptions.syntax);
+    } catch (error) {
+      throw new Error(
+        `Loading PostCSS "${postcssOptions.syntax}" syntax failed: ${
+          /** @type {Error} */ (error).message
+        }\n\n(@${name})`,
+        { cause: error },
+      );
+    }
+  }
+
+  if (sourceMap) {
+    postcssOptions.map = { annotation: false };
+  }
+
+  const result = await postcss
+    .default([cssnano(minimizerOptions)])
+    .process(code, postcssOptions);
+
+  return {
+    code: result.css,
+    map: result.map
+      ? /** @type {RawSourceMap} */ (
+          /** @type {unknown} */ (result.map.toJSON())
+        )
+      : undefined,
+    warnings: result.warnings().map(String),
+  };
+}
+
+/**
+ * @returns {string | undefined} the minimizer version
+ */
+cssnanoMinify.getMinimizerVersion = () => {
+  let packageJson;
+
+  try {
+    packageJson = require("cssnano/package.json");
+  } catch (_err) {
+    // Ignore
+  }
+
+  return packageJson && packageJson.version;
+};
+
+/**
+ * @returns {boolean | undefined} true if worker threads are supported
+ */
+cssnanoMinify.supportsWorkerThreads = () => true;
+
+/* istanbul ignore next */
+/**
+ * Minify CSS using `csso`.
+ * @param {Input} input input
+ * @param {RawSourceMap=} sourceMap source map
+ * @param {CustomOptions=} minimizerOptions options
+ * @returns {Promise<MinimizedResult>} minimized result
+ */
+async function cssoMinify(input, sourceMap, minimizerOptions) {
+  let csso;
+
+  try {
+    csso = require("csso");
+  } catch (err) {
+    return { errors: [/** @type {Error} */ (err)] };
+  }
+
+  const [[filename, code]] = Object.entries(input);
+  const result = csso.minify(code, {
+    filename,
+    sourceMap: Boolean(sourceMap),
+    ...minimizerOptions,
+  });
+
+  return {
+    code: result.css,
+    map: result.map
+      ? /** @type {RawSourceMap} */ (
+          /** @type {{ toJSON(): RawSourceMap }} */ (result.map).toJSON()
+        )
+      : undefined,
+  };
+}
+
+/**
+ * @returns {string | undefined} the minimizer version
+ */
+cssoMinify.getMinimizerVersion = () => {
+  let packageJson;
+
+  try {
+    packageJson = require("csso/package.json");
+  } catch (_err) {
+    // Ignore
+  }
+
+  return packageJson && packageJson.version;
+};
+
+/**
+ * @returns {boolean | undefined} true if worker threads are supported
+ */
+cssoMinify.supportsWorkerThreads = () => true;
+
+/* istanbul ignore next */
+/**
+ * Minify CSS using `clean-css`.
+ * @param {Input} input input
+ * @param {RawSourceMap=} sourceMap source map
+ * @param {CustomOptions=} minimizerOptions options
+ * @returns {Promise<MinimizedResult>} minimized result
+ */
+async function cleanCssMinify(input, sourceMap, minimizerOptions) {
+  let CleanCSS;
+
+  try {
+    CleanCSS = require("clean-css");
+  } catch (err) {
+    return { errors: [/** @type {Error} */ (err)] };
+  }
+
+  const [[name, code]] = Object.entries(input);
+  const result = await new CleanCSS({
+    sourceMap: Boolean(sourceMap),
+    ...minimizerOptions,
+    returnPromise: true,
+  }).minify({ [name]: { styles: code } });
+  const generatedSourceMap = result.sourceMap
+    ? /** @type {RawSourceMap} */ (
+        /** @type {{ toJSON(): RawSourceMap }} */ (
+          /** @type {unknown} */ (result.sourceMap)
+        ).toJSON()
+      )
+    : undefined;
+
+  // workaround for source maps on windows
+  if (generatedSourceMap) {
+    const isWindowsPathSep = require("path").sep === "\\";
+
+    generatedSourceMap.sources = generatedSourceMap.sources.map(
+      /**
+       * @param {string | null} item path item
+       * @returns {string} normalized path
+       */
+      (item) =>
+        isWindowsPathSep ? (item || "").replace(/\\/g, "/") : item || "",
+    );
+  }
+
+  return {
+    code: result.styles,
+    map: generatedSourceMap,
+    warnings: result.warnings,
+  };
+}
+
+/**
+ * @returns {string | undefined} the minimizer version
+ */
+cleanCssMinify.getMinimizerVersion = () => {
+  let packageJson;
+
+  try {
+    packageJson = require("clean-css/package.json");
+  } catch (_err) {
+    // Ignore
+  }
+
+  return packageJson && packageJson.version;
+};
+
+/**
+ * @returns {boolean | undefined} true if worker threads are supported
+ */
+cleanCssMinify.supportsWorkerThreads = () => true;
+
+/* istanbul ignore next */
+/**
+ * Minify CSS using `esbuild` (with the CSS loader).
+ * @param {Input} input input
+ * @param {RawSourceMap=} sourceMap source map
+ * @param {CustomOptions=} minimizerOptions options
+ * @returns {Promise<MinimizedResult>} minimized result
+ */
+async function esbuildMinifyCss(input, sourceMap, minimizerOptions) {
+  /**
+   * @param {import("esbuild").TransformOptions & { ecma?: string | number, module?: boolean }=} esbuildOptions esbuild options
+   * @returns {import("esbuild").TransformOptions} built esbuild options
+   */
+  const buildEsbuildOptions = (esbuildOptions = {}) => {
+    // `module` and `ecma` are JavaScript-only concepts; the dispatcher
+    // injects them for every minimizer, but esbuild's CSS transform
+    // rejects unknown options.
+    delete esbuildOptions.ecma;
+    delete esbuildOptions.module;
+
+    // Need deep copy objects to avoid https://github.com/terser/terser/issues/366
+    return {
+      loader: "css",
+      minify: true,
+      legalComments: "inline",
+      ...esbuildOptions,
+      sourcemap: false,
+    };
+  };
+
+  let esbuild;
+
+  try {
+    esbuild = require("esbuild");
+  } catch (err) {
+    return { errors: [/** @type {Error} */ (err)] };
+  }
+
+  // Copy `esbuild` options
+  const esbuildOptions = buildEsbuildOptions(minimizerOptions);
+
+  // Let `esbuild` generate a SourceMap
+  if (sourceMap) {
+    esbuildOptions.sourcemap = true;
+    esbuildOptions.sourcesContent = false;
+  }
+
+  const [[filename, code]] = Object.entries(input);
+
+  esbuildOptions.sourcefile = filename;
+
+  const result = await esbuild.transform(code, esbuildOptions);
+
+  return {
+    code: result.code,
+    map: result.map ? JSON.parse(result.map) : undefined,
+    warnings:
+      result.warnings.length > 0
+        ? result.warnings.map((item) => {
+            const plugin = item.pluginName
+              ? `\nPlugin Name: ${item.pluginName}`
+              : "";
+            const location = item.location
+              ? `\n\n${item.location.file}:${item.location.line}:${item.location.column}:\n  ${item.location.line} | ${item.location.lineText}\n\nSuggestion: ${item.location.suggestion}`
+              : "";
+            const notes =
+              item.notes.length > 0
+                ? `\n\nNotes:\n${item.notes
+                    .map(
+                      (note) =>
+                        `${
+                          note.location
+                            ? `[${note.location.file}:${note.location.line}:${note.location.column}] `
+                            : ""
+                        }${note.text}${
+                          note.location
+                            ? `\nSuggestion: ${note.location.suggestion}`
+                            : ""
+                        }${
+                          note.location
+                            ? `\nLine text:\n${note.location.lineText}\n`
+                            : ""
+                        }`,
+                    )
+                    .join("\n")}`
+                : "";
+
+            return `${item.text} [${item.id}]${plugin}${location}${
+              item.detail ? `\nDetails:\n${item.detail}` : ""
+            }${notes}`;
+          })
+        : [],
+  };
+}
+
+/**
+ * @returns {string | undefined} the minimizer version
+ */
+esbuildMinifyCss.getMinimizerVersion = () => {
+  let packageJson;
+
+  try {
+    packageJson = require("esbuild/package.json");
+  } catch (_err) {
+    // Ignore
+  }
+
+  return packageJson && packageJson.version;
+};
+
+/**
+ * @returns {boolean | undefined} false because `esbuild` is a native binding
+ */
+esbuildMinifyCss.supportsWorkerThreads = () => false;
+
+/* istanbul ignore next */
+/**
+ * Minify CSS using `lightningcss`.
+ * @param {Input} input input
+ * @param {RawSourceMap=} sourceMap source map
+ * @param {CustomOptions=} minimizerOptions options
+ * @returns {Promise<MinimizedResult>} minimized result
+ */
+async function lightningCssMinify(input, sourceMap, minimizerOptions) {
+  let lightningCss;
+
+  try {
+    lightningCss = require("lightningcss");
+  } catch (err) {
+    return { errors: [/** @type {Error} */ (err)] };
+  }
+
+  const [[filename, code]] = Object.entries(input);
+  /**
+   * @param {Partial<import("lightningcss").TransformOptions<import("lightningcss").CustomAtRules>>=} lightningCssOptions lightning css options
+   * @returns {import("lightningcss").TransformOptions<import("lightningcss").CustomAtRules>} built lightning css options
+   */
+  const buildLightningCssOptions = (lightningCssOptions = {}) =>
+    // Need deep copy objects to avoid https://github.com/terser/terser/issues/366
+    ({
+      minify: true,
+      ...lightningCssOptions,
+      sourceMap: false,
+      filename,
+      code: new Uint8Array(Buffer.from(code)),
+    });
+
+  // Copy `lightningCss` options
+  const lightningCssOptions = buildLightningCssOptions(minimizerOptions);
+
+  // Let `lightningcss` generate a SourceMap. The dispatcher in
+  // `minify.js` chains the previous step's map onto this one.
+  if (sourceMap) {
+    lightningCssOptions.sourceMap = true;
+  }
+
+  const result = lightningCss.transform(lightningCssOptions);
+
+  return {
+    code: result.code.toString(),
+    map: result.map ? JSON.parse(result.map.toString()) : undefined,
+  };
+}
+
+/**
+ * @returns {string | undefined} the minimizer version
+ */
+lightningCssMinify.getMinimizerVersion = () => {
+  let packageJson;
+
+  try {
+    packageJson = require("lightningcss/package.json");
+  } catch (_err) {
+    // Ignore
+  }
+
+  return packageJson && packageJson.version;
+};
+
+/**
+ * @returns {boolean | undefined} false because `lightningcss` is a native binding
+ */
+lightningCssMinify.supportsWorkerThreads = () => false;
+
+/* istanbul ignore next */
+/**
+ * Map a `@swc/css` diagnostic to a regular `Error`.
+ * @param {EXPECTED_OBJECT} diagnostic diagnostic from `@swc/css`
+ * @returns {Error} error preserving `span` and `level` from the diagnostic
+ */
+function swcCssDiagnosticToError(diagnostic) {
+  const typed =
+    /** @type {{ message: string, span?: unknown, level?: unknown }} */
+    (diagnostic);
+  /** @type {Error & { span?: unknown, level?: unknown }} */
+  const error = new Error(typed.message);
+
+  error.span = typed.span;
+  error.level = typed.level;
+
+  return error;
+}
+
+/* istanbul ignore next */
+/**
+ * Minify CSS using `@swc/css`.
+ * @param {Input} input input
+ * @param {RawSourceMap=} sourceMap source map
+ * @param {CustomOptions=} minimizerOptions options
+ * @returns {Promise<MinimizedResult>} minimized result
+ */
+async function swcMinifyCss(input, sourceMap, minimizerOptions) {
+  let swc;
+
+  try {
+    swc = require("@swc/css");
+  } catch (err) {
+    return { errors: [/** @type {Error} */ (err)] };
+  }
+
+  const [[filename, code]] = Object.entries(input);
+  /**
+   * @param {Partial<import("@swc/css").MinifyOptions>=} swcOptions swc options
+   * @returns {import("@swc/css").MinifyOptions} built swc options
+   */
+  const buildSwcOptions = (swcOptions = {}) =>
+    // Need deep copy objects to avoid https://github.com/terser/terser/issues/366
+    ({ ...swcOptions, filename });
+
+  // Copy `swc` options
+  const swcOptions = buildSwcOptions(minimizerOptions);
+
+  // Let `swc` generate a SourceMap
+  if (sourceMap) {
+    swcOptions.sourceMap = true;
+  }
+
+  const result = await swc.minify(Buffer.from(code), swcOptions);
+
+  return {
+    code: result.code.toString(),
+    map: result.map ? JSON.parse(result.map.toString()) : undefined,
+    errors: result.errors
+      ? result.errors.map(swcCssDiagnosticToError)
+      : undefined,
+  };
+}
+
+/**
+ * @returns {string | undefined} the minimizer version
+ */
+swcMinifyCss.getMinimizerVersion = () => {
+  let packageJson;
+
+  try {
+    packageJson = require("@swc/css/package.json");
+  } catch (_err) {
+    // Ignore
+  }
+
+  return packageJson && packageJson.version;
+};
+
+/**
+ * @returns {boolean | undefined} false because `@swc/css` is a native binding
+ */
+swcMinifyCss.supportsWorkerThreads = () => false;
+
 /**
  * @template T
  * @typedef {() => T} FunctionReturning
@@ -1223,13 +1765,19 @@ function memoize(fn) {
 }
 
 module.exports = {
+  cleanCssMinify,
+  cssnanoMinify,
+  cssoMinify,
   esbuildMinify,
+  esbuildMinifyCss,
   getEcmaVersion,
   htmlMinifierTerser,
   jsonMinify,
+  lightningCssMinify,
   memoize,
   minifyHtmlNode,
   swcMinify,
+  swcMinifyCss,
   swcMinifyHtml,
   swcMinifyHtmlFragment,
   terserMinify,

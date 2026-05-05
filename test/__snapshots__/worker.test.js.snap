@@ -223,15 +223,14 @@ Object {
   "errors": Array [],
   "extractedComments": Array [],
   "map": Object {
-    "ignoreList": Array [],
-    "mappings": "AAAA,SAASA,IAAIC,GAAK,GAAIA,EAAK,OAAOC,KAAwB",
+    "mappings": "AAAA,SAASA,IAAIC,GACT,GACIA,EAAA,OACAC,KAAAA",
     "names": Array [
       "foo",
       "x",
-      "bar",
+      "not_called1",
     ],
     "sources": Array [
-      "test6.js",
+      "test1.js",
     ],
     "version": 3,
   },

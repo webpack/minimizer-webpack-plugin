@@ -14,8 +14,9 @@
 # terser-webpack-plugin
 
 This plugin minifies your assets in a webpack build. It ships with several
-built-in minimizers covering JavaScript, JSON, and HTML — pick one with the
-[`minify`](#minify) option and target the right files with [`test`](#test).
+built-in minimizers covering JavaScript, JSON, HTML, and CSS — pick one
+with the [`minify`](#minify) option and target the right files with
+[`test`](#test).
 
 JavaScript minimizers:
 
@@ -33,6 +34,15 @@ HTML minimizers:
 - [`html-minifier-terser`](https://github.com/terser/html-minifier-terser) — `TerserPlugin.htmlMinifierTerser`. The default HTML minimizer. JavaScript-based, no native dependency. Requires `npm install --save-dev html-minifier-terser`.
 - [`@swc/html`](https://github.com/swc-project/swc) — `TerserPlugin.swcMinifyHtml` (full HTML documents) and `TerserPlugin.swcMinifyHtmlFragment` (HTML fragments, e.g. `<template>` content). Very fast Rust-based platform for the Web. Requires `npm install --save-dev @swc/html`.
 - [`@minify-html/node`](https://github.com/wilsonzlin/minify-html) — `TerserPlugin.minifyHtmlNode`. A Rust HTML minifier optimised for speed and effectiveness. Requires `npm install --save-dev @minify-html/node`.
+
+CSS minimizers:
+
+- [`cssnano`](https://cssnano.github.io/cssnano/) — `TerserPlugin.cssnanoMinify`. The default CSS minimizer. Built on top of [PostCSS](https://postcss.org/). Requires `npm install --save-dev cssnano postcss`.
+- [`csso`](https://github.com/css/csso) — `TerserPlugin.cssoMinify`. A CSS minifier with structural optimisations. Requires `npm install --save-dev csso`.
+- [`clean-css`](https://github.com/clean-css/clean-css) — `TerserPlugin.cleanCssMinify`. A widely-used CSS optimiser. Requires `npm install --save-dev clean-css`.
+- [`esbuild`](https://github.com/evanw/esbuild) — `TerserPlugin.esbuildMinifyCss`. Very fast CSS minification using esbuild's CSS loader. Requires `npm install --save-dev esbuild`.
+- [`lightningcss`](https://github.com/parcel-bundler/lightningcss) — `TerserPlugin.lightningCssMinify`. A Rust-based CSS parser, transformer, and minifier. Requires `npm install --save-dev lightningcss`.
+- [`@swc/css`](https://github.com/swc-project/swc) — `TerserPlugin.swcMinifyCss`. A very fast Rust-based CSS minifier. Requires `npm install --save-dev @swc/css`.
 
 All of the non-default minimizers are declared as **optional** peer
 dependencies — install only the ones you actually use. You can also stack
@@ -1065,6 +1075,196 @@ module.exports = {
 
 You can also stack multiple `TerserPlugin` instances to compress different files with different `minify` functions in the same build (e.g. JS with `terserMinify`, HTML with `htmlMinifierTerser`, JSON with `jsonMinify`).
 
+### CSS
+
+The plugin can minify CSS assets too. Pick one of the bundled CSS
+minimizers and set `test` to match your CSS files.
+
+Available CSS minimizers:
+
+- `TerserPlugin.cssnanoMinify` — uses [`cssnano`](https://cssnano.github.io/cssnano/) (via [`postcss`](https://postcss.org/)).
+- `TerserPlugin.cssoMinify` — uses [`csso`](https://github.com/css/csso).
+- `TerserPlugin.cleanCssMinify` — uses [`clean-css`](https://github.com/clean-css/clean-css).
+- `TerserPlugin.esbuildMinifyCss` — uses [`esbuild`](https://github.com/evanw/esbuild) with the CSS loader.
+- `TerserPlugin.lightningCssMinify` — uses [`lightningcss`](https://github.com/parcel-bundler/lightningcss).
+- `TerserPlugin.swcMinifyCss` — uses [`@swc/css`](https://github.com/swc-project/swc).
+
+The CSS minimizers are optional peer dependencies — install only the ones
+you actually use:
+
+```console
+npm install --save-dev cssnano postcss
+# or
+npm install --save-dev csso
+# or
+npm install --save-dev clean-css
+# or
+npm install --save-dev esbuild
+# or
+npm install --save-dev lightningcss
+# or
+npm install --save-dev @swc/css
+```
+
+> **Note**
+>
+> CSS assets typically come from plugins like
+> [`mini-css-extract-plugin`](https://github.com/webpack-contrib/mini-css-extract-plugin)
+> or webpack's [asset modules](https://webpack.js.org/guides/asset-modules/).
+
+#### `cssnano`
+
+[`cssnano`](https://cssnano.github.io/cssnano/) is the default CSS minimizer. It runs as a [PostCSS](https://postcss.org/) plugin.
+
+**webpack.config.js**
+
+```js
+const TerserPlugin = require("terser-webpack-plugin");
+
+module.exports = {
+  optimization: {
+    minimize: true,
+    minimizer: [
+      // Keeps the default Terser plugin for JS files
+      "...",
+      new TerserPlugin({
+        test: /\.css(\?.*)?$/i,
+        minify: TerserPlugin.cssnanoMinify,
+        // Options - https://cssnano.github.io/cssnano/docs/config-file/
+        minimizerOptions: {
+          preset: "default",
+        },
+      }),
+    ],
+  },
+};
+```
+
+#### `csso`
+
+[`csso`](https://github.com/css/csso) is a CSS minifier with structural optimisations.
+
+**webpack.config.js**
+
+```js
+const TerserPlugin = require("terser-webpack-plugin");
+
+module.exports = {
+  optimization: {
+    minimize: true,
+    minimizer: [
+      "...",
+      new TerserPlugin({
+        test: /\.css(\?.*)?$/i,
+        minify: TerserPlugin.cssoMinify,
+        // Options - https://github.com/css/csso#minifysource-options
+        minimizerOptions: {},
+      }),
+    ],
+  },
+};
+```
+
+#### `clean-css`
+
+[`clean-css`](https://github.com/clean-css/clean-css) is a widely-used CSS optimiser.
+
+**webpack.config.js**
+
+```js
+const TerserPlugin = require("terser-webpack-plugin");
+
+module.exports = {
+  optimization: {
+    minimize: true,
+    minimizer: [
+      "...",
+      new TerserPlugin({
+        test: /\.css(\?.*)?$/i,
+        minify: TerserPlugin.cleanCssMinify,
+        // Options - https://github.com/clean-css/clean-css#constructor-options
+        minimizerOptions: {},
+      }),
+    ],
+  },
+};
+```
+
+#### `esbuild`
+
+[`esbuild`](https://github.com/evanw/esbuild) ships with a fast CSS minifier (used via its CSS loader).
+
+**webpack.config.js**
+
+```js
+const TerserPlugin = require("terser-webpack-plugin");
+
+module.exports = {
+  optimization: {
+    minimize: true,
+    minimizer: [
+      "...",
+      new TerserPlugin({
+        test: /\.css(\?.*)?$/i,
+        minify: TerserPlugin.esbuildMinifyCss,
+        // Options - https://esbuild.github.io/api/#transform-api
+        minimizerOptions: {},
+      }),
+    ],
+  },
+};
+```
+
+#### `lightningcss`
+
+[`lightningcss`](https://github.com/parcel-bundler/lightningcss) is a Rust-based CSS parser, transformer, and minifier.
+
+**webpack.config.js**
+
+```js
+const TerserPlugin = require("terser-webpack-plugin");
+
+module.exports = {
+  optimization: {
+    minimize: true,
+    minimizer: [
+      "...",
+      new TerserPlugin({
+        test: /\.css(\?.*)?$/i,
+        minify: TerserPlugin.lightningCssMinify,
+        // Options - https://lightningcss.dev/transpilation.html
+        minimizerOptions: {},
+      }),
+    ],
+  },
+};
+```
+
+#### `@swc/css`
+
+[`@swc/css`](https://github.com/swc-project/swc) is a Rust-based CSS minifier.
+
+**webpack.config.js**
+
+```js
+const TerserPlugin = require("terser-webpack-plugin");
+
+module.exports = {
+  optimization: {
+    minimize: true,
+    minimizer: [
+      "...",
+      new TerserPlugin({
+        test: /\.css(\?.*)?$/i,
+        minify: TerserPlugin.swcMinifyCss,
+        // Options - https://github.com/swc-project/bindings/blob/main/packages/css/index.ts
+        minimizerOptions: {},
+      }),
+    ],
+  },
+};
+```
+
 ### Custom Minify Function
 
 Override the default minify function - use `uglify-js` for minification.
@@ -1120,12 +1320,17 @@ With built-in minify functions:
 
 ```ts
 import { type JsMinifyOptions as SwcOptions } from "@swc/core";
+import { type MinifyOptions as SwcCssOptions } from "@swc/css";
 import {
   type FragmentOptions as SwcHtmlFragmentOptions,
   type Options as SwcHtmlOptions,
 } from "@swc/html";
+import { type OptionsOutput as CleanCssOptions } from "clean-css";
+import { type Options as CssnanoOptions } from "cssnano";
+import { type CompressOptions as CssoOptions } from "csso";
 import { type TransformOptions as EsbuildOptions } from "esbuild";
 import { type Options as HtmlMinifierTerserOptions } from "html-minifier-terser";
+import { type TransformOptions as LightningCssOptions } from "lightningcss";
 import { type MinifyOptions as TerserOptions } from "terser";
 import { type MinifyOptions as UglifyJSOptions } from "uglify-js";
 
@@ -1180,6 +1385,50 @@ module.exports = {
         minify: TerserPlugin.swcMinifyHtmlFragment,
         minimizerOptions: {
           // `@swc/html` fragment options
+        },
+      }),
+
+      // CSS minimizers
+      new TerserPlugin<CssnanoOptions>({
+        test: /\.css(\?.*)?$/i,
+        minify: TerserPlugin.cssnanoMinify,
+        minimizerOptions: {
+          // `cssnano` options
+        },
+      }),
+      new TerserPlugin<CssoOptions>({
+        test: /\.css(\?.*)?$/i,
+        minify: TerserPlugin.cssoMinify,
+        minimizerOptions: {
+          // `csso` options
+        },
+      }),
+      new TerserPlugin<CleanCssOptions>({
+        test: /\.css(\?.*)?$/i,
+        minify: TerserPlugin.cleanCssMinify,
+        minimizerOptions: {
+          // `clean-css` options
+        },
+      }),
+      new TerserPlugin<EsbuildOptions>({
+        test: /\.css(\?.*)?$/i,
+        minify: TerserPlugin.esbuildMinifyCss,
+        minimizerOptions: {
+          // `esbuild` options (CSS loader)
+        },
+      }),
+      new TerserPlugin<LightningCssOptions>({
+        test: /\.css(\?.*)?$/i,
+        minify: TerserPlugin.lightningCssMinify,
+        minimizerOptions: {
+          // `lightningcss` options
+        },
+      }),
+      new TerserPlugin<SwcCssOptions>({
+        test: /\.css(\?.*)?$/i,
+        minify: TerserPlugin.swcMinifyCss,
+        minimizerOptions: {
+          // `@swc/css` options
         },
       }),
     ],

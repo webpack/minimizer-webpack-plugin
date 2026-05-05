@@ -6,13 +6,19 @@ const { validate } = require("schema-utils");
 const { minify } = require("./minify");
 const schema = require("./options.json");
 const {
+  cleanCssMinify,
+  cssnanoMinify,
+  cssoMinify,
   esbuildMinify,
+  esbuildMinifyCss,
   getEcmaVersion,
   htmlMinifierTerser,
   jsonMinify,
+  lightningCssMinify,
   memoize,
   minifyHtmlNode,
   swcMinify,
+  swcMinifyCss,
   swcMinifyHtml,
   swcMinifyHtmlFragment,
   terserMinify,
@@ -917,5 +923,11 @@ TerserPlugin.htmlMinifierTerser = htmlMinifierTerser;
 TerserPlugin.swcMinifyHtml = swcMinifyHtml;
 TerserPlugin.swcMinifyHtmlFragment = swcMinifyHtmlFragment;
 TerserPlugin.minifyHtmlNode = minifyHtmlNode;
+TerserPlugin.cssnanoMinify = cssnanoMinify;
+TerserPlugin.cssoMinify = cssoMinify;
+TerserPlugin.cleanCssMinify = cleanCssMinify;
+TerserPlugin.esbuildMinifyCss = esbuildMinifyCss;
+TerserPlugin.lightningCssMinify = lightningCssMinify;
+TerserPlugin.swcMinifyCss = swcMinifyCss;
 
 module.exports = TerserPlugin;
