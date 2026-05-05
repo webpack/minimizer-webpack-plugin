@@ -33,6 +33,11 @@ export namespace cleanCssMinify {
    * @returns {boolean | undefined} true if worker threads are supported
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like a CSS file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * Minify CSS using `cssnano` (via `postcss`).
@@ -55,6 +60,11 @@ export namespace cssnanoMinify {
    * @returns {boolean | undefined} true if worker threads are supported
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like a CSS file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * Minify CSS using `csso`.
@@ -77,6 +87,11 @@ export namespace cssoMinify {
    * @returns {boolean | undefined} true if worker threads are supported
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like a CSS file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * @param {Input} input input
@@ -98,6 +113,11 @@ export namespace esbuildMinify {
    * @returns {boolean | undefined} true if worker thread is supported, false otherwise
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like a JavaScript file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * Minify CSS using `esbuild` (with the CSS loader).
@@ -120,6 +140,11 @@ export namespace esbuildMinifyCss {
    * @returns {boolean | undefined} false because `esbuild` is a native binding
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like a CSS file
+   */
+  function filter(name: string): boolean;
 }
 /** @typedef {import("./index.js").ExtractCommentsOptions} ExtractCommentsOptions */
 /** @typedef {import("./index.js").ExtractCommentsFunction} ExtractCommentsFunction */
@@ -165,6 +190,11 @@ export namespace htmlMinifierTerser {
    * @returns {boolean | undefined} true if worker threads are supported
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like an HTML file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * @param {Input} input input
@@ -181,6 +211,11 @@ export namespace jsonMinify {
   function getMinimizerVersion(): string;
   function supportsWorker(): boolean;
   function supportsWorkerThreads(): boolean;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like a JSON file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * Minify CSS using `lightningcss`.
@@ -203,6 +238,11 @@ export namespace lightningCssMinify {
    * @returns {boolean | undefined} false because `lightningcss` is a native binding
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like a CSS file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * @template T
@@ -235,6 +275,11 @@ export namespace minifyHtmlNode {
    * @returns {boolean | undefined} false because `@minify-html/node` is a native binding
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like an HTML file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * @param {Input} input input
@@ -258,6 +303,11 @@ export namespace swcMinify {
    * @returns {boolean | undefined} true if worker thread is supported, false otherwise
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like a JavaScript file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * Minify CSS using `@swc/css`.
@@ -280,6 +330,11 @@ export namespace swcMinifyCss {
    * @returns {boolean | undefined} false because `@swc/css` is a native binding
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like a CSS file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * Minify a complete HTML document using `@swc/html`.
@@ -302,6 +357,11 @@ export namespace swcMinifyHtml {
    * @returns {boolean | undefined} false because `@swc/html` is a native binding
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like an HTML file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * Minify an HTML fragment using `@swc/html`.
@@ -327,6 +387,11 @@ export namespace swcMinifyHtmlFragment {
    * @returns {boolean | undefined} false because `@swc/html` is a native binding
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like an HTML file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * @param {Input} input input
@@ -350,6 +415,11 @@ export namespace terserMinify {
    * @returns {boolean | undefined} true if worker thread is supported, false otherwise
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like a JavaScript file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * @template T
@@ -385,4 +455,9 @@ export namespace uglifyJsMinify {
    * @returns {boolean | undefined} true if worker thread is supported, false otherwise
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like a JavaScript file
+   */
+  function filter(name: string): boolean;
 }

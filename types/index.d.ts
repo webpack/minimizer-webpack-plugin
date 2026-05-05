@@ -249,6 +249,12 @@ type MinimizeFunctionHelpers = {
    * true when minimizer support worker, otherwise false
    */
   supportsWorker?: (() => boolean | undefined) | undefined;
+  /**
+   * return true when the minimizer supports the asset, otherwise false. When an array of minimizers is configured, each asset is dispatched only to the minimizers whose `filter` accepts it. Assets rejected by every minimizer in the array are skipped entirely.
+   */
+  filter?:
+    | ((name: string, info?: AssetInfo) => boolean | undefined)
+    | undefined;
 };
 type MinimizerImplementation<T> = T extends EXPECTED_ANY[]
   ? {

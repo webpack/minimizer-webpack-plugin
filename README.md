@@ -321,7 +321,34 @@ Allows you to override the default minify function.
 By default plugin uses [terser](https://github.com/terser/terser) package.
 Useful for using and testing unpublished versions or forks.
 
-An array of functions can also be provided to chain multiple minimizers — the output of each minimizer is fed as input to the next. When an array is used, the [`minimizerOptions`](#minimizeroptions) option may also be an array (index-paired with `minify`) or a single object that is reused for every minimizer.
+An array of functions can also be provided. Each minimizer can expose a
+`filter(name, info)` helper that decides whether it should run on a given
+asset; the plugin dispatches each asset only to the minimizers whose `filter`
+accepts it (or runs them all when no filter is set). All built-in minimizers
+ship with a `filter` that matches their natural extension, so a single plugin
+instance and a single worker pool can handle JS, CSS, HTML and JSON together
+without juggling multiple `TerserPlugin` instances:
+
+```js
+new TerserPlugin({
+  minify: [
+    TerserPlugin.terserMinify,
+    TerserPlugin.cssnanoMinify,
+    TerserPlugin.htmlMinifierTerser,
+    TerserPlugin.jsonMinify,
+  ],
+});
+```
+
+When more than one minimizer in the array claims the same asset, the chain
+semantic still applies: the output of each accepting minimizer is fed as
+input to the next. The [`minimizerOptions`](#minimizeroptions) option may
+be an array (index-paired with `minify`) or a single object reused by every
+minimizer.
+
+When `minify` is an array, the `test` option defaults to `undefined` so each
+minimizer's `filter` decides which assets it processes. With a single `minify`
+function, `test` keeps its JS-only default of `/\.[cm]?js(\?.*)?$/i`.
 
 > **Warning**
 >
@@ -362,6 +389,12 @@ minify.getMinimizerVersion = () => {
   return packageJson && packageJson.version;
 };
 
+// Restrict the minimizer to the assets it can actually handle. The plugin
+// skips assets for which `filter` returns `false` and (when an array of
+// minimizers is used) dispatches each asset only to the minimizers that
+// accept it. Returning `undefined` is treated as accept.
+minify.filter = (name) => /\.[cm]?js(\?.*)?$/i.test(name);
+
 module.exports = {
   optimization: {
     minimize: true,
@@ -379,11 +412,13 @@ module.exports = {
 
 #### `array`
 
-If an array of functions is passed to the `minify` option, the output of each
-minimizer is fed as input to the next one. The `minimizerOptions` option can be
-either an array of option objects (index-paired with `minify`) or a single
-object that will be shared by all minimizers. Warnings, errors and extracted
-comments from all minimizers are merged together.
+If an array of functions is passed to the `minify` option, each asset is
+dispatched to the minimizers whose `filter` accepts it. When more than one
+minimizer accepts the same asset the output of each is fed as input to the
+next one (the chain semantic). The `minimizerOptions` option can be either an
+array of option objects (index-paired with `minify`) or a single object that
+will be shared by all minimizers. Warnings, errors and extracted comments
+from all running minimizers are merged together.
 
 **webpack.config.js**
 
@@ -400,6 +435,30 @@ module.exports = {
           { mangle: false },
           // Options for `TerserPlugin.swcMinify`
           {},
+        ],
+      }),
+    ],
+  },
+};
+```
+
+A single plugin instance can also handle multiple asset types — the built-in
+minimizers each ship with a `filter` matching their natural extension, so JS,
+CSS, HTML and JSON can all be minified by one shared worker pool:
+
+```js
+module.exports = {
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        // `test` defaults to `undefined` here so each filter decides which
+        // assets it handles. Override `test` to narrow further if needed.
+        minify: [
+          TerserPlugin.terserMinify,
+          TerserPlugin.cssnanoMinify,
+          TerserPlugin.htmlMinifierTerser,
+          TerserPlugin.jsonMinify,
         ],
       }),
     ],
