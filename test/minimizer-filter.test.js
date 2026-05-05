@@ -72,6 +72,7 @@ describe("minimizer filter", () => {
 
     new TerserPlugin({
       parallel: false,
+      test: /\.(?:[cm]?js|css)(\?.*)?$/i,
       minify: [jsMinify, cssMinify],
     }).apply(compiler);
 
@@ -129,6 +130,9 @@ describe("minimizer filter", () => {
 
     new TerserPlugin({
       parallel: false,
+      // Widen `test` so the .txt asset reaches the dispatcher and we can
+      // verify that no minimizer in the array claims it.
+      test: /.*/,
       minify: [jsMinify, cssMinify],
     }).apply(compiler);
 
@@ -189,7 +193,7 @@ describe("minimizer filter", () => {
     expect(getWarnings(stats)).toEqual([]);
   });
 
-  it("relies on filters when an array of minimizers is provided without an explicit `test`", async () => {
+  it("dispatches across asset types when `test` is widened", async () => {
     const compiler = getCompiler({
       entry: path.resolve(__dirname, "./fixtures/entry.js"),
     });
@@ -204,11 +208,11 @@ describe("minimizer filter", () => {
 
     cssMinify.filter = (name) => /\.css(\?.*)?$/i.test(name);
 
-    // No `test` here — defaulting must let the .css asset through so
-    // cssMinify.filter can claim it. Without the array-aware default this
-    // would gate on /\.[cm]?js$/ and skip the .css asset entirely.
     new TerserPlugin({
       parallel: false,
+      // `test` still defaults to JS only; widen it (or set it to a regex
+      // that catches every asset) so the dispatcher gets to see CSS too.
+      test: /\.(?:[cm]?js|css)(\?.*)?$/i,
       minify: [jsMinify, cssMinify],
     }).apply(compiler);
 
@@ -260,6 +264,7 @@ describe("minimizer filter", () => {
 
     new TerserPlugin({
       parallel: false,
+      test: /\.(?:[cm]?js|css)(\?.*)?$/i,
       minify: [jsMinify, cssMinify],
       minimizerOptions: [{ flavor: "js" }, { flavor: "css" }],
     }).apply(compiler);

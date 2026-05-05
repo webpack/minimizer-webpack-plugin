@@ -327,10 +327,12 @@ asset; the plugin dispatches each asset only to the minimizers whose `filter`
 accepts it (or runs them all when no filter is set). All built-in minimizers
 ship with a `filter` that matches their natural extension, so a single plugin
 instance and a single worker pool can handle JS, CSS, HTML and JSON together
-without juggling multiple `TerserPlugin` instances:
+without juggling multiple `TerserPlugin` instances — just widen `test` to
+let those asset types reach the dispatcher:
 
 ```js
 new TerserPlugin({
+  test: /\.(?:[cm]?js|css|html?|json)(\?.*)?$/i,
   minify: [
     TerserPlugin.terserMinify,
     TerserPlugin.cssnanoMinify,
@@ -346,9 +348,9 @@ input to the next. The [`minimizerOptions`](#minimizeroptions) option may
 be an array (index-paired with `minify`) or a single object reused by every
 minimizer.
 
-When `minify` is an array, the `test` option defaults to `undefined` so each
-minimizer's `filter` decides which assets it processes. With a single `minify`
-function, `test` keeps its JS-only default of `/\.[cm]?js(\?.*)?$/i`.
+The `test` option always defaults to `/\.[cm]?js(\?.*)?$/i`. When you mix
+asset types in a single plugin instance, widen `test` so non-JS assets reach
+the dispatcher (for example `test: /\.(?:[cm]?js|css|html?|json)(\?.*)?$/i`).
 
 > **Warning**
 >
@@ -452,8 +454,9 @@ module.exports = {
     minimize: true,
     minimizer: [
       new TerserPlugin({
-        // `test` defaults to `undefined` here so each filter decides which
-        // assets it handles. Override `test` to narrow further if needed.
+        // `test` still defaults to JS only, so widen it to catch every
+        // asset type you want the dispatcher to consider.
+        test: /\.(?:[cm]?js|css|html?|json)(\?.*)?$/i,
         minify: [
           TerserPlugin.terserMinify,
           TerserPlugin.cssnanoMinify,

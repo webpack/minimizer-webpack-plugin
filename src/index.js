@@ -190,17 +190,13 @@ class TerserPlugin {
 
     // TODO handle json and etc in the next major release
     // TODO make `minimizer` option instead `minify` and `terserOptions` in the next major release, also rename `terserMinify` to `terserMinimize`
-    // When an array of minimizers is supplied, leave `test` undefined so that
-    // each minimizer's own `filter` decides which assets it processes;
-    // otherwise fall back to the JS-only default.
-    const isMinifyArray = Array.isArray(options && options.minify);
     const {
       minify = /** @type {MinimizerImplementation<T>} */ (
         /** @type {unknown} */ (terserMinify)
       ),
       minimizerOptions,
       terserOptions,
-      test = isMinifyArray ? undefined : /\.[cm]?js(\?.*)?$/i,
+      test = /\.[cm]?js(\?.*)?$/i,
       extractComments = true,
       parallel = true,
       include,
@@ -424,10 +420,12 @@ class TerserPlugin {
 
       return matched;
     };
-    const assetsForMinify = await Promise.all(
-      Object.keys(assets)
-        .filter((name) => {
-          const { info } = /** @type {Asset} */ (compilation.getAsset(name));
+    const assetsForMinify = (
+      await Promise.all(
+        Object.keys(assets).map(async (name) => {
+          const { info, source } = /** @type {Asset} */ (
+            compilation.getAsset(name)
+          );
 
           if (
             // Skip double minimize assets from child compilation
@@ -435,7 +433,7 @@ class TerserPlugin {
             // Skip minimizing for extracted comments assets
             info.extractedComments
           ) {
-            return false;
+            return [];
           }
 
           if (
@@ -444,19 +442,16 @@ class TerserPlugin {
               this.options,
             )(name)
           ) {
-            return false;
+            return [];
           }
 
-          if (matchingMinimizers(name, info).length === 0) {
-            return false;
-          }
+          // Compute the matching minimizers once and carry them through to
+          // the per-asset task so we don't pay the lookup twice.
+          const matched = matchingMinimizers(name, info);
 
-          return true;
-        })
-        .map(async (name) => {
-          const { info, source } = /** @type {Asset} */ (
-            compilation.getAsset(name)
-          );
+          if (matched.length === 0) {
+            return [];
+          }
 
           const eTag = cache.getLazyHashedEtag(source);
           const cacheItem = cache.getItemCache(name, eTag);
@@ -466,9 +461,19 @@ class TerserPlugin {
             numberOfAssets += 1;
           }
 
-          return { name, info, inputSource: source, output, cacheItem };
+          return [
+            {
+              name,
+              info,
+              inputSource: source,
+              output,
+              cacheItem,
+              matched,
+            },
+          ];
         }),
-    );
+      )
+    ).flat();
 
     if (assetsForMinify.length === 0) {
       return;
@@ -543,7 +548,7 @@ class TerserPlugin {
 
     for (const asset of assetsForMinify) {
       scheduledTasks.push(async () => {
-        const { name, inputSource, info, cacheItem } = asset;
+        const { name, inputSource, info, cacheItem, matched } = asset;
         let { output } = asset;
 
         if (!output) {
@@ -570,10 +575,10 @@ class TerserPlugin {
             input = input.toString();
           }
 
-          // Dispatch to only the minimizers whose `filter` accepts this asset.
+          // Dispatch to only the minimizers whose `filter` accepted this
+          // asset (computed once when collecting `assetsForMinify`).
           // `minify.js` already normalizes a single implementation into a
           // one-element array, so we always hand it the matching subset here.
-          const matched = matchingMinimizers(name, info);
           const assetImplementation =
             /** @type {MinimizerImplementation<T>} */
             (matched.map((i) => implementations[i]));
