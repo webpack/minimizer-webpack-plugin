@@ -323,8 +323,8 @@ async function minify(options) {
     const currentImplementation =
       /** @type {import("./index.js").BasicMinimizerImplementation<T> & import("./index.js").MinimizeFunctionHelpers} */
       (implementations[i]);
-    const currentOptions =
-      /** @type {import("./index.js").MinimizerOptions<T>} */
+    const baseOptions =
+      /** @type {import("./index.js").MinimizerOptions<T> & { module?: boolean, ecma?: number | string }} */
       (
         Array.isArray(minimizerOptions)
           ? minimizerOptions[i] || {}
@@ -333,14 +333,15 @@ async function minify(options) {
     const currentInput = typeof lastCode === "string" ? lastCode : input;
     const currentMap = typeof lastCode === "string" ? lastMap : inputSourceMap;
 
-    /** @type {MinimizerOptions<T & { module?: boolean }>} */
-    (currentOptions).module =
-      /** @type {MinimizerOptions<T & { module?: boolean }>} */
-      (currentOptions).module || module;
-    /** @type {MinimizerOptions<T & { ecma?: number | string }>} */
-    (currentOptions).ecma =
-      /** @type {MinimizerOptions<T & { ecma?: number | string }>} */
-      (currentOptions).ecma || ecma;
+    // Overlay `module` and `ecma` without mutating the caller's options so
+    // a single options object can be reused safely across assets.
+    const currentOptions =
+      /** @type {import("./index.js").MinimizerOptions<T>} */
+      ({
+        ...baseOptions,
+        module: baseOptions.module || module,
+        ecma: baseOptions.ecma || ecma,
+      });
 
     const result = await currentImplementation(
       { [name]: currentInput },

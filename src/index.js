@@ -379,21 +379,13 @@ class TerserPlugin {
     const cache = compilation.getCache("TerserWebpackPlugin");
     let numberOfAssets = 0;
 
-    // Normalize the configured minimizer(s) and their options into parallel
-    // arrays. The user can pass either a single `(impl, options)` pair or an
-    // array of pairs; for dispatch and per-asset slicing we treat both the
-    // same. The original `this.options.minimizer.implementation` shape is
-    // preserved for chunk hashing further down.
+    // Normalize the implementation list to an array so dispatch and the
+    // worker-pool capability checks below can iterate uniformly. The
+    // original shape on `this.options.minimizer.implementation` is preserved
+    // for chunk hashing.
     const implementations = Array.isArray(this.options.minimizer.implementation)
       ? this.options.minimizer.implementation
       : [this.options.minimizer.implementation];
-    const minimizerOptionsList =
-      /** @type {MinimizerOptions<T>[]} */
-      (
-        Array.isArray(this.options.minimizer.options)
-          ? this.options.minimizer.options
-          : implementations.map(() => this.options.minimizer.options)
-      );
 
     /**
      * Collect the indices of minimizers whose `filter` accepts `name`.
@@ -578,16 +570,19 @@ class TerserPlugin {
           // Dispatch to only the minimizers whose `filter` accepted this
           // asset (computed once when collecting `assetsForMinify`).
           // `minify.js` already normalizes a single implementation into a
-          // one-element array, so we always hand it the matching subset here.
+          // one-element array, so we always hand it the matching subset.
+          // Options are sliced as references — `minify.js` overlays
+          // `module`/`ecma` without mutating the caller's object.
           const assetImplementation =
             /** @type {MinimizerImplementation<T>} */
             (matched.map((i) => implementations[i]));
-          const clonedMinimizerOptions =
+          const sourceOptions = this.options.minimizer.options;
+          const assetMinimizerOptions =
             /** @type {MinimizerOptions<T>} */
             (
-              matched.map((i) => ({
-                .../** @type {T} */ (minimizerOptionsList[i]),
-              }))
+              Array.isArray(sourceOptions)
+                ? matched.map((i) => sourceOptions[i] || {})
+                : sourceOptions
             );
 
           /**
@@ -599,7 +594,7 @@ class TerserPlugin {
             inputSourceMap,
             minimizer: {
               implementation: assetImplementation,
-              options: clonedMinimizerOptions,
+              options: assetMinimizerOptions,
             },
             extractComments: this.options.extractComments,
           };
