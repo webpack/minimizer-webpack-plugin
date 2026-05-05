@@ -1,3 +1,5 @@
+export type Task<T> = () => Promise<T>;
+export type FunctionReturning<T> = () => T;
 export type ExtractCommentsOptions =
   import("./index.js").ExtractCommentsOptions;
 export type ExtractCommentsFunction =
@@ -10,8 +12,6 @@ export type CustomOptions = import("./index.js").CustomOptions;
 export type RawSourceMap = import("./index.js").RawSourceMap;
 export type EXPECTED_OBJECT = import("./index.js").EXPECTED_OBJECT;
 export type ExtractedComments = string[];
-export type Task<T> = () => Promise<T>;
-export type FunctionReturning<T> = () => T;
 /**
  * Minify CSS using `clean-css`.
  * @param {Input} input input
@@ -146,17 +146,6 @@ export namespace esbuildMinifyCss {
    */
   function filter(name: string): boolean;
 }
-/** @typedef {import("./index.js").ExtractCommentsOptions} ExtractCommentsOptions */
-/** @typedef {import("./index.js").ExtractCommentsFunction} ExtractCommentsFunction */
-/** @typedef {import("./index.js").ExtractCommentsCondition} ExtractCommentsCondition */
-/** @typedef {import("./index.js").Input} Input */
-/** @typedef {import("./index.js").MinimizedResult} MinimizedResult */
-/** @typedef {import("./index.js").CustomOptions} CustomOptions */
-/** @typedef {import("./index.js").RawSourceMap} RawSourceMap */
-/** @typedef {import("./index.js").EXPECTED_OBJECT} EXPECTED_OBJECT */
-/**
- * @typedef {string[]} ExtractedComments
- */
 /**
  * Map a webpack `output.environment` configuration to the highest
  * ECMAScript version that the target is known to support. Returns `5`
