@@ -8,6 +8,10 @@ const RUN_CSS_TESTS = NODE_MAJOR >= 18 && !IS_WINDOWS;
 
 module.exports = {
   testEnvironment: "node",
+  // The default 5s timeout is too tight for slower CI runners (especially
+  // older Node on macOS), where webpack + multiple minimizers per asset
+  // routinely take longer than that.
+  testTimeout: 60000,
   coveragePathIgnorePatterns: ["src/serialize-javascript.js"],
   testPathIgnorePatterns: RUN_CSS_TESTS
     ? []
