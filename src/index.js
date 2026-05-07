@@ -412,12 +412,13 @@ class TerserPlugin {
 
       return matched;
     };
-    const assetsForMinify = (
-      await Promise.all(
-        Object.keys(assets).map(async (name) => {
-          const { info, source } = /** @type {Asset} */ (
-            compilation.getAsset(name)
-          );
+    /** @type {Map<string, number[]>} */
+    const matchedByName = new Map();
+
+    const assetsForMinify = await Promise.all(
+      Object.keys(assets)
+        .filter((name) => {
+          const { info } = /** @type {Asset} */ (compilation.getAsset(name));
 
           if (
             // Skip double minimize assets from child compilation
@@ -425,7 +426,7 @@ class TerserPlugin {
             // Skip minimizing for extracted comments assets
             info.extractedComments
           ) {
-            return [];
+            return false;
           }
 
           if (
@@ -434,16 +435,25 @@ class TerserPlugin {
               this.options,
             )(name)
           ) {
-            return [];
+            return false;
           }
 
-          // Compute the matching minimizers once and carry them through to
-          // the per-asset task so we don't pay the lookup twice.
+          // Compute the matching minimizers once and carry the result to the
+          // per-asset task via `matchedByName` so the regexes don't run again.
           const matched = matchingMinimizers(name, info);
 
           if (matched.length === 0) {
-            return [];
+            return false;
           }
+
+          matchedByName.set(name, matched);
+
+          return true;
+        })
+        .map(async (name) => {
+          const { info, source } = /** @type {Asset} */ (
+            compilation.getAsset(name)
+          );
 
           const eTag = cache.getLazyHashedEtag(source);
           const cacheItem = cache.getItemCache(name, eTag);
@@ -453,19 +463,16 @@ class TerserPlugin {
             numberOfAssets += 1;
           }
 
-          return [
-            {
-              name,
-              info,
-              inputSource: source,
-              output,
-              cacheItem,
-              matched,
-            },
-          ];
+          return {
+            name,
+            info,
+            inputSource: source,
+            output,
+            cacheItem,
+            matched: /** @type {number[]} */ (matchedByName.get(name)),
+          };
         }),
-      )
-    ).flat();
+    );
 
     if (assetsForMinify.length === 0) {
       return;
