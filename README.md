@@ -11,7 +11,7 @@
 [![discussion][discussion]][discussion-url]
 [![size][size]][size-url]
 
-# terser-webpack-plugin
+# minimizer-webpack-plugin
 
 This plugin minifies your assets in a webpack build. It ships with several
 built-in minimizers covering JavaScript, JSON, HTML, and CSS — pick one
@@ -51,26 +51,26 @@ file types with different minimizers (see [Examples](#examples)).
 
 ## Getting Started
 
-Webpack v5 comes with the latest `terser-webpack-plugin` out of the box.
-If you are using Webpack v5 or above and wish to customize the options, you will still need to install `terser-webpack-plugin`.
-Using Webpack v4, you have to install `terser-webpack-plugin` v4.
+Webpack v5 comes with the latest `minimizer-webpack-plugin` out of the box.
+If you are using Webpack v5 or above and wish to customize the options, you will still need to install `minimizer-webpack-plugin`.
+Using Webpack v4, you have to install `minimizer-webpack-plugin` v4.
 
-To begin, you'll need to install `terser-webpack-plugin`:
+To begin, you'll need to install `minimizer-webpack-plugin`:
 
 ```console
-npm install terser-webpack-plugin --save-dev
+npm install minimizer-webpack-plugin --save-dev
 ```
 
 or
 
 ```console
-yarn add -D terser-webpack-plugin
+yarn add -D minimizer-webpack-plugin
 ```
 
 or
 
 ```console
-pnpm add -D terser-webpack-plugin
+pnpm add -D minimizer-webpack-plugin
 ```
 
 Then add the plugin to your `webpack` configuration. For example:
@@ -78,7 +78,7 @@ Then add the plugin to your `webpack` configuration. For example:
 **webpack.config.js**
 
 ```js
-const TerserPlugin = require("terser-webpack-plugin");
+const TerserPlugin = require("minimizer-webpack-plugin");
 
 module.exports = {
   optimization: {
@@ -212,7 +212,7 @@ Default number of concurrent runs: `os.cpus().length - 1` or `os.availableParall
 
 > **Warning**
 >
-> If you use **Circle CI** or any other environment that doesn't provide the real available count of CPUs then you need to explicitly set up the number of CPUs to avoid `Error: Call retries were exceeded` (see [#143](https://github.com/webpack/terser-webpack-plugin/issues/143), [#202](https://github.com/webpack/terser-webpack-plugin/issues/202)).
+> If you use **Circle CI** or any other environment that doesn't provide the real available count of CPUs then you need to explicitly set up the number of CPUs to avoid `Error: Call retries were exceeded` (see [#143](https://github.com/webpack/minimizer-webpack-plugin/issues/143), [#202](https://github.com/webpack/minimizer-webpack-plugin/issues/202)).
 
 #### `boolean`
 
@@ -1033,7 +1033,7 @@ npm install --save-dev @minify-html/node
 **webpack.config.js**
 
 ```js
-const TerserPlugin = require("terser-webpack-plugin");
+const TerserPlugin = require("minimizer-webpack-plugin");
 
 module.exports = {
   optimization: {
@@ -1062,7 +1062,7 @@ Use `swcMinifyHtml` for complete HTML documents (i.e. with a doctype and `<html>
 **webpack.config.js**
 
 ```js
-const TerserPlugin = require("terser-webpack-plugin");
+const TerserPlugin = require("minimizer-webpack-plugin");
 
 module.exports = {
   optimization: {
@@ -1087,7 +1087,7 @@ Use `swcMinifyHtmlFragment` for partial HTML — for example, content of `<templ
 **webpack.config.js**
 
 ```js
-const TerserPlugin = require("terser-webpack-plugin");
+const TerserPlugin = require("minimizer-webpack-plugin");
 
 module.exports = {
   optimization: {
@@ -1117,7 +1117,7 @@ module.exports = {
 **webpack.config.js**
 
 ```js
-const TerserPlugin = require("terser-webpack-plugin");
+const TerserPlugin = require("minimizer-webpack-plugin");
 
 module.exports = {
   optimization: {
@@ -1181,7 +1181,7 @@ npm install --save-dev @swc/css
 **webpack.config.js**
 
 ```js
-const TerserPlugin = require("terser-webpack-plugin");
+const TerserPlugin = require("minimizer-webpack-plugin");
 
 module.exports = {
   optimization: {
@@ -1209,7 +1209,7 @@ module.exports = {
 **webpack.config.js**
 
 ```js
-const TerserPlugin = require("terser-webpack-plugin");
+const TerserPlugin = require("minimizer-webpack-plugin");
 
 module.exports = {
   optimization: {
@@ -1234,7 +1234,7 @@ module.exports = {
 **webpack.config.js**
 
 ```js
-const TerserPlugin = require("terser-webpack-plugin");
+const TerserPlugin = require("minimizer-webpack-plugin");
 
 module.exports = {
   optimization: {
@@ -1259,7 +1259,7 @@ module.exports = {
 **webpack.config.js**
 
 ```js
-const TerserPlugin = require("terser-webpack-plugin");
+const TerserPlugin = require("minimizer-webpack-plugin");
 
 module.exports = {
   optimization: {
@@ -1284,7 +1284,7 @@ module.exports = {
 **webpack.config.js**
 
 ```js
-const TerserPlugin = require("terser-webpack-plugin");
+const TerserPlugin = require("minimizer-webpack-plugin");
 
 module.exports = {
   optimization: {
@@ -1309,7 +1309,7 @@ module.exports = {
 **webpack.config.js**
 
 ```js
-const TerserPlugin = require("terser-webpack-plugin");
+const TerserPlugin = require("minimizer-webpack-plugin");
 
 module.exports = {
   optimization: {
@@ -1503,21 +1503,21 @@ module.exports = {
 We welcome all contributions!
 If you're new here, please take a moment to review our contributing guidelines before submitting issues or pull requests.
 
-[CONTRIBUTING](https://github.com/webpack/terser-webpack-plugin?tab=contributing-ov-file#contributing)
+[CONTRIBUTING](https://github.com/webpack/minimizer-webpack-plugin?tab=contributing-ov-file#contributing)
 
 ## License
 
 [MIT](./LICENSE)
 
-[npm]: https://img.shields.io/npm/v/terser-webpack-plugin.svg
-[npm-url]: https://npmjs.com/package/terser-webpack-plugin
-[node]: https://img.shields.io/node/v/terser-webpack-plugin.svg
+[npm]: https://img.shields.io/npm/v/minimizer-webpack-plugin.svg
+[npm-url]: https://npmjs.com/package/minimizer-webpack-plugin
+[node]: https://img.shields.io/node/v/minimizer-webpack-plugin.svg
 [node-url]: https://nodejs.org
-[tests]: https://github.com/webpack/terser-webpack-plugin/workflows/terser-webpack-plugin/badge.svg
-[tests-url]: https://github.com/webpack/terser-webpack-plugin/actions
-[cover]: https://codecov.io/gh/webpack/terser-webpack-plugin/branch/main/graph/badge.svg
-[cover-url]: https://codecov.io/gh/webpack/terser-webpack-plugin
+[tests]: https://github.com/webpack/minimizer-webpack-plugin/workflows/minimizer-webpack-plugin/badge.svg
+[tests-url]: https://github.com/webpack/minimizer-webpack-plugin/actions
+[cover]: https://codecov.io/gh/webpack/minimizer-webpack-plugin/branch/main/graph/badge.svg
+[cover-url]: https://codecov.io/gh/webpack/minimizer-webpack-plugin
 [discussion]: https://img.shields.io/github/discussions/webpack/webpack
 [discussion-url]: https://github.com/webpack/webpack/discussions
-[size]: https://packagephobia.now.sh/badge?p=terser-webpack-plugin
-[size-url]: https://packagephobia.now.sh/result?p=terser-webpack-plugin
+[size]: https://packagephobia.now.sh/badge?p=minimizer-webpack-plugin
+[size-url]: https://packagephobia.now.sh/result?p=minimizer-webpack-plugin

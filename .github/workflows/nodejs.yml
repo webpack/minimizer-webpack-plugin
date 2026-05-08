@@ -1,4 +1,4 @@
-name: terser-webpack-plugin
+name: minimizer-webpack-plugin
 
 on:
   push:

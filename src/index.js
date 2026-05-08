@@ -961,7 +961,7 @@ class TerserPlugin {
       compilation.hooks.statsPrinter.tap(pluginName, (stats) => {
         stats.hooks.print
           .for("asset.info.minimized")
-          .tap("terser-webpack-plugin", (minimized, { green, formatFlag }) =>
+          .tap("minimizer-webpack-plugin", (minimized, { green, formatFlag }) =>
             minimized
               ? /** @type {(text: string) => string} */ (green)(
                   /** @type {(flag: string) => string} */ (formatFlag)(

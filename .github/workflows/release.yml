@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   release:
-    if: github.repository == 'webpack/terser-webpack-plugin'
+    if: github.repository == 'webpack/minimizer-webpack-plugin' || github.repository == 'webpack/terser-webpack-plugin'
     name: Release
     runs-on: ubuntu-latest
     outputs:
