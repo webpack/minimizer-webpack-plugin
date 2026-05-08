@@ -1,5 +1,18 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`css minify option should minify js, json, css, and html assets emitted in the same compilation: assets 1`] = `
+Object {
+  "1d477fcae4c6c3852830.html": "<!doctype html> <html lang=\\"en\\"> <head> <meta charset=\\"utf-8\\"/> <title>Hello</title> </head> <body> <h1>Hello, World!</h1> <p> Hello there </p> </body> </html> ",
+  "60491a50c1e5dd7216b6.json": "{\\"foo\\":\\"bar\\",\\"bar\\":[\\"baz\\"]}",
+  "7ef9f914930a1190260b.css": ".foo{background:blue;color:red}.bar{margin:10px;padding:10px}",
+  "main.js": "(()=>{var t={292(t,e,r){\\"use strict\\";t.exports=r.p+\\"7ef9f914930a1190260b.css\\"},740(t,e,r){\\"use strict\\";t.exports=r.p+\\"1d477fcae4c6c3852830.html\\"},437(t,e,r){\\"use strict\\";t.exports=r.p+\\"60491a50c1e5dd7216b6.json\\"}},e={};function r(o){var c=e[o];if(void 0!==c)return c.exports;var n=e[o]={exports:{}};return t[o](n,n.exports,r),n.exports}r.m=t,r.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(t){if(\\"object\\"==typeof window)return window}}(),r.o=(t,e)=>Object.prototype.hasOwnProperty.call(t,e),(()=>{var t;r.g.importScripts&&(t=r.g.location+\\"\\");var e=r.g.document;if(!t&&e&&(e.currentScript&&\\"SCRIPT\\"===e.currentScript.tagName.toUpperCase()&&(t=e.currentScript.src),!t)){var o=e.getElementsByTagName(\\"script\\");if(o.length)for(var c=o.length-1;c>-1&&(!t||!/^http(s?):/.test(t));)t=o[c--].src}if(!t)throw new Error(\\"Automatic publicPath is not supported in this browser\\");t=t.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),r.p=t})(),r.b=\\"undefined\\"!=typeof document&&document.baseURI||self.location.href,console.log(new URL(r(292),r.b)),console.log(new URL(r(437),r.b)),console.log(new URL(r(740),r.b))})();",
+}
+`;
+
+exports[`css minify option should minify js, json, css, and html assets emitted in the same compilation: errors 1`] = `Array []`;
+
+exports[`css minify option should minify js, json, css, and html assets emitted in the same compilation: warnings 1`] = `Array []`;
+
 exports[`css minify option should work and merge source maps when \`minify\` is an array of \`terserMinify\` minimizers: assets 1`] = `
 Object {
   "main.js": "(()=>{\\"use strict\\";console.log(\\"HERE\\")})();

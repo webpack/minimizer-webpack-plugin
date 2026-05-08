@@ -457,6 +457,20 @@ describe("TerserPlugin", () => {
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
 
+  it("should not fail when only a js minimizer is set up but the compilation emits non-js assets", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/multi-asset.js"),
+    });
+
+    new TerserPlugin().apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
   it('should work and respect "terser" errors (the "parallel" option is "true")', async () => {
     const compiler = getCompiler();
 

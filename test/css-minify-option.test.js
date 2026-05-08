@@ -322,6 +322,34 @@ describe("css minify option", () => {
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
 
+  it("should minify js, json, css, and html assets emitted in the same compilation", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/multi-asset.js"),
+    });
+
+    new TerserPlugin({
+      minify: TerserPlugin.terserMinify,
+    }).apply(compiler);
+    new TerserPlugin({
+      test: /\.json(\?.*)?$/i,
+      minify: TerserPlugin.jsonMinify,
+    }).apply(compiler);
+    new TerserPlugin({
+      test: /\.css(\?.*)?$/i,
+      minify: TerserPlugin.cssnanoMinify,
+    }).apply(compiler);
+    new TerserPlugin({
+      test: /\.html(\?.*)?$/i,
+      minify: TerserPlugin.htmlMinifierTerser,
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
   // The chain runs through every CSS minimizer; `esbuild` is the
   // tightest constraint at Node >=18.
   it("should work and merge source maps when `minify` mixes CSS minimizers using `cssnano`, `csso`, `cleanCss`, `lightningCss`, `swcCss`, and `esbuild`", async () => {
