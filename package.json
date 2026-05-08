@@ -1,5 +1,5 @@
 {
-  "name": "terser-webpack-plugin",
+  "name": "minimizer-webpack-plugin",
   "version": "5.5.0",
   "description": "Terser plugin for webpack",
   "keywords": [
