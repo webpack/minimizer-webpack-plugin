@@ -53,7 +53,7 @@ file types with different minimizers (see [Examples](#examples)).
 
 Webpack v5 comes with the latest `minimizer-webpack-plugin` out of the box.
 If you are using Webpack v5 or above and wish to customize the options, you will still need to install `minimizer-webpack-plugin`.
-Using Webpack v4, you have to install `minimizer-webpack-plugin` v4.
+Using Webpack v4, you have to install `terser-webpack-plugin` v4 (`minimizer-webpack-plugin` is only published for Webpack v5+).
 
 To begin, you'll need to install `minimizer-webpack-plugin`:
 
