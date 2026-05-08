@@ -1309,7 +1309,10 @@ describe("minify option", () => {
 
     new MinimizerPlugin({
       test: /\.(?:[cm]?js|html?)(\?.*)?$/i,
-      minify: [MinimizerPlugin.terserMinify, MinimizerPlugin.htmlMinifierTerser],
+      minify: [
+        MinimizerPlugin.terserMinify,
+        MinimizerPlugin.htmlMinifierTerser,
+      ],
     }).apply(compiler);
 
     const stats = await compile(compiler);
