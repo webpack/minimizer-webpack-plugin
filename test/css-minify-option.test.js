@@ -322,25 +322,20 @@ describe("css minify option", () => {
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
 
-  it("should minify js, json, css, and html assets emitted in the same compilation", async () => {
+  it("should minify js, json, css, and html assets emitted in the same compilation using a single plugin instance", async () => {
     const compiler = getCompiler({
       entry: path.resolve(__dirname, "./fixtures/multi-asset.js"),
     });
 
     new TerserPlugin({
-      minify: TerserPlugin.terserMinify,
-    }).apply(compiler);
-    new TerserPlugin({
-      test: /\.json(\?.*)?$/i,
-      minify: TerserPlugin.jsonMinify,
-    }).apply(compiler);
-    new TerserPlugin({
-      test: /\.css(\?.*)?$/i,
-      minify: TerserPlugin.cssnanoMinify,
-    }).apply(compiler);
-    new TerserPlugin({
-      test: /\.html(\?.*)?$/i,
-      minify: TerserPlugin.htmlMinifierTerser,
+      test: /\.([cm]?js|json|css|html?)(\?.*)?$/i,
+      parallel: false,
+      minify: [
+        TerserPlugin.terserMinify,
+        TerserPlugin.jsonMinify,
+        TerserPlugin.cleanCssMinify,
+        TerserPlugin.htmlMinifierTerser,
+      ],
     }).apply(compiler);
 
     const stats = await compile(compiler);
