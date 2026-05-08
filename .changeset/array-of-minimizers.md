@@ -1,5 +1,5 @@
 ---
-"terser-webpack-plugin": minor
+"minimizer-webpack-plugin": minor
 ---
 
 support array of minimizers for `minify` and `terserOptions`

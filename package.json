@@ -1,7 +1,7 @@
 {
-  "name": "terser-webpack-plugin",
+  "name": "minimizer-webpack-plugin",
   "version": "5.5.0",
-  "description": "Terser plugin for webpack",
+  "description": "Minimizer plugin for webpack",
   "keywords": [
     "uglify",
     "uglify-js",
@@ -29,9 +29,9 @@
     "optimize",
     "optimizer"
   ],
-  "homepage": "https://github.com/webpack/terser-webpack-plugin",
-  "bugs": "https://github.com/webpack/terser-webpack-plugin/issues",
-  "repository": "webpack/terser-webpack-plugin",
+  "homepage": "https://github.com/webpack/minimizer-webpack-plugin",
+  "bugs": "https://github.com/webpack/minimizer-webpack-plugin/issues",
+  "repository": "webpack/minimizer-webpack-plugin",
   "funding": {
     "type": "opencollective",
     "url": "https://opencollective.com/webpack"

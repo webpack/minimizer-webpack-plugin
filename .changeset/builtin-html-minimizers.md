@@ -1,5 +1,5 @@
 ---
-"terser-webpack-plugin": minor
+"minimizer-webpack-plugin": minor
 ---
 
 add built-in HTML minimizers from `html-minimizer-webpack-plugin`
