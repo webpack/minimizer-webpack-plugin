@@ -8,7 +8,7 @@ import del from "del";
 import { SourceMapDevToolPlugin, javascript, util } from "webpack";
 import RequestShortener from "webpack/lib/RequestShortener";
 
-import TerserPlugin from "../src/index";
+import MinimizerPlugin from "../src/index";
 
 import {
   BrokenCodePlugin,
@@ -25,7 +25,7 @@ import {
 
 jest.setTimeout(30000);
 
-const terserPluginName = "TerserPlugin";
+const MinimizerPluginName = "TerserPlugin";
 
 expect.addSnapshotSerializer({
   test: (value) => {
@@ -43,7 +43,7 @@ expect.addSnapshotSerializer({
   print: (value) => JSON.stringify(JSON.parse(value), null, 2),
 });
 
-describe("TerserPlugin", () => {
+describe("MinimizerPlugin", () => {
   const rawSourceMap = {
     version: 3,
     file: "test.js",
@@ -98,7 +98,7 @@ describe("TerserPlugin", () => {
   it("should work (without options)", async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -136,7 +136,7 @@ describe("TerserPlugin", () => {
         optimization: {
           minimize: false,
         },
-        plugins: [new TerserPlugin()],
+        plugins: [new MinimizerPlugin()],
       },
       {
         mode: "production",
@@ -151,23 +151,23 @@ describe("TerserPlugin", () => {
         optimization: {
           minimize: false,
         },
-        plugins: [new TerserPlugin()],
+        plugins: [new MinimizerPlugin()],
       },
     ]);
 
     const emptyPluginCount = countPlugins(
       multiCompiler.compilers[0],
-      terserPluginName,
+      MinimizerPluginName,
     );
     const expectedPluginCount = countPlugins(
       multiCompiler.compilers[1],
-      terserPluginName,
+      MinimizerPluginName,
     );
 
     expect(emptyPluginCount).not.toEqual(expectedPluginCount);
 
     for (const compiler of multiCompiler.compilers.slice(2)) {
-      const pluginCount = countPlugins(compiler, terserPluginName);
+      const pluginCount = countPlugins(compiler, MinimizerPluginName);
 
       expect(pluginCount).not.toEqual(emptyPluginCount);
       expect(pluginCount).toEqual(expectedPluginCount);
@@ -190,7 +190,7 @@ describe("TerserPlugin", () => {
       entry: path.resolve(__dirname, "fixtures/empty.js"),
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -212,7 +212,7 @@ describe("TerserPlugin", () => {
       },
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -222,7 +222,7 @@ describe("TerserPlugin", () => {
   });
 
   it("should work in multi compiler mode with the one plugin", async () => {
-    const plugins = [new TerserPlugin()];
+    const plugins = [new MinimizerPlugin()];
     const multiCompiler = getCompiler([
       {
         mode: "production",
@@ -272,17 +272,17 @@ describe("TerserPlugin", () => {
 
     const emptyPluginCount = countPlugins(
       multiCompiler.compilers[0],
-      terserPluginName,
+      MinimizerPluginName,
     );
     const expectedPluginCount = countPlugins(
       multiCompiler.compilers[1],
-      terserPluginName,
+      MinimizerPluginName,
     );
 
     expect(emptyPluginCount).not.toEqual(expectedPluginCount);
 
     for (const compiler of multiCompiler.compilers.slice(2)) {
-      const pluginCount = countPlugins(compiler, terserPluginName);
+      const pluginCount = countPlugins(compiler, MinimizerPluginName);
 
       expect(pluginCount).not.toEqual(emptyPluginCount);
       expect(pluginCount).toEqual(expectedPluginCount);
@@ -301,7 +301,7 @@ describe("TerserPlugin", () => {
   });
 
   it("should work in multi compiler mode with the one plugin and with the same file", async () => {
-    const plugins = [new TerserPlugin()];
+    const plugins = [new MinimizerPlugin()];
     const multiCompiler = getCompiler([
       {
         mode: "production",
@@ -393,7 +393,7 @@ describe("TerserPlugin", () => {
 
   it("should work as a plugin", async () => {
     const compiler = getCompiler({
-      plugins: [new TerserPlugin()],
+      plugins: [new MinimizerPlugin()],
     });
 
     const stats = await compile(compiler);
@@ -407,7 +407,7 @@ describe("TerserPlugin", () => {
     const compiler = getCompiler({
       optimization: {
         minimize: true,
-        minimizer: [new TerserPlugin()],
+        minimizer: [new MinimizerPlugin()],
       },
     });
 
@@ -423,7 +423,7 @@ describe("TerserPlugin", () => {
       entry: path.resolve(__dirname, "fixtures/file-loader.js"),
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -448,7 +448,7 @@ describe("TerserPlugin", () => {
       },
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -462,7 +462,7 @@ describe("TerserPlugin", () => {
       entry: path.resolve(__dirname, "./fixtures/multi-asset.js"),
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -474,7 +474,7 @@ describe("TerserPlugin", () => {
   it('should work and respect "terser" errors (the "parallel" option is "true")', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       parallel: true,
       minify(input) {
         return require("terser").minify(`${input}1()2()3()`);
@@ -493,7 +493,7 @@ describe("TerserPlugin", () => {
   it('should work and respect "terser" errors (the "parallel" option is "false")', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       parallel: false,
       minify(input) {
         return require("terser").minify(`${input}1()2()3()`);
@@ -531,13 +531,13 @@ describe("TerserPlugin", () => {
       },
     });
 
-    compiler.hooks.thisCompilation.tap("TerserPlugin", (compilation) => {
+    compiler.hooks.thisCompilation.tap("MinimizerPlugin", (compilation) => {
       javascript.JavascriptModulesPlugin.getCompilationHooks(
         compilation,
-      ).chunkHash.tap("TerserPlugin", mockUpdateHashForChunk);
+      ).chunkHash.tap("MinimizerPlugin", mockUpdateHashForChunk);
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -546,7 +546,7 @@ describe("TerserPlugin", () => {
 
     // On each chunk we have 2 calls (we have 1 async chunk and 4 initial).
     // First call do `webpack`.
-    // Second call do `TerserPlugin`.
+    // Second call do `MinimizerPlugin`.
 
     // We have 1 async chunk (1 * 2 = 2 calls) and 4 initial chunks (4 * 2 = 8 calls)
     expect(mockUpdateHashForChunk).toHaveBeenCalledTimes(10);
@@ -555,22 +555,22 @@ describe("TerserPlugin", () => {
   });
 
   it("isSourceMap method", () => {
-    expect(TerserPlugin.isSourceMap(null)).toBe(false);
-    expect(TerserPlugin.isSourceMap()).toBe(false);
-    expect(TerserPlugin.isSourceMap({})).toBe(false);
-    expect(TerserPlugin.isSourceMap([])).toBe(false);
-    expect(TerserPlugin.isSourceMap("foo")).toBe(false);
-    expect(TerserPlugin.isSourceMap({ version: 3 })).toBe(false);
-    expect(TerserPlugin.isSourceMap({ sources: "" })).toBe(false);
-    expect(TerserPlugin.isSourceMap({ mappings: [] })).toBe(false);
-    expect(TerserPlugin.isSourceMap({ version: 3, sources: "" })).toBe(false);
-    expect(TerserPlugin.isSourceMap({ version: 3, mappings: [] })).toBe(false);
-    expect(TerserPlugin.isSourceMap({ sources: "", mappings: [] })).toBe(false);
+    expect(MinimizerPlugin.isSourceMap(null)).toBe(false);
+    expect(MinimizerPlugin.isSourceMap()).toBe(false);
+    expect(MinimizerPlugin.isSourceMap({})).toBe(false);
+    expect(MinimizerPlugin.isSourceMap([])).toBe(false);
+    expect(MinimizerPlugin.isSourceMap("foo")).toBe(false);
+    expect(MinimizerPlugin.isSourceMap({ version: 3 })).toBe(false);
+    expect(MinimizerPlugin.isSourceMap({ sources: "" })).toBe(false);
+    expect(MinimizerPlugin.isSourceMap({ mappings: [] })).toBe(false);
+    expect(MinimizerPlugin.isSourceMap({ version: 3, sources: "" })).toBe(false);
+    expect(MinimizerPlugin.isSourceMap({ version: 3, mappings: [] })).toBe(false);
+    expect(MinimizerPlugin.isSourceMap({ sources: "", mappings: [] })).toBe(false);
     expect(
-      TerserPlugin.isSourceMap({ version: 3, sources: "", mappings: [] }),
+      MinimizerPlugin.isSourceMap({ version: 3, sources: "", mappings: [] }),
     ).toBe(false);
-    expect(TerserPlugin.isSourceMap(rawSourceMap)).toBe(true);
-    expect(TerserPlugin.isSourceMap(emptyRawSourceMap)).toBe(true);
+    expect(MinimizerPlugin.isSourceMap(rawSourceMap)).toBe(true);
+    expect(MinimizerPlugin.isSourceMap(emptyRawSourceMap)).toBe(true);
   });
 
   it("buildError method", () => {
@@ -578,7 +578,7 @@ describe("TerserPlugin", () => {
 
     error.stack = null;
 
-    expect(TerserPlugin.buildError(error, "test.js")).toMatchSnapshot();
+    expect(MinimizerPlugin.buildError(error, "test.js")).toMatchSnapshot();
 
     const errorWithLineAndCol = new Error("Message");
 
@@ -587,7 +587,7 @@ describe("TerserPlugin", () => {
     errorWithLineAndCol.col = 1;
 
     expect(
-      TerserPlugin.buildError(
+      MinimizerPlugin.buildError(
         errorWithLineAndCol,
         "test.js",
         new TraceMap(rawSourceMap),
@@ -603,7 +603,7 @@ describe("TerserPlugin", () => {
     otherErrorWithLineAndCol.col = 1;
 
     expect(
-      TerserPlugin.buildError(
+      MinimizerPlugin.buildError(
         otherErrorWithLineAndCol,
         "test.js",
         new TraceMap(rawSourceMap),
@@ -616,7 +616,7 @@ describe("TerserPlugin", () => {
     errorWithStack.stack = "Stack";
 
     expect(
-      TerserPlugin.buildError(errorWithStack, "test.js"),
+      MinimizerPlugin.buildError(errorWithStack, "test.js"),
     ).toMatchSnapshot();
   });
 
@@ -634,7 +634,7 @@ describe("TerserPlugin", () => {
       },
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -661,7 +661,7 @@ describe("TerserPlugin", () => {
       },
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -684,7 +684,7 @@ describe("TerserPlugin", () => {
 
     new BrokenCodePlugin().apply(compiler);
 
-    new TerserPlugin({ parallel: true }).apply(compiler);
+    new MinimizerPlugin({ parallel: true }).apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -707,7 +707,7 @@ describe("TerserPlugin", () => {
 
     new BrokenCodePlugin().apply(compiler);
 
-    new TerserPlugin({ parallel: false }).apply(compiler);
+    new MinimizerPlugin({ parallel: false }).apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -738,7 +738,7 @@ describe("TerserPlugin", () => {
       },
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       parallel: true,
       minify: () => {
         process.stdout.write("stdout\n");
@@ -783,7 +783,7 @@ describe("TerserPlugin", () => {
       },
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       parallel: false,
       minify: () => {
         process.stdout.write("stdout\n");
@@ -835,7 +835,7 @@ describe("TerserPlugin", () => {
               },
             ],
           }),
-          new TerserPlugin(),
+          new MinimizerPlugin(),
         ],
       },
       {
@@ -868,7 +868,7 @@ describe("TerserPlugin", () => {
               },
             ],
           }),
-          new TerserPlugin(),
+          new MinimizerPlugin(),
         ],
       },
     ]);
@@ -902,7 +902,7 @@ describe("TerserPlugin", () => {
       },
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -914,7 +914,7 @@ describe("TerserPlugin", () => {
   it("should work and show minimized assets in stats", async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
     const stringStats = stats.toString({ relatedAssets: true });
@@ -932,7 +932,7 @@ describe("TerserPlugin", () => {
       devtool: "source-map",
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -959,7 +959,7 @@ describe("TerserPlugin", () => {
       },
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
     const {
@@ -1008,7 +1008,7 @@ describe("TerserPlugin", () => {
       },
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -1047,7 +1047,7 @@ describe("TerserPlugin", () => {
       },
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -1086,7 +1086,7 @@ describe("TerserPlugin", () => {
       },
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -1128,7 +1128,7 @@ describe("TerserPlugin", () => {
       },
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -1168,7 +1168,7 @@ describe("TerserPlugin", () => {
       },
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -1203,7 +1203,7 @@ describe("TerserPlugin", () => {
       },
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -1236,7 +1236,7 @@ describe("TerserPlugin", () => {
       },
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -1271,7 +1271,7 @@ describe("TerserPlugin", () => {
       },
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: {
         filename: "licenses.txt",
       },
@@ -1308,7 +1308,7 @@ describe("TerserPlugin", () => {
       },
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: {
         filename: "licenses.txt",
       },
@@ -1353,7 +1353,7 @@ describe("TerserPlugin", () => {
       },
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -1376,7 +1376,7 @@ describe("TerserPlugin", () => {
       devtool: false,
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -1391,7 +1391,7 @@ describe("TerserPlugin", () => {
       devtool: "source-map",
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -1406,7 +1406,7 @@ describe("TerserPlugin", () => {
       devtool: "inline-source-map",
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -1421,7 +1421,7 @@ describe("TerserPlugin", () => {
       devtool: "hidden-source-map",
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -1436,7 +1436,7 @@ describe("TerserPlugin", () => {
       devtool: "nosources-source-map",
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -1451,7 +1451,7 @@ describe("TerserPlugin", () => {
       devtool: "eval",
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -1466,7 +1466,7 @@ describe("TerserPlugin", () => {
       devtool: "cheap-source-map",
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -1488,7 +1488,7 @@ describe("TerserPlugin", () => {
       ],
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -1510,7 +1510,7 @@ describe("TerserPlugin", () => {
       ],
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -1535,7 +1535,7 @@ describe("TerserPlugin", () => {
         optimization: {
           minimize: false,
         },
-        plugins: [new TerserPlugin()],
+        plugins: [new MinimizerPlugin()],
       },
       {
         mode: "production",
@@ -1551,7 +1551,7 @@ describe("TerserPlugin", () => {
         optimization: {
           minimize: false,
         },
-        plugins: [new TerserPlugin()],
+        plugins: [new MinimizerPlugin()],
       },
       {
         mode: "production",
@@ -1573,7 +1573,7 @@ describe("TerserPlugin", () => {
             module: false,
             columns: false,
           }),
-          new TerserPlugin(),
+          new MinimizerPlugin(),
         ],
       },
       {
@@ -1596,7 +1596,7 @@ describe("TerserPlugin", () => {
             module: true,
             columns: true,
           }),
-          new TerserPlugin(),
+          new MinimizerPlugin(),
         ],
       },
     ]);
@@ -1618,7 +1618,7 @@ describe("TerserPlugin", () => {
       devtool: "source-map",
     });
 
-    new TerserPlugin({ parallel: false }).apply(compiler);
+    new MinimizerPlugin({ parallel: false }).apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -1633,7 +1633,7 @@ describe("TerserPlugin", () => {
       devtool: "source-map",
     });
 
-    new TerserPlugin({ parallel: true }).apply(compiler);
+    new MinimizerPlugin({ parallel: true }).apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -1647,7 +1647,7 @@ describe("TerserPlugin", () => {
       entry: path.resolve(__dirname, "./fixtures/entry.js"),
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
     new EmitNewAsset({ name: "newFile.js" }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -1669,7 +1669,7 @@ describe("TerserPlugin", () => {
       cache: false,
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     let getCounter = 0;
 
@@ -1743,7 +1743,7 @@ describe("TerserPlugin", () => {
       },
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     let getCounter = 0;
 
@@ -1812,7 +1812,7 @@ describe("TerserPlugin", () => {
       },
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     let getCounter = 0;
 
@@ -1888,7 +1888,7 @@ describe("TerserPlugin", () => {
       },
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     let getCounter = 0;
 
@@ -1962,7 +1962,7 @@ describe("TerserPlugin", () => {
       },
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     let getCounter = 0;
 
@@ -2036,7 +2036,7 @@ describe("TerserPlugin", () => {
       },
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: {
         filename: "licenses.txt",
       },
@@ -2108,7 +2108,7 @@ describe("TerserPlugin", () => {
       },
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       minify(input) {
         const [[, code]] = Object.entries(input);
         const isOldNodeJs = process.version.match(/^v(\d+)/)[1] === "10";
@@ -2189,7 +2189,7 @@ describe("TerserPlugin", () => {
       },
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       minify(input) {
         const [[, code]] = Object.entries(input);
         const isOldNodeJs = process.version.match(/^v(\d+)/)[1] === "10";

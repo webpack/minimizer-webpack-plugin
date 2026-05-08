@@ -1,27 +1,27 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`TerserPlugin buildError method 1`] = `
+exports[`MinimizerPlugin buildError method 1`] = `
 [Error: test.js from Terser plugin
 Message]
 `;
 
-exports[`TerserPlugin buildError method 2`] = `
+exports[`MinimizerPlugin buildError method 2`] = `
 [Error: test.js from Terser plugin
 Message [test.js:1,undefined]]
 `;
 
-exports[`TerserPlugin buildError method 3`] = `
+exports[`MinimizerPlugin buildError method 3`] = `
 [Error: test.js from Terser plugin
 Message [test.js:1,undefined]]
 `;
 
-exports[`TerserPlugin buildError method 4`] = `
+exports[`MinimizerPlugin buildError method 4`] = `
 [Error: test.js from Terser plugin
 Message
 Stack]
 `;
 
-exports[`TerserPlugin should emit an error on a broken code in not parallel mode: assets 1`] = `
+exports[`MinimizerPlugin should emit an error on a broken code in not parallel mode: assets 1`] = `
 Object {
   "broken.js": "\`Broken===",
   "one.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
@@ -29,16 +29,16 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should emit an error on a broken code in not parallel mode: errors 1`] = `
+exports[`MinimizerPlugin should emit an error on a broken code in not parallel mode: errors 1`] = `
 Array [
   "Error: broken.js from Terser plugin
 Unterminated template [broken.js:1,undefined]",
 ]
 `;
 
-exports[`TerserPlugin should emit an error on a broken code in not parallel mode: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should emit an error on a broken code in not parallel mode: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should emit an error on a broken code in parallel mode: assets 1`] = `
+exports[`MinimizerPlugin should emit an error on a broken code in parallel mode: assets 1`] = `
 Object {
   "broken.js": "\`Broken===",
   "one.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
@@ -46,16 +46,16 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should emit an error on a broken code in parallel mode: errors 1`] = `
+exports[`MinimizerPlugin should emit an error on a broken code in parallel mode: errors 1`] = `
 Array [
   "Error: broken.js from Terser plugin
 Unterminated template [broken.js:1,undefined]",
 ]
 `;
 
-exports[`TerserPlugin should emit an error on a broken code in parallel mode: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should emit an error on a broken code in parallel mode: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should not fail when only a js minimizer is set up but the compilation emits non-js assets: assets 1`] = `
+exports[`MinimizerPlugin should not fail when only a js minimizer is set up but the compilation emits non-js assets: assets 1`] = `
 Object {
   "04f1ffca8fe68614c9da.css": "/* a comment */
 .foo {
@@ -92,11 +92,11 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should not fail when only a js minimizer is set up but the compilation emits non-js assets: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should not fail when only a js minimizer is set up but the compilation emits non-js assets: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should not fail when only a js minimizer is set up but the compilation emits non-js assets: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should not fail when only a js minimizer is set up but the compilation emits non-js assets: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should regenerate hash: assets 1`] = `
+exports[`MinimizerPlugin should regenerate hash: assets 1`] = `
 Object {
   "389.389.28556c474aed5f181e45.js": "\\"use strict\\";(self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[389],{389(e,i,n){n.r(i),n.d(i,{default:()=>p});const p=\\"async-dep\\"}}]);",
   "AsyncImportExport.d6005d837f80a49afa93.js": "(()=>{\\"use strict\\";var e,r,t={},o={};function n(e){var r=o[e];if(void 0!==r)return r.exports;var i=o[e]={exports:{}};return t[e](i,i.exports,n),i.exports}n.m=t,n.d=(e,r)=>{for(var t in r)n.o(r,t)&&!n.o(e,t)&&Object.defineProperty(e,t,{enumerable:!0,get:r[t]})},n.f={},n.e=e=>Promise.all(Object.keys(n.f).reduce((r,t)=>(n.f[t](e,r),r),[])),n.u=e=>e+\\".\\"+e+\\".28556c474aed5f181e45.js\\",n.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(e){if(\\"object\\"==typeof window)return window}}(),n.o=(e,r)=>Object.prototype.hasOwnProperty.call(e,r),e={},r=\\"minimizer-webpack-plugin:\\",n.l=(t,o,i,a)=>{if(e[t])e[t].push(o);else{var l,c;if(void 0!==i)for(var u=document.getElementsByTagName(\\"script\\"),p=0;p<u.length;p++){var s=u[p];if(s.getAttribute(\\"src\\")==t||s.getAttribute(\\"data-webpack\\")==r+i){l=s;break}}l||(c=!0,(l=document.createElement(\\"script\\")).charset=\\"utf-8\\",n.nc&&l.setAttribute(\\"nonce\\",n.nc),l.setAttribute(\\"data-webpack\\",r+i),l.src=t),e[t]=[o];var d=(r,o)=>{l.onerror=l.onload=null,clearTimeout(f);var n=e[t];if(delete e[t],l.parentNode&&l.parentNode.removeChild(l),n&&n.forEach(e=>e(o)),r)return r(o)},f=setTimeout(d.bind(null,void 0,{type:\\"timeout\\",target:l}),12e4);l.onerror=d.bind(null,l.onerror),l.onload=d.bind(null,l.onload),c&&document.head.appendChild(l)}},n.r=e=>{\\"undefined\\"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:\\"Module\\"}),Object.defineProperty(e,\\"__esModule\\",{value:!0})},(()=>{var e;n.g.importScripts&&(e=n.g.location+\\"\\");var r=n.g.document;if(!e&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(e=r.currentScript.src),!e)){var t=r.getElementsByTagName(\\"script\\");if(t.length)for(var o=t.length-1;o>-1&&(!e||!/^http(s?):/.test(e));)e=t[o--].src}if(!e)throw new Error(\\"Automatic publicPath is not supported in this browser\\");e=e.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),n.p=e})(),(()=>{var e={988:0};n.f.j=(r,t)=>{var o=n.o(e,r)?e[r]:void 0;if(0!==o)if(o)t.push(o[2]);else{var i=new Promise((t,n)=>o=e[r]=[t,n]);t.push(o[2]=i);var a=n.p+n.u(r),l=new Error;n.l(a,t=>{if(n.o(e,r)&&(0!==(o=e[r])&&(e[r]=void 0),o)){var i=t&&(\\"load\\"===t.type?\\"missing\\":t.type),a=t&&t.target&&t.target.src;l.message=\\"Loading chunk \\"+r+\\" failed.\\\\n(\\"+i+\\": \\"+a+\\")\\",l.name=\\"ChunkLoadError\\",l.type=i,l.request=a,o[1](l)}},\\"chunk-\\"+r,r)}};var r=(r,t)=>{var o,i,[a,l,c]=t,u=0;if(a.some(r=>0!==e[r])){for(o in l)n.o(l,o)&&(n.m[o]=l[o]);if(c)c(n)}for(r&&r(t);u<a.length;u++)i=a[u],n.o(e,i)&&e[i]&&e[i][0](),e[i]=0},t=self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[];t.forEach(r.bind(null,0)),t.push=r.bind(null,t.push.bind(t))})(),n.e(389).then(n.bind(n,389)).then(()=>{console.log(\\"Good\\")})})();",
@@ -106,52 +106,52 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should regenerate hash: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should regenerate hash: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should regenerate hash: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should regenerate hash: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should respect hash options #2: assets 1`] = `
+exports[`MinimizerPlugin should respect hash options #2: assets 1`] = `
 Object {
   "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
-exports[`TerserPlugin should respect hash options #2: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should respect hash options #2: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should respect hash options #2: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should respect hash options #2: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should respect the hash options #1: assets 1`] = `
+exports[`MinimizerPlugin should respect the hash options #1: assets 1`] = `
 Object {
   "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
-exports[`TerserPlugin should respect the hash options #1: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should respect the hash options #1: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should respect the hash options #1: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should respect the hash options #1: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should run plugin against assets added later by plugins: assets 1`] = `
+exports[`MinimizerPlugin should run plugin against assets added later by plugins: assets 1`] = `
 Object {
   "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
   "newFile.js": "var foo=\\"bar\\",bar=\\"foo\\";",
 }
 `;
 
-exports[`TerserPlugin should run plugin against assets added later by plugins: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should run plugin against assets added later by plugins: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should run plugin against assets added later by plugins: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should run plugin against assets added later by plugins: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work (without options): assets 1`] = `
+exports[`MinimizerPlugin should work (without options): assets 1`] = `
 Object {
   "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
-exports[`TerserPlugin should work (without options): errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work (without options): errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work (without options): warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work (without options): warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work and do not use memory cache when the "cache" option is "false": assets 1`] = `
+exports[`MinimizerPlugin should work and do not use memory cache when the "cache" option is "false": assets 1`] = `
 Object {
   "389.389.js": "\\"use strict\\";(self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[389],{389(e,i,n){n.r(i),n.d(i,{default:()=>p});const p=\\"async-dep\\"}}]);",
   "AsyncImportExport.js": "(()=>{\\"use strict\\";var e,r,t={},o={};function n(e){var r=o[e];if(void 0!==r)return r.exports;var i=o[e]={exports:{}};return t[e](i,i.exports,n),i.exports}n.m=t,n.d=(e,r)=>{for(var t in r)n.o(r,t)&&!n.o(e,t)&&Object.defineProperty(e,t,{enumerable:!0,get:r[t]})},n.f={},n.e=e=>Promise.all(Object.keys(n.f).reduce((r,t)=>(n.f[t](e,r),r),[])),n.u=e=>e+\\".\\"+e+\\".js\\",n.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(e){if(\\"object\\"==typeof window)return window}}(),n.o=(e,r)=>Object.prototype.hasOwnProperty.call(e,r),e={},r=\\"minimizer-webpack-plugin:\\",n.l=(t,o,i,a)=>{if(e[t])e[t].push(o);else{var l,c;if(void 0!==i)for(var u=document.getElementsByTagName(\\"script\\"),p=0;p<u.length;p++){var s=u[p];if(s.getAttribute(\\"src\\")==t||s.getAttribute(\\"data-webpack\\")==r+i){l=s;break}}l||(c=!0,(l=document.createElement(\\"script\\")).charset=\\"utf-8\\",n.nc&&l.setAttribute(\\"nonce\\",n.nc),l.setAttribute(\\"data-webpack\\",r+i),l.src=t),e[t]=[o];var d=(r,o)=>{l.onerror=l.onload=null,clearTimeout(f);var n=e[t];if(delete e[t],l.parentNode&&l.parentNode.removeChild(l),n&&n.forEach(e=>e(o)),r)return r(o)},f=setTimeout(d.bind(null,void 0,{type:\\"timeout\\",target:l}),12e4);l.onerror=d.bind(null,l.onerror),l.onload=d.bind(null,l.onload),c&&document.head.appendChild(l)}},n.r=e=>{\\"undefined\\"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:\\"Module\\"}),Object.defineProperty(e,\\"__esModule\\",{value:!0})},(()=>{var e;n.g.importScripts&&(e=n.g.location+\\"\\");var r=n.g.document;if(!e&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(e=r.currentScript.src),!e)){var t=r.getElementsByTagName(\\"script\\");if(t.length)for(var o=t.length-1;o>-1&&(!e||!/^http(s?):/.test(e));)e=t[o--].src}if(!e)throw new Error(\\"Automatic publicPath is not supported in this browser\\");e=e.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),n.p=e})(),(()=>{var e={988:0};n.f.j=(r,t)=>{var o=n.o(e,r)?e[r]:void 0;if(0!==o)if(o)t.push(o[2]);else{var i=new Promise((t,n)=>o=e[r]=[t,n]);t.push(o[2]=i);var a=n.p+n.u(r),l=new Error;n.l(a,t=>{if(n.o(e,r)&&(0!==(o=e[r])&&(e[r]=void 0),o)){var i=t&&(\\"load\\"===t.type?\\"missing\\":t.type),a=t&&t.target&&t.target.src;l.message=\\"Loading chunk \\"+r+\\" failed.\\\\n(\\"+i+\\": \\"+a+\\")\\",l.name=\\"ChunkLoadError\\",l.type=i,l.request=a,o[1](l)}},\\"chunk-\\"+r,r)}};var r=(r,t)=>{var o,i,[a,l,c]=t,u=0;if(a.some(r=>0!==e[r])){for(o in l)n.o(l,o)&&(n.m[o]=l[o]);if(c)c(n)}for(r&&r(t);u<a.length;u++)i=a[u],n.o(e,i)&&e[i]&&e[i][0](),e[i]=0},t=self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[];t.forEach(r.bind(null,0)),t.push=r.bind(null,t.push.bind(t))})(),n.e(389).then(n.bind(n,389)).then(()=>{console.log(\\"Good\\")})})();",
@@ -161,7 +161,7 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work and do not use memory cache when the "cache" option is "false": assets 2`] = `
+exports[`MinimizerPlugin should work and do not use memory cache when the "cache" option is "false": assets 2`] = `
 Object {
   "389.389.js": "\\"use strict\\";(self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[389],{389(e,i,n){n.r(i),n.d(i,{default:()=>p});const p=\\"async-dep\\"}}]);",
   "AsyncImportExport.js": "(()=>{\\"use strict\\";var e,r,t={},o={};function n(e){var r=o[e];if(void 0!==r)return r.exports;var i=o[e]={exports:{}};return t[e](i,i.exports,n),i.exports}n.m=t,n.d=(e,r)=>{for(var t in r)n.o(r,t)&&!n.o(e,t)&&Object.defineProperty(e,t,{enumerable:!0,get:r[t]})},n.f={},n.e=e=>Promise.all(Object.keys(n.f).reduce((r,t)=>(n.f[t](e,r),r),[])),n.u=e=>e+\\".\\"+e+\\".js\\",n.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(e){if(\\"object\\"==typeof window)return window}}(),n.o=(e,r)=>Object.prototype.hasOwnProperty.call(e,r),e={},r=\\"minimizer-webpack-plugin:\\",n.l=(t,o,i,a)=>{if(e[t])e[t].push(o);else{var l,c;if(void 0!==i)for(var u=document.getElementsByTagName(\\"script\\"),p=0;p<u.length;p++){var s=u[p];if(s.getAttribute(\\"src\\")==t||s.getAttribute(\\"data-webpack\\")==r+i){l=s;break}}l||(c=!0,(l=document.createElement(\\"script\\")).charset=\\"utf-8\\",n.nc&&l.setAttribute(\\"nonce\\",n.nc),l.setAttribute(\\"data-webpack\\",r+i),l.src=t),e[t]=[o];var d=(r,o)=>{l.onerror=l.onload=null,clearTimeout(f);var n=e[t];if(delete e[t],l.parentNode&&l.parentNode.removeChild(l),n&&n.forEach(e=>e(o)),r)return r(o)},f=setTimeout(d.bind(null,void 0,{type:\\"timeout\\",target:l}),12e4);l.onerror=d.bind(null,l.onerror),l.onload=d.bind(null,l.onload),c&&document.head.appendChild(l)}},n.r=e=>{\\"undefined\\"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:\\"Module\\"}),Object.defineProperty(e,\\"__esModule\\",{value:!0})},(()=>{var e;n.g.importScripts&&(e=n.g.location+\\"\\");var r=n.g.document;if(!e&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(e=r.currentScript.src),!e)){var t=r.getElementsByTagName(\\"script\\");if(t.length)for(var o=t.length-1;o>-1&&(!e||!/^http(s?):/.test(e));)e=t[o--].src}if(!e)throw new Error(\\"Automatic publicPath is not supported in this browser\\");e=e.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),n.p=e})(),(()=>{var e={988:0};n.f.j=(r,t)=>{var o=n.o(e,r)?e[r]:void 0;if(0!==o)if(o)t.push(o[2]);else{var i=new Promise((t,n)=>o=e[r]=[t,n]);t.push(o[2]=i);var a=n.p+n.u(r),l=new Error;n.l(a,t=>{if(n.o(e,r)&&(0!==(o=e[r])&&(e[r]=void 0),o)){var i=t&&(\\"load\\"===t.type?\\"missing\\":t.type),a=t&&t.target&&t.target.src;l.message=\\"Loading chunk \\"+r+\\" failed.\\\\n(\\"+i+\\": \\"+a+\\")\\",l.name=\\"ChunkLoadError\\",l.type=i,l.request=a,o[1](l)}},\\"chunk-\\"+r,r)}};var r=(r,t)=>{var o,i,[a,l,c]=t,u=0;if(a.some(r=>0!==e[r])){for(o in l)n.o(l,o)&&(n.m[o]=l[o]);if(c)c(n)}for(r&&r(t);u<a.length;u++)i=a[u],n.o(e,i)&&e[i]&&e[i][0](),e[i]=0},t=self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[];t.forEach(r.bind(null,0)),t.push=r.bind(null,t.push.bind(t))})(),n.e(389).then(n.bind(n,389)).then(()=>{console.log(\\"Good\\")})})();",
@@ -171,54 +171,54 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work and do not use memory cache when the "cache" option is "false": errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work and do not use memory cache when the "cache" option is "false": errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work and do not use memory cache when the "cache" option is "false": errors 2`] = `Array []`;
+exports[`MinimizerPlugin should work and do not use memory cache when the "cache" option is "false": errors 2`] = `Array []`;
 
-exports[`TerserPlugin should work and do not use memory cache when the "cache" option is "false": warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work and do not use memory cache when the "cache" option is "false": warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work and do not use memory cache when the "cache" option is "false": warnings 2`] = `Array []`;
+exports[`MinimizerPlugin should work and do not use memory cache when the "cache" option is "false": warnings 2`] = `Array []`;
 
-exports[`TerserPlugin should work and generate real content hash: assets 1`] = `
+exports[`MinimizerPlugin should work and generate real content hash: assets 1`] = `
 Object {
   "389.28556c474aed5f181e45.a869e6b687b548f37a7a.50b4781c34d1e0f1954b.js": "\\"use strict\\";(self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[389],{389(e,i,n){n.r(i),n.d(i,{default:()=>p});const p=\\"async-dep\\"}}]);",
   "app.ca592c50a8ef896eea4c.8ac7f02f4c85a917cdba.50b4781c34d1e0f1954b.js": "(()=>{\\"use strict\\";var e,r,t={},o={};function n(e){var r=o[e];if(void 0!==r)return r.exports;var i=o[e]={exports:{}};return t[e](i,i.exports,n),i.exports}n.m=t,n.d=(e,r)=>{for(var t in r)n.o(r,t)&&!n.o(e,t)&&Object.defineProperty(e,t,{enumerable:!0,get:r[t]})},n.f={},n.e=e=>Promise.all(Object.keys(n.f).reduce((r,t)=>(n.f[t](e,r),r),[])),n.u=e=>e+\\".28556c474aed5f181e45.a869e6b687b548f37a7a.\\"+n.h()+\\".js\\",n.h=()=>\\"50b4781c34d1e0f1954b\\",n.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(e){if(\\"object\\"==typeof window)return window}}(),n.o=(e,r)=>Object.prototype.hasOwnProperty.call(e,r),e={},r=\\"minimizer-webpack-plugin:\\",n.l=(t,o,i,a)=>{if(e[t])e[t].push(o);else{var l,c;if(void 0!==i)for(var u=document.getElementsByTagName(\\"script\\"),p=0;p<u.length;p++){var s=u[p];if(s.getAttribute(\\"src\\")==t||s.getAttribute(\\"data-webpack\\")==r+i){l=s;break}}l||(c=!0,(l=document.createElement(\\"script\\")).charset=\\"utf-8\\",n.nc&&l.setAttribute(\\"nonce\\",n.nc),l.setAttribute(\\"data-webpack\\",r+i),l.src=t),e[t]=[o];var d=(r,o)=>{l.onerror=l.onload=null,clearTimeout(f);var n=e[t];if(delete e[t],l.parentNode&&l.parentNode.removeChild(l),n&&n.forEach(e=>e(o)),r)return r(o)},f=setTimeout(d.bind(null,void 0,{type:\\"timeout\\",target:l}),12e4);l.onerror=d.bind(null,l.onerror),l.onload=d.bind(null,l.onload),c&&document.head.appendChild(l)}},n.r=e=>{\\"undefined\\"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:\\"Module\\"}),Object.defineProperty(e,\\"__esModule\\",{value:!0})},(()=>{var e;n.g.importScripts&&(e=n.g.location+\\"\\");var r=n.g.document;if(!e&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(e=r.currentScript.src),!e)){var t=r.getElementsByTagName(\\"script\\");if(t.length)for(var o=t.length-1;o>-1&&(!e||!/^http(s?):/.test(e));)e=t[o--].src}if(!e)throw new Error(\\"Automatic publicPath is not supported in this browser\\");e=e.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),n.p=e})(),(()=>{var e={524:0};n.f.j=(r,t)=>{var o=n.o(e,r)?e[r]:void 0;if(0!==o)if(o)t.push(o[2]);else{var i=new Promise((t,n)=>o=e[r]=[t,n]);t.push(o[2]=i);var a=n.p+n.u(r),l=new Error;n.l(a,t=>{if(n.o(e,r)&&(0!==(o=e[r])&&(e[r]=void 0),o)){var i=t&&(\\"load\\"===t.type?\\"missing\\":t.type),a=t&&t.target&&t.target.src;l.message=\\"Loading chunk \\"+r+\\" failed.\\\\n(\\"+i+\\": \\"+a+\\")\\",l.name=\\"ChunkLoadError\\",l.type=i,l.request=a,o[1](l)}},\\"chunk-\\"+r,r)}};var r=(r,t)=>{var o,i,[a,l,c]=t,u=0;if(a.some(r=>0!==e[r])){for(o in l)n.o(l,o)&&(n.m[o]=l[o]);if(c)c(n)}for(r&&r(t);u<a.length;u++)i=a[u],n.o(e,i)&&e[i]&&e[i][0](),e[i]=0},t=self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[];t.forEach(r.bind(null,0)),t.push=r.bind(null,t.push.bind(t))})(),n.e(389).then(n.bind(n,389)).then(()=>{console.log(\\"Good\\")})})();",
 }
 `;
 
-exports[`TerserPlugin should work and generate real content hash: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work and generate real content hash: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work and generate real content hash: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work and generate real content hash: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work and respect "terser" errors (the "parallel" option is "false"): errors 1`] = `
+exports[`MinimizerPlugin should work and respect "terser" errors (the "parallel" option is "false"): errors 1`] = `
 Array [
   "Error: main.js from Terser plugin
 Unexpected token name «Object», expected punc «,» [main.js:1,undefined]",
 ]
 `;
 
-exports[`TerserPlugin should work and respect "terser" errors (the "parallel" option is "false"): warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work and respect "terser" errors (the "parallel" option is "false"): warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work and respect "terser" errors (the "parallel" option is "true"): errors 1`] = `
+exports[`MinimizerPlugin should work and respect "terser" errors (the "parallel" option is "true"): errors 1`] = `
 Array [
   "Error: main.js from Terser plugin
 Unexpected token name «Object», expected punc «,» [main.js:1,undefined]",
 ]
 `;
 
-exports[`TerserPlugin should work and respect "terser" errors (the "parallel" option is "true"): warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work and respect "terser" errors (the "parallel" option is "true"): warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work and show minimized assets in stats: assets 1`] = `
+exports[`MinimizerPlugin should work and show minimized assets in stats: assets 1`] = `
 Object {
   "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
-exports[`TerserPlugin should work and show minimized assets in stats: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work and show minimized assets in stats: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work and show minimized assets in stats: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work and show minimized assets in stats: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work and show related assets in stats: assets 1`] = `
+exports[`MinimizerPlugin should work and show related assets in stats: assets 1`] = `
 Object {
   "comments.js": "/*! For license information please see comments.js.LICENSE.txt */
 (()=>{var r={250(r){r.exports=Math.random()}},t={};(function o(e){var a=t[e];if(void 0!==a)return a.exports;var n=t[e]={exports:{}};return r[e](n,n.exports,o),n.exports})(250)})();
@@ -259,11 +259,11 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work and show related assets in stats: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work and show related assets in stats: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work and show related assets in stats: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work and show related assets in stats: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work and use memory cache out of box: assets 1`] = `
+exports[`MinimizerPlugin should work and use memory cache out of box: assets 1`] = `
 Object {
   "389.389.js": "\\"use strict\\";(self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[389],{389(e,i,n){n.r(i),n.d(i,{default:()=>p});const p=\\"async-dep\\"}}]);",
   "AsyncImportExport.js": "(()=>{\\"use strict\\";var e,r,t={},o={};function n(e){var r=o[e];if(void 0!==r)return r.exports;var i=o[e]={exports:{}};return t[e](i,i.exports,n),i.exports}n.m=t,n.d=(e,r)=>{for(var t in r)n.o(r,t)&&!n.o(e,t)&&Object.defineProperty(e,t,{enumerable:!0,get:r[t]})},n.f={},n.e=e=>Promise.all(Object.keys(n.f).reduce((r,t)=>(n.f[t](e,r),r),[])),n.u=e=>e+\\".\\"+e+\\".js\\",n.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(e){if(\\"object\\"==typeof window)return window}}(),n.o=(e,r)=>Object.prototype.hasOwnProperty.call(e,r),e={},r=\\"minimizer-webpack-plugin:\\",n.l=(t,o,i,a)=>{if(e[t])e[t].push(o);else{var l,c;if(void 0!==i)for(var u=document.getElementsByTagName(\\"script\\"),p=0;p<u.length;p++){var s=u[p];if(s.getAttribute(\\"src\\")==t||s.getAttribute(\\"data-webpack\\")==r+i){l=s;break}}l||(c=!0,(l=document.createElement(\\"script\\")).charset=\\"utf-8\\",n.nc&&l.setAttribute(\\"nonce\\",n.nc),l.setAttribute(\\"data-webpack\\",r+i),l.src=t),e[t]=[o];var d=(r,o)=>{l.onerror=l.onload=null,clearTimeout(f);var n=e[t];if(delete e[t],l.parentNode&&l.parentNode.removeChild(l),n&&n.forEach(e=>e(o)),r)return r(o)},f=setTimeout(d.bind(null,void 0,{type:\\"timeout\\",target:l}),12e4);l.onerror=d.bind(null,l.onerror),l.onload=d.bind(null,l.onload),c&&document.head.appendChild(l)}},n.r=e=>{\\"undefined\\"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:\\"Module\\"}),Object.defineProperty(e,\\"__esModule\\",{value:!0})},(()=>{var e;n.g.importScripts&&(e=n.g.location+\\"\\");var r=n.g.document;if(!e&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(e=r.currentScript.src),!e)){var t=r.getElementsByTagName(\\"script\\");if(t.length)for(var o=t.length-1;o>-1&&(!e||!/^http(s?):/.test(e));)e=t[o--].src}if(!e)throw new Error(\\"Automatic publicPath is not supported in this browser\\");e=e.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),n.p=e})(),(()=>{var e={988:0};n.f.j=(r,t)=>{var o=n.o(e,r)?e[r]:void 0;if(0!==o)if(o)t.push(o[2]);else{var i=new Promise((t,n)=>o=e[r]=[t,n]);t.push(o[2]=i);var a=n.p+n.u(r),l=new Error;n.l(a,t=>{if(n.o(e,r)&&(0!==(o=e[r])&&(e[r]=void 0),o)){var i=t&&(\\"load\\"===t.type?\\"missing\\":t.type),a=t&&t.target&&t.target.src;l.message=\\"Loading chunk \\"+r+\\" failed.\\\\n(\\"+i+\\": \\"+a+\\")\\",l.name=\\"ChunkLoadError\\",l.type=i,l.request=a,o[1](l)}},\\"chunk-\\"+r,r)}};var r=(r,t)=>{var o,i,[a,l,c]=t,u=0;if(a.some(r=>0!==e[r])){for(o in l)n.o(l,o)&&(n.m[o]=l[o]);if(c)c(n)}for(r&&r(t);u<a.length;u++)i=a[u],n.o(e,i)&&e[i]&&e[i][0](),e[i]=0},t=self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[];t.forEach(r.bind(null,0)),t.push=r.bind(null,t.push.bind(t))})(),n.e(389).then(n.bind(n,389)).then(()=>{console.log(\\"Good\\")})})();",
@@ -273,7 +273,7 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work and use memory cache out of box: assets 2`] = `
+exports[`MinimizerPlugin should work and use memory cache out of box: assets 2`] = `
 Object {
   "389.389.js": "\\"use strict\\";(self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[389],{389(e,i,n){n.r(i),n.d(i,{default:()=>p});const p=\\"async-dep\\"}}]);",
   "AsyncImportExport.js": "(()=>{\\"use strict\\";var e,r,t={},o={};function n(e){var r=o[e];if(void 0!==r)return r.exports;var i=o[e]={exports:{}};return t[e](i,i.exports,n),i.exports}n.m=t,n.d=(e,r)=>{for(var t in r)n.o(r,t)&&!n.o(e,t)&&Object.defineProperty(e,t,{enumerable:!0,get:r[t]})},n.f={},n.e=e=>Promise.all(Object.keys(n.f).reduce((r,t)=>(n.f[t](e,r),r),[])),n.u=e=>e+\\".\\"+e+\\".js\\",n.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(e){if(\\"object\\"==typeof window)return window}}(),n.o=(e,r)=>Object.prototype.hasOwnProperty.call(e,r),e={},r=\\"minimizer-webpack-plugin:\\",n.l=(t,o,i,a)=>{if(e[t])e[t].push(o);else{var l,c;if(void 0!==i)for(var u=document.getElementsByTagName(\\"script\\"),p=0;p<u.length;p++){var s=u[p];if(s.getAttribute(\\"src\\")==t||s.getAttribute(\\"data-webpack\\")==r+i){l=s;break}}l||(c=!0,(l=document.createElement(\\"script\\")).charset=\\"utf-8\\",n.nc&&l.setAttribute(\\"nonce\\",n.nc),l.setAttribute(\\"data-webpack\\",r+i),l.src=t),e[t]=[o];var d=(r,o)=>{l.onerror=l.onload=null,clearTimeout(f);var n=e[t];if(delete e[t],l.parentNode&&l.parentNode.removeChild(l),n&&n.forEach(e=>e(o)),r)return r(o)},f=setTimeout(d.bind(null,void 0,{type:\\"timeout\\",target:l}),12e4);l.onerror=d.bind(null,l.onerror),l.onload=d.bind(null,l.onload),c&&document.head.appendChild(l)}},n.r=e=>{\\"undefined\\"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:\\"Module\\"}),Object.defineProperty(e,\\"__esModule\\",{value:!0})},(()=>{var e;n.g.importScripts&&(e=n.g.location+\\"\\");var r=n.g.document;if(!e&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(e=r.currentScript.src),!e)){var t=r.getElementsByTagName(\\"script\\");if(t.length)for(var o=t.length-1;o>-1&&(!e||!/^http(s?):/.test(e));)e=t[o--].src}if(!e)throw new Error(\\"Automatic publicPath is not supported in this browser\\");e=e.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),n.p=e})(),(()=>{var e={988:0};n.f.j=(r,t)=>{var o=n.o(e,r)?e[r]:void 0;if(0!==o)if(o)t.push(o[2]);else{var i=new Promise((t,n)=>o=e[r]=[t,n]);t.push(o[2]=i);var a=n.p+n.u(r),l=new Error;n.l(a,t=>{if(n.o(e,r)&&(0!==(o=e[r])&&(e[r]=void 0),o)){var i=t&&(\\"load\\"===t.type?\\"missing\\":t.type),a=t&&t.target&&t.target.src;l.message=\\"Loading chunk \\"+r+\\" failed.\\\\n(\\"+i+\\": \\"+a+\\")\\",l.name=\\"ChunkLoadError\\",l.type=i,l.request=a,o[1](l)}},\\"chunk-\\"+r,r)}};var r=(r,t)=>{var o,i,[a,l,c]=t,u=0;if(a.some(r=>0!==e[r])){for(o in l)n.o(l,o)&&(n.m[o]=l[o]);if(c)c(n)}for(r&&r(t);u<a.length;u++)i=a[u],n.o(e,i)&&e[i]&&e[i][0](),e[i]=0},t=self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[];t.forEach(r.bind(null,0)),t.push=r.bind(null,t.push.bind(t))})(),n.e(389).then(n.bind(n,389)).then(()=>{console.log(\\"Good\\")})})();",
@@ -283,15 +283,15 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work and use memory cache out of box: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work and use memory cache out of box: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work and use memory cache out of box: errors 2`] = `Array []`;
+exports[`MinimizerPlugin should work and use memory cache out of box: errors 2`] = `Array []`;
 
-exports[`TerserPlugin should work and use memory cache out of box: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work and use memory cache out of box: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work and use memory cache out of box: warnings 2`] = `Array []`;
+exports[`MinimizerPlugin should work and use memory cache out of box: warnings 2`] = `Array []`;
 
-exports[`TerserPlugin should work and use memory cache when the "cache" option is "true" and the asset has been changed: assets 1`] = `
+exports[`MinimizerPlugin should work and use memory cache when the "cache" option is "true" and the asset has been changed: assets 1`] = `
 Object {
   "389.389.js": "\\"use strict\\";(self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[389],{389(e,i,n){n.r(i),n.d(i,{default:()=>p});const p=\\"async-dep\\"}}]);",
   "AsyncImportExport.js": "(()=>{\\"use strict\\";var e,r,t={},o={};function n(e){var r=o[e];if(void 0!==r)return r.exports;var i=o[e]={exports:{}};return t[e](i,i.exports,n),i.exports}n.m=t,n.d=(e,r)=>{for(var t in r)n.o(r,t)&&!n.o(e,t)&&Object.defineProperty(e,t,{enumerable:!0,get:r[t]})},n.f={},n.e=e=>Promise.all(Object.keys(n.f).reduce((r,t)=>(n.f[t](e,r),r),[])),n.u=e=>e+\\".\\"+e+\\".js\\",n.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(e){if(\\"object\\"==typeof window)return window}}(),n.o=(e,r)=>Object.prototype.hasOwnProperty.call(e,r),e={},r=\\"minimizer-webpack-plugin:\\",n.l=(t,o,i,a)=>{if(e[t])e[t].push(o);else{var l,c;if(void 0!==i)for(var u=document.getElementsByTagName(\\"script\\"),p=0;p<u.length;p++){var s=u[p];if(s.getAttribute(\\"src\\")==t||s.getAttribute(\\"data-webpack\\")==r+i){l=s;break}}l||(c=!0,(l=document.createElement(\\"script\\")).charset=\\"utf-8\\",n.nc&&l.setAttribute(\\"nonce\\",n.nc),l.setAttribute(\\"data-webpack\\",r+i),l.src=t),e[t]=[o];var d=(r,o)=>{l.onerror=l.onload=null,clearTimeout(f);var n=e[t];if(delete e[t],l.parentNode&&l.parentNode.removeChild(l),n&&n.forEach(e=>e(o)),r)return r(o)},f=setTimeout(d.bind(null,void 0,{type:\\"timeout\\",target:l}),12e4);l.onerror=d.bind(null,l.onerror),l.onload=d.bind(null,l.onload),c&&document.head.appendChild(l)}},n.r=e=>{\\"undefined\\"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:\\"Module\\"}),Object.defineProperty(e,\\"__esModule\\",{value:!0})},(()=>{var e;n.g.importScripts&&(e=n.g.location+\\"\\");var r=n.g.document;if(!e&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(e=r.currentScript.src),!e)){var t=r.getElementsByTagName(\\"script\\");if(t.length)for(var o=t.length-1;o>-1&&(!e||!/^http(s?):/.test(e));)e=t[o--].src}if(!e)throw new Error(\\"Automatic publicPath is not supported in this browser\\");e=e.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),n.p=e})(),(()=>{var e={988:0};n.f.j=(r,t)=>{var o=n.o(e,r)?e[r]:void 0;if(0!==o)if(o)t.push(o[2]);else{var i=new Promise((t,n)=>o=e[r]=[t,n]);t.push(o[2]=i);var a=n.p+n.u(r),l=new Error;n.l(a,t=>{if(n.o(e,r)&&(0!==(o=e[r])&&(e[r]=void 0),o)){var i=t&&(\\"load\\"===t.type?\\"missing\\":t.type),a=t&&t.target&&t.target.src;l.message=\\"Loading chunk \\"+r+\\" failed.\\\\n(\\"+i+\\": \\"+a+\\")\\",l.name=\\"ChunkLoadError\\",l.type=i,l.request=a,o[1](l)}},\\"chunk-\\"+r,r)}};var r=(r,t)=>{var o,i,[a,l,c]=t,u=0;if(a.some(r=>0!==e[r])){for(o in l)n.o(l,o)&&(n.m[o]=l[o]);if(c)c(n)}for(r&&r(t);u<a.length;u++)i=a[u],n.o(e,i)&&e[i]&&e[i][0](),e[i]=0},t=self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[];t.forEach(r.bind(null,0)),t.push=r.bind(null,t.push.bind(t))})(),n.e(389).then(n.bind(n,389)).then(()=>{console.log(\\"Good\\")})})();",
@@ -301,7 +301,7 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work and use memory cache when the "cache" option is "true" and the asset has been changed: assets 2`] = `
+exports[`MinimizerPlugin should work and use memory cache when the "cache" option is "true" and the asset has been changed: assets 2`] = `
 Object {
   "389.389.js": "\\"use strict\\";(self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[389],{389(e,i,n){n.r(i),n.d(i,{default:()=>p});const p=\\"async-dep\\"}}]);",
   "AsyncImportExport.js": "(()=>{\\"use strict\\";var e,r,t={},o={};function n(e){var r=o[e];if(void 0!==r)return r.exports;var i=o[e]={exports:{}};return t[e](i,i.exports,n),i.exports}n.m=t,n.d=(e,r)=>{for(var t in r)n.o(r,t)&&!n.o(e,t)&&Object.defineProperty(e,t,{enumerable:!0,get:r[t]})},n.f={},n.e=e=>Promise.all(Object.keys(n.f).reduce((r,t)=>(n.f[t](e,r),r),[])),n.u=e=>e+\\".\\"+e+\\".js\\",n.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(e){if(\\"object\\"==typeof window)return window}}(),n.o=(e,r)=>Object.prototype.hasOwnProperty.call(e,r),e={},r=\\"minimizer-webpack-plugin:\\",n.l=(t,o,i,a)=>{if(e[t])e[t].push(o);else{var l,c;if(void 0!==i)for(var u=document.getElementsByTagName(\\"script\\"),p=0;p<u.length;p++){var s=u[p];if(s.getAttribute(\\"src\\")==t||s.getAttribute(\\"data-webpack\\")==r+i){l=s;break}}l||(c=!0,(l=document.createElement(\\"script\\")).charset=\\"utf-8\\",n.nc&&l.setAttribute(\\"nonce\\",n.nc),l.setAttribute(\\"data-webpack\\",r+i),l.src=t),e[t]=[o];var d=(r,o)=>{l.onerror=l.onload=null,clearTimeout(f);var n=e[t];if(delete e[t],l.parentNode&&l.parentNode.removeChild(l),n&&n.forEach(e=>e(o)),r)return r(o)},f=setTimeout(d.bind(null,void 0,{type:\\"timeout\\",target:l}),12e4);l.onerror=d.bind(null,l.onerror),l.onload=d.bind(null,l.onload),c&&document.head.appendChild(l)}},n.r=e=>{\\"undefined\\"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:\\"Module\\"}),Object.defineProperty(e,\\"__esModule\\",{value:!0})},(()=>{var e;n.g.importScripts&&(e=n.g.location+\\"\\");var r=n.g.document;if(!e&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(e=r.currentScript.src),!e)){var t=r.getElementsByTagName(\\"script\\");if(t.length)for(var o=t.length-1;o>-1&&(!e||!/^http(s?):/.test(e));)e=t[o--].src}if(!e)throw new Error(\\"Automatic publicPath is not supported in this browser\\");e=e.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),n.p=e})(),(()=>{var e={988:0};n.f.j=(r,t)=>{var o=n.o(e,r)?e[r]:void 0;if(0!==o)if(o)t.push(o[2]);else{var i=new Promise((t,n)=>o=e[r]=[t,n]);t.push(o[2]=i);var a=n.p+n.u(r),l=new Error;n.l(a,t=>{if(n.o(e,r)&&(0!==(o=e[r])&&(e[r]=void 0),o)){var i=t&&(\\"load\\"===t.type?\\"missing\\":t.type),a=t&&t.target&&t.target.src;l.message=\\"Loading chunk \\"+r+\\" failed.\\\\n(\\"+i+\\": \\"+a+\\")\\",l.name=\\"ChunkLoadError\\",l.type=i,l.request=a,o[1](l)}},\\"chunk-\\"+r,r)}};var r=(r,t)=>{var o,i,[a,l,c]=t,u=0;if(a.some(r=>0!==e[r])){for(o in l)n.o(l,o)&&(n.m[o]=l[o]);if(c)c(n)}for(r&&r(t);u<a.length;u++)i=a[u],n.o(e,i)&&e[i]&&e[i][0](),e[i]=0},t=self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[];t.forEach(r.bind(null,0)),t.push=r.bind(null,t.push.bind(t))})(),n.e(389).then(n.bind(n,389)).then(()=>{console.log(\\"Good\\")})})();",
@@ -311,15 +311,15 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work and use memory cache when the "cache" option is "true" and the asset has been changed: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work and use memory cache when the "cache" option is "true" and the asset has been changed: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work and use memory cache when the "cache" option is "true" and the asset has been changed: errors 2`] = `Array []`;
+exports[`MinimizerPlugin should work and use memory cache when the "cache" option is "true" and the asset has been changed: errors 2`] = `Array []`;
 
-exports[`TerserPlugin should work and use memory cache when the "cache" option is "true" and the asset has been changed: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work and use memory cache when the "cache" option is "true" and the asset has been changed: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work and use memory cache when the "cache" option is "true" and the asset has been changed: warnings 2`] = `Array []`;
+exports[`MinimizerPlugin should work and use memory cache when the "cache" option is "true" and the asset has been changed: warnings 2`] = `Array []`;
 
-exports[`TerserPlugin should work and use memory cache when the "cache" option is "true": assets 1`] = `
+exports[`MinimizerPlugin should work and use memory cache when the "cache" option is "true": assets 1`] = `
 Object {
   "389.389.js": "\\"use strict\\";(self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[389],{389(e,i,n){n.r(i),n.d(i,{default:()=>p});const p=\\"async-dep\\"}}]);",
   "AsyncImportExport.js": "(()=>{\\"use strict\\";var e,r,t={},o={};function n(e){var r=o[e];if(void 0!==r)return r.exports;var i=o[e]={exports:{}};return t[e](i,i.exports,n),i.exports}n.m=t,n.d=(e,r)=>{for(var t in r)n.o(r,t)&&!n.o(e,t)&&Object.defineProperty(e,t,{enumerable:!0,get:r[t]})},n.f={},n.e=e=>Promise.all(Object.keys(n.f).reduce((r,t)=>(n.f[t](e,r),r),[])),n.u=e=>e+\\".\\"+e+\\".js\\",n.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(e){if(\\"object\\"==typeof window)return window}}(),n.o=(e,r)=>Object.prototype.hasOwnProperty.call(e,r),e={},r=\\"minimizer-webpack-plugin:\\",n.l=(t,o,i,a)=>{if(e[t])e[t].push(o);else{var l,c;if(void 0!==i)for(var u=document.getElementsByTagName(\\"script\\"),p=0;p<u.length;p++){var s=u[p];if(s.getAttribute(\\"src\\")==t||s.getAttribute(\\"data-webpack\\")==r+i){l=s;break}}l||(c=!0,(l=document.createElement(\\"script\\")).charset=\\"utf-8\\",n.nc&&l.setAttribute(\\"nonce\\",n.nc),l.setAttribute(\\"data-webpack\\",r+i),l.src=t),e[t]=[o];var d=(r,o)=>{l.onerror=l.onload=null,clearTimeout(f);var n=e[t];if(delete e[t],l.parentNode&&l.parentNode.removeChild(l),n&&n.forEach(e=>e(o)),r)return r(o)},f=setTimeout(d.bind(null,void 0,{type:\\"timeout\\",target:l}),12e4);l.onerror=d.bind(null,l.onerror),l.onload=d.bind(null,l.onload),c&&document.head.appendChild(l)}},n.r=e=>{\\"undefined\\"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:\\"Module\\"}),Object.defineProperty(e,\\"__esModule\\",{value:!0})},(()=>{var e;n.g.importScripts&&(e=n.g.location+\\"\\");var r=n.g.document;if(!e&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(e=r.currentScript.src),!e)){var t=r.getElementsByTagName(\\"script\\");if(t.length)for(var o=t.length-1;o>-1&&(!e||!/^http(s?):/.test(e));)e=t[o--].src}if(!e)throw new Error(\\"Automatic publicPath is not supported in this browser\\");e=e.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),n.p=e})(),(()=>{var e={988:0};n.f.j=(r,t)=>{var o=n.o(e,r)?e[r]:void 0;if(0!==o)if(o)t.push(o[2]);else{var i=new Promise((t,n)=>o=e[r]=[t,n]);t.push(o[2]=i);var a=n.p+n.u(r),l=new Error;n.l(a,t=>{if(n.o(e,r)&&(0!==(o=e[r])&&(e[r]=void 0),o)){var i=t&&(\\"load\\"===t.type?\\"missing\\":t.type),a=t&&t.target&&t.target.src;l.message=\\"Loading chunk \\"+r+\\" failed.\\\\n(\\"+i+\\": \\"+a+\\")\\",l.name=\\"ChunkLoadError\\",l.type=i,l.request=a,o[1](l)}},\\"chunk-\\"+r,r)}};var r=(r,t)=>{var o,i,[a,l,c]=t,u=0;if(a.some(r=>0!==e[r])){for(o in l)n.o(l,o)&&(n.m[o]=l[o]);if(c)c(n)}for(r&&r(t);u<a.length;u++)i=a[u],n.o(e,i)&&e[i]&&e[i][0](),e[i]=0},t=self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[];t.forEach(r.bind(null,0)),t.push=r.bind(null,t.push.bind(t))})(),n.e(389).then(n.bind(n,389)).then(()=>{console.log(\\"Good\\")})})();",
@@ -329,7 +329,7 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work and use memory cache when the "cache" option is "true": assets 2`] = `
+exports[`MinimizerPlugin should work and use memory cache when the "cache" option is "true": assets 2`] = `
 Object {
   "389.389.js": "\\"use strict\\";(self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[389],{389(e,i,n){n.r(i),n.d(i,{default:()=>p});const p=\\"async-dep\\"}}]);",
   "AsyncImportExport.js": "(()=>{\\"use strict\\";var e,r,t={},o={};function n(e){var r=o[e];if(void 0!==r)return r.exports;var i=o[e]={exports:{}};return t[e](i,i.exports,n),i.exports}n.m=t,n.d=(e,r)=>{for(var t in r)n.o(r,t)&&!n.o(e,t)&&Object.defineProperty(e,t,{enumerable:!0,get:r[t]})},n.f={},n.e=e=>Promise.all(Object.keys(n.f).reduce((r,t)=>(n.f[t](e,r),r),[])),n.u=e=>e+\\".\\"+e+\\".js\\",n.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(e){if(\\"object\\"==typeof window)return window}}(),n.o=(e,r)=>Object.prototype.hasOwnProperty.call(e,r),e={},r=\\"minimizer-webpack-plugin:\\",n.l=(t,o,i,a)=>{if(e[t])e[t].push(o);else{var l,c;if(void 0!==i)for(var u=document.getElementsByTagName(\\"script\\"),p=0;p<u.length;p++){var s=u[p];if(s.getAttribute(\\"src\\")==t||s.getAttribute(\\"data-webpack\\")==r+i){l=s;break}}l||(c=!0,(l=document.createElement(\\"script\\")).charset=\\"utf-8\\",n.nc&&l.setAttribute(\\"nonce\\",n.nc),l.setAttribute(\\"data-webpack\\",r+i),l.src=t),e[t]=[o];var d=(r,o)=>{l.onerror=l.onload=null,clearTimeout(f);var n=e[t];if(delete e[t],l.parentNode&&l.parentNode.removeChild(l),n&&n.forEach(e=>e(o)),r)return r(o)},f=setTimeout(d.bind(null,void 0,{type:\\"timeout\\",target:l}),12e4);l.onerror=d.bind(null,l.onerror),l.onload=d.bind(null,l.onload),c&&document.head.appendChild(l)}},n.r=e=>{\\"undefined\\"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:\\"Module\\"}),Object.defineProperty(e,\\"__esModule\\",{value:!0})},(()=>{var e;n.g.importScripts&&(e=n.g.location+\\"\\");var r=n.g.document;if(!e&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(e=r.currentScript.src),!e)){var t=r.getElementsByTagName(\\"script\\");if(t.length)for(var o=t.length-1;o>-1&&(!e||!/^http(s?):/.test(e));)e=t[o--].src}if(!e)throw new Error(\\"Automatic publicPath is not supported in this browser\\");e=e.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),n.p=e})(),(()=>{var e={988:0};n.f.j=(r,t)=>{var o=n.o(e,r)?e[r]:void 0;if(0!==o)if(o)t.push(o[2]);else{var i=new Promise((t,n)=>o=e[r]=[t,n]);t.push(o[2]=i);var a=n.p+n.u(r),l=new Error;n.l(a,t=>{if(n.o(e,r)&&(0!==(o=e[r])&&(e[r]=void 0),o)){var i=t&&(\\"load\\"===t.type?\\"missing\\":t.type),a=t&&t.target&&t.target.src;l.message=\\"Loading chunk \\"+r+\\" failed.\\\\n(\\"+i+\\": \\"+a+\\")\\",l.name=\\"ChunkLoadError\\",l.type=i,l.request=a,o[1](l)}},\\"chunk-\\"+r,r)}};var r=(r,t)=>{var o,i,[a,l,c]=t,u=0;if(a.some(r=>0!==e[r])){for(o in l)n.o(l,o)&&(n.m[o]=l[o]);if(c)c(n)}for(r&&r(t);u<a.length;u++)i=a[u],n.o(e,i)&&e[i]&&e[i][0](),e[i]=0},t=self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[];t.forEach(r.bind(null,0)),t.push=r.bind(null,t.push.bind(t))})(),n.e(389).then(n.bind(n,389)).then(()=>{console.log(\\"Good\\")})})();",
@@ -339,85 +339,85 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work and use memory cache when the "cache" option is "true": errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work and use memory cache when the "cache" option is "true": errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work and use memory cache when the "cache" option is "true": errors 2`] = `Array []`;
+exports[`MinimizerPlugin should work and use memory cache when the "cache" option is "true": errors 2`] = `Array []`;
 
-exports[`TerserPlugin should work and use memory cache when the "cache" option is "true": warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work and use memory cache when the "cache" option is "true": warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work and use memory cache when the "cache" option is "true": warnings 2`] = `Array []`;
+exports[`MinimizerPlugin should work and use memory cache when the "cache" option is "true": warnings 2`] = `Array []`;
 
-exports[`TerserPlugin should work as a minimizer: assets 1`] = `
+exports[`MinimizerPlugin should work as a minimizer: assets 1`] = `
 Object {
   "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
-exports[`TerserPlugin should work as a minimizer: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work as a minimizer: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work as a minimizer: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work as a minimizer: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work as a plugin: assets 1`] = `
+exports[`MinimizerPlugin should work as a plugin: assets 1`] = `
 Object {
   "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
-exports[`TerserPlugin should work as a plugin: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work as a plugin: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work as a plugin: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work as a plugin: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work in multi compiler mode with the one plugin and with the same file: assets 1`] = `
+exports[`MinimizerPlugin should work in multi compiler mode with the one plugin and with the same file: assets 1`] = `
 Object {
   "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
-exports[`TerserPlugin should work in multi compiler mode with the one plugin and with the same file: assets 2`] = `
+exports[`MinimizerPlugin should work in multi compiler mode with the one plugin and with the same file: assets 2`] = `
 Object {
   "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
-exports[`TerserPlugin should work in multi compiler mode with the one plugin and with the same file: assets 3`] = `
+exports[`MinimizerPlugin should work in multi compiler mode with the one plugin and with the same file: assets 3`] = `
 Object {
   "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
-exports[`TerserPlugin should work in multi compiler mode with the one plugin and with the same file: assets 4`] = `
+exports[`MinimizerPlugin should work in multi compiler mode with the one plugin and with the same file: assets 4`] = `
 Object {
   "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
-exports[`TerserPlugin should work in multi compiler mode with the one plugin and with the same file: assets 5`] = `
+exports[`MinimizerPlugin should work in multi compiler mode with the one plugin and with the same file: assets 5`] = `
 Object {
   "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
-exports[`TerserPlugin should work in multi compiler mode with the one plugin and with the same file: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work in multi compiler mode with the one plugin and with the same file: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work in multi compiler mode with the one plugin and with the same file: errors 2`] = `Array []`;
+exports[`MinimizerPlugin should work in multi compiler mode with the one plugin and with the same file: errors 2`] = `Array []`;
 
-exports[`TerserPlugin should work in multi compiler mode with the one plugin and with the same file: errors 3`] = `Array []`;
+exports[`MinimizerPlugin should work in multi compiler mode with the one plugin and with the same file: errors 3`] = `Array []`;
 
-exports[`TerserPlugin should work in multi compiler mode with the one plugin and with the same file: errors 4`] = `Array []`;
+exports[`MinimizerPlugin should work in multi compiler mode with the one plugin and with the same file: errors 4`] = `Array []`;
 
-exports[`TerserPlugin should work in multi compiler mode with the one plugin and with the same file: errors 5`] = `Array []`;
+exports[`MinimizerPlugin should work in multi compiler mode with the one plugin and with the same file: errors 5`] = `Array []`;
 
-exports[`TerserPlugin should work in multi compiler mode with the one plugin and with the same file: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work in multi compiler mode with the one plugin and with the same file: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work in multi compiler mode with the one plugin and with the same file: warnings 2`] = `Array []`;
+exports[`MinimizerPlugin should work in multi compiler mode with the one plugin and with the same file: warnings 2`] = `Array []`;
 
-exports[`TerserPlugin should work in multi compiler mode with the one plugin and with the same file: warnings 3`] = `Array []`;
+exports[`MinimizerPlugin should work in multi compiler mode with the one plugin and with the same file: warnings 3`] = `Array []`;
 
-exports[`TerserPlugin should work in multi compiler mode with the one plugin and with the same file: warnings 4`] = `Array []`;
+exports[`MinimizerPlugin should work in multi compiler mode with the one plugin and with the same file: warnings 4`] = `Array []`;
 
-exports[`TerserPlugin should work in multi compiler mode with the one plugin and with the same file: warnings 5`] = `Array []`;
+exports[`MinimizerPlugin should work in multi compiler mode with the one plugin and with the same file: warnings 5`] = `Array []`;
 
-exports[`TerserPlugin should work in multi compiler mode with the one plugin: assets 1`] = `
+exports[`MinimizerPlugin should work in multi compiler mode with the one plugin: assets 1`] = `
 Object {
   "main-1.js": "/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
@@ -476,37 +476,37 @@ module.exports = function Foo() {
 }
 `;
 
-exports[`TerserPlugin should work in multi compiler mode with the one plugin: assets 2`] = `
+exports[`MinimizerPlugin should work in multi compiler mode with the one plugin: assets 2`] = `
 Object {
   "main-2.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
-exports[`TerserPlugin should work in multi compiler mode with the one plugin: assets 3`] = `
+exports[`MinimizerPlugin should work in multi compiler mode with the one plugin: assets 3`] = `
 Object {
   "main-3.js": "(()=>{\\"use strict\\";function o(){const o=\`baz\${Math.random()}\`;return()=>({a:\\"foobar\\"+o,b:\\"foo\\",baz:o})}console.log(o())})();",
 }
 `;
 
-exports[`TerserPlugin should work in multi compiler mode with the one plugin: compiler plugin count 1`] = `
+exports[`MinimizerPlugin should work in multi compiler mode with the one plugin: compiler plugin count 1`] = `
 Object {
   "compilation": 1,
 }
 `;
 
-exports[`TerserPlugin should work in multi compiler mode with the one plugin: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work in multi compiler mode with the one plugin: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work in multi compiler mode with the one plugin: errors 2`] = `Array []`;
+exports[`MinimizerPlugin should work in multi compiler mode with the one plugin: errors 2`] = `Array []`;
 
-exports[`TerserPlugin should work in multi compiler mode with the one plugin: errors 3`] = `Array []`;
+exports[`MinimizerPlugin should work in multi compiler mode with the one plugin: errors 3`] = `Array []`;
 
-exports[`TerserPlugin should work in multi compiler mode with the one plugin: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work in multi compiler mode with the one plugin: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work in multi compiler mode with the one plugin: warnings 2`] = `Array []`;
+exports[`MinimizerPlugin should work in multi compiler mode with the one plugin: warnings 2`] = `Array []`;
 
-exports[`TerserPlugin should work in multi compiler mode with the one plugin: warnings 3`] = `Array []`;
+exports[`MinimizerPlugin should work in multi compiler mode with the one plugin: warnings 3`] = `Array []`;
 
-exports[`TerserPlugin should work in multi compiler mode: assets 1`] = `
+exports[`MinimizerPlugin should work in multi compiler mode: assets 1`] = `
 Object {
   "main-1.js": "/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
@@ -565,37 +565,37 @@ module.exports = function Foo() {
 }
 `;
 
-exports[`TerserPlugin should work in multi compiler mode: assets 2`] = `
+exports[`MinimizerPlugin should work in multi compiler mode: assets 2`] = `
 Object {
   "main-2.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
-exports[`TerserPlugin should work in multi compiler mode: assets 3`] = `
+exports[`MinimizerPlugin should work in multi compiler mode: assets 3`] = `
 Object {
   "main-3.js": "(()=>{\\"use strict\\";function o(){const o=\`baz\${Math.random()}\`;return()=>({a:\\"foobar\\"+o,b:\\"foo\\",baz:o})}console.log(o())})();",
 }
 `;
 
-exports[`TerserPlugin should work in multi compiler mode: compiler plugin count 1`] = `
+exports[`MinimizerPlugin should work in multi compiler mode: compiler plugin count 1`] = `
 Object {
   "compilation": 1,
 }
 `;
 
-exports[`TerserPlugin should work in multi compiler mode: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work in multi compiler mode: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work in multi compiler mode: errors 2`] = `Array []`;
+exports[`MinimizerPlugin should work in multi compiler mode: errors 2`] = `Array []`;
 
-exports[`TerserPlugin should work in multi compiler mode: errors 3`] = `Array []`;
+exports[`MinimizerPlugin should work in multi compiler mode: errors 3`] = `Array []`;
 
-exports[`TerserPlugin should work in multi compiler mode: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work in multi compiler mode: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work in multi compiler mode: warnings 2`] = `Array []`;
+exports[`MinimizerPlugin should work in multi compiler mode: warnings 2`] = `Array []`;
 
-exports[`TerserPlugin should work in multi compiler mode: warnings 3`] = `Array []`;
+exports[`MinimizerPlugin should work in multi compiler mode: warnings 3`] = `Array []`;
 
-exports[`TerserPlugin should work when some of assets do not contain source maps: assets 1`] = `
+exports[`MinimizerPlugin should work when some of assets do not contain source maps: assets 1`] = `
 Object {
   "extra-file.js": "var a=1;console.log(a);",
   "main.js": "(()=>{var r={251(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(251)})();
@@ -632,22 +632,22 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work when some of assets do not contain source maps: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work when some of assets do not contain source maps: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work when some of assets do not contain source maps: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work when some of assets do not contain source maps: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "asset" module type: assets 1`] = `
+exports[`MinimizerPlugin should work with "asset" module type: assets 1`] = `
 Object {
   "emitted.js": "console.log(\\"HERE\\");",
   "main.js": "(()=>{\\"use strict\\";var t={};t.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(t){if(\\"object\\"==typeof window)return window}}(),(()=>{var r;t.g.importScripts&&(r=t.g.location+\\"\\");var e=t.g.document;if(!r&&e&&(e.currentScript&&\\"SCRIPT\\"===e.currentScript.tagName.toUpperCase()&&(r=e.currentScript.src),!r)){var c=e.getElementsByTagName(\\"script\\");if(c.length)for(var i=c.length-1;i>-1&&(!r||!/^http(s?):/.test(r));)r=c[i--].src}if(!r)throw new Error(\\"Automatic publicPath is not supported in this browser\\");r=r.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),t.p=r})();const r=t.p+\\"emitted.js\\";console.log(12,r)})();",
 }
 `;
 
-exports[`TerserPlugin should work with "asset" module type: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "asset" module type: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "asset" module type: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "asset" module type: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "devtool" option and the "cheap-source-map" value: assets 1`] = `
+exports[`MinimizerPlugin should work with "devtool" option and the "cheap-source-map" value: assets 1`] = `
 Object {
   "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();
 //# sourceMappingURL=main.js.map",
@@ -671,21 +671,21 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with "devtool" option and the "cheap-source-map" value: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "devtool" option and the "cheap-source-map" value: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "devtool" option and the "cheap-source-map" value: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "devtool" option and the "cheap-source-map" value: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "devtool" option and the "eval" value: assets 1`] = `
+exports[`MinimizerPlugin should work with "devtool" option and the "eval" value: assets 1`] = `
 Object {
   "main.js": "(()=>{var __webpack_modules__={921(module){eval(\\"{// foo\\\\n/* @preserve*/\\\\n// bar\\\\nconst a = (/* unused pure expression or super */ null && (2 + 2));\\\\n\\\\nmodule.exports = function Foo() {\\\\n  const b = 2 + 2;\\\\n  console.log(b + 1 + 2);\\\\n};\\\\n\\\\n\\\\n//# sourceURL=webpack://minimizer-webpack-plugin/./test/fixtures/entry.js?\\\\n}\\")}},__webpack_module_cache__={};function __webpack_require__(e){var _=__webpack_module_cache__[e];if(void 0!==_)return _.exports;var r=__webpack_module_cache__[e]={exports:{}};return __webpack_modules__[e](r,r.exports,__webpack_require__),r.exports}var __webpack_exports__=__webpack_require__(921)})();",
 }
 `;
 
-exports[`TerserPlugin should work with "devtool" option and the "eval" value: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "devtool" option and the "eval" value: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "devtool" option and the "eval" value: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "devtool" option and the "eval" value: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "devtool" option and the "hidden-source-map" value: assets 1`] = `
+exports[`MinimizerPlugin should work with "devtool" option and the "hidden-source-map" value: assets 1`] = `
 Object {
   "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
   "main.js.map": {
@@ -720,22 +720,22 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with "devtool" option and the "hidden-source-map" value: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "devtool" option and the "hidden-source-map" value: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "devtool" option and the "hidden-source-map" value: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "devtool" option and the "hidden-source-map" value: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "devtool" option and the "inline-source-map" value: assets 1`] = `
+exports[`MinimizerPlugin should work with "devtool" option and the "inline-source-map" value: assets 1`] = `
 Object {
   "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();
 //# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibWFpbi5qcyIsIm1hcHBpbmdzIjoib0JBS0FBLEVBQUFDLFFBQUEsV0FFQUMsUUFBQUMsSUFBQUMsRUFDQSxJQ1BBQyxFQUFBLElBR0EsU0FBQUMsRUFBQUMsR0FFQSxJQUFBQyxFQUFBSCxFQUFBRSxHQUNBLFFBQUFFLElBQUFELEVBQ0EsT0FBQUEsRUFBQVAsUUFHQSxJQUFBRCxFQUFBSyxFQUFBRSxHQUFBLENBR0FOLFFBQUEsSUFPQSxPQUhBUyxFQUFBSCxHQUFBUCxFQUFBQSxFQUFBQyxRQUFBSyxHQUdBTixFQUFBQyxPQUNBLEVDbkJBSyxDQUFBIiwic291cmNlcyI6WyJ3ZWJwYWNrOi8vbWluaW1pemVyLXdlYnBhY2stcGx1Z2luLy4vdGVzdC9maXh0dXJlcy9lbnRyeS5qcyIsIndlYnBhY2s6Ly9taW5pbWl6ZXItd2VicGFjay1wbHVnaW4vd2VicGFjay9ib290c3RyYXAiLCJ3ZWJwYWNrOi8vbWluaW1pemVyLXdlYnBhY2stcGx1Z2luL3dlYnBhY2svc3RhcnR1cCJdLCJzb3VyY2VzQ29udGVudCI6WyIvLyBmb29cbi8qIEBwcmVzZXJ2ZSovXG4vLyBiYXJcbmNvbnN0IGEgPSAyICsgMjtcblxubW9kdWxlLmV4cG9ydHMgPSBmdW5jdGlvbiBGb28oKSB7XG4gIGNvbnN0IGIgPSAyICsgMjtcbiAgY29uc29sZS5sb2coYiArIDEgKyAyKTtcbn07XG4iLCIvLyBUaGUgbW9kdWxlIGNhY2hlXG52YXIgX193ZWJwYWNrX21vZHVsZV9jYWNoZV9fID0ge307XG5cbi8vIFRoZSByZXF1aXJlIGZ1bmN0aW9uXG5mdW5jdGlvbiBfX3dlYnBhY2tfcmVxdWlyZV9fKG1vZHVsZUlkKSB7XG5cdC8vIENoZWNrIGlmIG1vZHVsZSBpcyBpbiBjYWNoZVxuXHR2YXIgY2FjaGVkTW9kdWxlID0gX193ZWJwYWNrX21vZHVsZV9jYWNoZV9fW21vZHVsZUlkXTtcblx0aWYgKGNhY2hlZE1vZHVsZSAhPT0gdW5kZWZpbmVkKSB7XG5cdFx0cmV0dXJuIGNhY2hlZE1vZHVsZS5leHBvcnRzO1xuXHR9XG5cdC8vIENyZWF0ZSBhIG5ldyBtb2R1bGUgKGFuZCBwdXQgaXQgaW50byB0aGUgY2FjaGUpXG5cdHZhciBtb2R1bGUgPSBfX3dlYnBhY2tfbW9kdWxlX2NhY2hlX19bbW9kdWxlSWRdID0ge1xuXHRcdC8vIG5vIG1vZHVsZS5pZCBuZWVkZWRcblx0XHQvLyBubyBtb2R1bGUubG9hZGVkIG5lZWRlZFxuXHRcdGV4cG9ydHM6IHt9XG5cdH07XG5cblx0Ly8gRXhlY3V0ZSB0aGUgbW9kdWxlIGZ1bmN0aW9uXG5cdF9fd2VicGFja19tb2R1bGVzX19bbW9kdWxlSWRdKG1vZHVsZSwgbW9kdWxlLmV4cG9ydHMsIF9fd2VicGFja19yZXF1aXJlX18pO1xuXG5cdC8vIFJldHVybiB0aGUgZXhwb3J0cyBvZiB0aGUgbW9kdWxlXG5cdHJldHVybiBtb2R1bGUuZXhwb3J0cztcbn1cblxuIiwiLy8gc3RhcnR1cFxuLy8gTG9hZCBlbnRyeSBtb2R1bGUgYW5kIHJldHVybiBleHBvcnRzXG4vLyBUaGlzIGVudHJ5IG1vZHVsZSBpcyByZWZlcmVuY2VkIGJ5IG90aGVyIG1vZHVsZXMgc28gaXQgY2FuJ3QgYmUgaW5saW5lZFxudmFyIF9fd2VicGFja19leHBvcnRzX18gPSBfX3dlYnBhY2tfcmVxdWlyZV9fKDkyMSk7XG4iXSwibmFtZXMiOlsibW9kdWxlIiwiZXhwb3J0cyIsImNvbnNvbGUiLCJsb2ciLCJiIiwiX193ZWJwYWNrX21vZHVsZV9jYWNoZV9fIiwiX193ZWJwYWNrX3JlcXVpcmVfXyIsIm1vZHVsZUlkIiwiY2FjaGVkTW9kdWxlIiwidW5kZWZpbmVkIiwiX193ZWJwYWNrX21vZHVsZXNfXyJdLCJzb3VyY2VSb290IjoiIn0=",
 }
 `;
 
-exports[`TerserPlugin should work with "devtool" option and the "inline-source-map" value: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "devtool" option and the "inline-source-map" value: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "devtool" option and the "inline-source-map" value: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "devtool" option and the "inline-source-map" value: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "devtool" option and the "nosources-source-map" value: assets 1`] = `
+exports[`MinimizerPlugin should work with "devtool" option and the "nosources-source-map" value: assets 1`] = `
 Object {
   "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();
 //# sourceMappingURL=main.js.map",
@@ -766,51 +766,11 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with "devtool" option and the "nosources-source-map" value: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "devtool" option and the "nosources-source-map" value: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "devtool" option and the "nosources-source-map" value: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "devtool" option and the "nosources-source-map" value: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "devtool" option and the "source-map" value (the "parallel" option is "false"): assets 1`] = `
-Object {
-  "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();
-//# sourceMappingURL=main.js.map",
-  "main.js.map": {
-  "version": 3,
-  "file": "main.js",
-  "mappings": "oBAKAA,EAAAC,QAAA,WAEAC,QAAAC,IAAAC,EACA,ICPAC,EAAA,IAGA,SAAAC,EAAAC,GAEA,IAAAC,EAAAH,EAAAE,GACA,QAAAE,IAAAD,EACA,OAAAA,EAAAP,QAGA,IAAAD,EAAAK,EAAAE,GAAA,CAGAN,QAAA,IAOA,OAHAS,EAAAH,GAAAP,EAAAA,EAAAC,QAAAK,GAGAN,EAAAC,OACA,ECnBAK,CAAA",
-  "sources": [
-    "webpack://minimizer-webpack-plugin/./test/fixtures/entry.js",
-    "webpack://minimizer-webpack-plugin/webpack/bootstrap",
-    "webpack://minimizer-webpack-plugin/webpack/startup"
-  ],
-  "sourcesContent": [
-    "// foo\\n/* @preserve*/\\n// bar\\nconst a = 2 + 2;\\n\\nmodule.exports = function Foo() {\\n  const b = 2 + 2;\\n  console.log(b + 1 + 2);\\n};\\n",
-    "// The module cache\\nvar __webpack_module_cache__ = {};\\n\\n// The require function\\nfunction __webpack_require__(moduleId) {\\n\\t// Check if module is in cache\\n\\tvar cachedModule = __webpack_module_cache__[moduleId];\\n\\tif (cachedModule !== undefined) {\\n\\t\\treturn cachedModule.exports;\\n\\t}\\n\\t// Create a new module (and put it into the cache)\\n\\tvar module = __webpack_module_cache__[moduleId] = {\\n\\t\\t// no module.id needed\\n\\t\\t// no module.loaded needed\\n\\t\\texports: {}\\n\\t};\\n\\n\\t// Execute the module function\\n\\t__webpack_modules__[moduleId](module, module.exports, __webpack_require__);\\n\\n\\t// Return the exports of the module\\n\\treturn module.exports;\\n}\\n\\n",
-    "// startup\\n// Load entry module and return exports\\n// This entry module is referenced by other modules so it can't be inlined\\nvar __webpack_exports__ = __webpack_require__(921);\\n"
-  ],
-  "names": [
-    "module",
-    "exports",
-    "console",
-    "log",
-    "b",
-    "__webpack_module_cache__",
-    "__webpack_require__",
-    "moduleId",
-    "cachedModule",
-    "undefined",
-    "__webpack_modules__"
-  ],
-  "sourceRoot": ""
-},
-}
-`;
-
-exports[`TerserPlugin should work with "devtool" option and the "source-map" value (the "parallel" option is "false"): errors 1`] = `Array []`;
-
-exports[`TerserPlugin should work with "devtool" option and the "source-map" value (the "parallel" option is "false"): warnings 1`] = `Array []`;
-
-exports[`TerserPlugin should work with "devtool" option and the "source-map" value (the "parallel" option is "true"): assets 1`] = `
+exports[`MinimizerPlugin should work with "devtool" option and the "source-map" value (the "parallel" option is "false"): assets 1`] = `
 Object {
   "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();
 //# sourceMappingURL=main.js.map",
@@ -846,11 +806,11 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with "devtool" option and the "source-map" value (the "parallel" option is "true"): errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "devtool" option and the "source-map" value (the "parallel" option is "false"): errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "devtool" option and the "source-map" value (the "parallel" option is "true"): warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "devtool" option and the "source-map" value (the "parallel" option is "false"): warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "devtool" option and the "source-map" value: assets 1`] = `
+exports[`MinimizerPlugin should work with "devtool" option and the "source-map" value (the "parallel" option is "true"): assets 1`] = `
 Object {
   "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();
 //# sourceMappingURL=main.js.map",
@@ -886,11 +846,51 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with "devtool" option and the "source-map" value: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "devtool" option and the "source-map" value (the "parallel" option is "true"): errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "devtool" option and the "source-map" value: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "devtool" option and the "source-map" value (the "parallel" option is "true"): warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "false" value for the "cache" option: assets 1`] = `
+exports[`MinimizerPlugin should work with "devtool" option and the "source-map" value: assets 1`] = `
+Object {
+  "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();
+//# sourceMappingURL=main.js.map",
+  "main.js.map": {
+  "version": 3,
+  "file": "main.js",
+  "mappings": "oBAKAA,EAAAC,QAAA,WAEAC,QAAAC,IAAAC,EACA,ICPAC,EAAA,IAGA,SAAAC,EAAAC,GAEA,IAAAC,EAAAH,EAAAE,GACA,QAAAE,IAAAD,EACA,OAAAA,EAAAP,QAGA,IAAAD,EAAAK,EAAAE,GAAA,CAGAN,QAAA,IAOA,OAHAS,EAAAH,GAAAP,EAAAA,EAAAC,QAAAK,GAGAN,EAAAC,OACA,ECnBAK,CAAA",
+  "sources": [
+    "webpack://minimizer-webpack-plugin/./test/fixtures/entry.js",
+    "webpack://minimizer-webpack-plugin/webpack/bootstrap",
+    "webpack://minimizer-webpack-plugin/webpack/startup"
+  ],
+  "sourcesContent": [
+    "// foo\\n/* @preserve*/\\n// bar\\nconst a = 2 + 2;\\n\\nmodule.exports = function Foo() {\\n  const b = 2 + 2;\\n  console.log(b + 1 + 2);\\n};\\n",
+    "// The module cache\\nvar __webpack_module_cache__ = {};\\n\\n// The require function\\nfunction __webpack_require__(moduleId) {\\n\\t// Check if module is in cache\\n\\tvar cachedModule = __webpack_module_cache__[moduleId];\\n\\tif (cachedModule !== undefined) {\\n\\t\\treturn cachedModule.exports;\\n\\t}\\n\\t// Create a new module (and put it into the cache)\\n\\tvar module = __webpack_module_cache__[moduleId] = {\\n\\t\\t// no module.id needed\\n\\t\\t// no module.loaded needed\\n\\t\\texports: {}\\n\\t};\\n\\n\\t// Execute the module function\\n\\t__webpack_modules__[moduleId](module, module.exports, __webpack_require__);\\n\\n\\t// Return the exports of the module\\n\\treturn module.exports;\\n}\\n\\n",
+    "// startup\\n// Load entry module and return exports\\n// This entry module is referenced by other modules so it can't be inlined\\nvar __webpack_exports__ = __webpack_require__(921);\\n"
+  ],
+  "names": [
+    "module",
+    "exports",
+    "console",
+    "log",
+    "b",
+    "__webpack_module_cache__",
+    "__webpack_require__",
+    "moduleId",
+    "cachedModule",
+    "undefined",
+    "__webpack_modules__"
+  ],
+  "sourceRoot": ""
+},
+}
+`;
+
+exports[`MinimizerPlugin should work with "devtool" option and the "source-map" value: errors 1`] = `Array []`;
+
+exports[`MinimizerPlugin should work with "devtool" option and the "source-map" value: warnings 1`] = `Array []`;
+
+exports[`MinimizerPlugin should work with "false" value for the "cache" option: assets 1`] = `
 Object {
   "five.js": "(()=>{var r={958(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(958)})();",
   "four.js": "(()=>{var r={111(r){r.exports=class{}}},t={};(function e(o){var s=t[o];if(void 0!==s)return s.exports;var p=t[o]={exports:{}};return r[o](p,p.exports,e),p.exports})(111)})();",
@@ -900,7 +900,7 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with "false" value for the "cache" option: assets 2`] = `
+exports[`MinimizerPlugin should work with "false" value for the "cache" option: assets 2`] = `
 Object {
   "five.js": "(()=>{var r={958(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(958)})();",
   "four.js": "(()=>{var r={111(r){r.exports=class{}}},t={};(function e(o){var s=t[o];if(void 0!==s)return s.exports;var p=t[o]={exports:{}};return r[o](p,p.exports,e),p.exports})(111)})();",
@@ -910,26 +910,26 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with "false" value for the "cache" option: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "false" value for the "cache" option: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "false" value for the "cache" option: errors 2`] = `Array []`;
+exports[`MinimizerPlugin should work with "false" value for the "cache" option: errors 2`] = `Array []`;
 
-exports[`TerserPlugin should work with "false" value for the "cache" option: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "false" value for the "cache" option: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "false" value for the "cache" option: warnings 2`] = `Array []`;
+exports[`MinimizerPlugin should work with "false" value for the "cache" option: warnings 2`] = `Array []`;
 
-exports[`TerserPlugin should work with "file-loader": assets 1`] = `
+exports[`MinimizerPlugin should work with "file-loader": assets 1`] = `
 Object {
   "main.js": "(()=>{\\"use strict\\";var t={};t.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(t){if(\\"object\\"==typeof window)return window}}(),(()=>{var r;t.g.importScripts&&(r=t.g.location+\\"\\");var e=t.g.document;if(!r&&e&&(e.currentScript&&\\"SCRIPT\\"===e.currentScript.tagName.toUpperCase()&&(r=e.currentScript.src),!r)){var i=e.getElementsByTagName(\\"script\\");if(i.length)for(var c=i.length-1;c>-1&&(!r||!/^http(s?):/.test(r));)r=i[c--].src}if(!r)throw new Error(\\"Automatic publicPath is not supported in this browser\\");r=r.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),t.p=r})();const r=t.p+\\"test/fixtures/emitted.js\\";console.log(12,r)})();",
   "test/fixtures/emitted.js": "console.log(\\"HERE\\");",
 }
 `;
 
-exports[`TerserPlugin should work with "file-loader": errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "file-loader": errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "file-loader": warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "file-loader": warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option and extract comments in different files: assets 1`] = `
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option and extract comments in different files: assets 1`] = `
 Object {
   "203.203.js": "/*! For license information please see 203.203.js.LICENSE.txt */
 (self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[203],{203(e){e.exports=Math.random()}}]);",
@@ -986,7 +986,7 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option and extract comments in different files: assets 2`] = `
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option and extract comments in different files: assets 2`] = `
 Object {
   "203.203.js": "/*! For license information please see 203.203.js.LICENSE.txt */
 (self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[203],{203(e){e.exports=Math.random()}}]);",
@@ -1043,15 +1043,15 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option and extract comments in different files: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option and extract comments in different files: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option and extract comments in different files: errors 2`] = `Array []`;
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option and extract comments in different files: errors 2`] = `Array []`;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option and extract comments in different files: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option and extract comments in different files: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option and extract comments in different files: warnings 2`] = `Array []`;
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option and extract comments in different files: warnings 2`] = `Array []`;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option and extract comments in the one file: assets 1`] = `
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option and extract comments in the one file: assets 1`] = `
 Object {
   "203.203.js": "/*! For license information please see licenses.txt */
 (self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[203],{203(e){e.exports=Math.random()}}]);",
@@ -1104,7 +1104,7 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option and extract comments in the one file: assets 2`] = `
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option and extract comments in the one file: assets 2`] = `
 Object {
   "203.203.js": "/*! For license information please see licenses.txt */
 (self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[203],{203(e){e.exports=Math.random()}}]);",
@@ -1157,15 +1157,15 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option and extract comments in the one file: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option and extract comments in the one file: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option and extract comments in the one file: errors 2`] = `Array []`;
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option and extract comments in the one file: errors 2`] = `Array []`;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option and extract comments in the one file: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option and extract comments in the one file: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option and extract comments in the one file: warnings 2`] = `Array []`;
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option and extract comments in the one file: warnings 2`] = `Array []`;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option and source maps: assets 1`] = `
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option and source maps: assets 1`] = `
 Object {
   "five.js": "(()=>{var r={958(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(958)})();
 //# sourceMappingURL=five.js.map",
@@ -1316,7 +1316,7 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option and source maps: assets 2`] = `
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option and source maps: assets 2`] = `
 Object {
   "five.js": "(()=>{var r={958(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(958)})();
 //# sourceMappingURL=five.js.map",
@@ -1467,15 +1467,15 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option and source maps: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option and source maps: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option and source maps: errors 2`] = `Array []`;
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option and source maps: errors 2`] = `Array []`;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option and source maps: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option and source maps: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option and source maps: warnings 2`] = `Array []`;
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option and source maps: warnings 2`] = `Array []`;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option when the \`minify\` options is custom option and keep errors: errors 1`] = `
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option when the \`minify\` options is custom option and keep errors: errors 1`] = `
 Array [
   "Error: main.js from Terser plugin
 Error 1",
@@ -1484,7 +1484,7 @@ Error 2",
 ]
 `;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option when the \`minify\` options is custom option and keep errors: errors 2`] = `
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option when the \`minify\` options is custom option and keep errors: errors 2`] = `
 Array [
   "Error: main.js from Terser plugin
 Error 1",
@@ -1493,11 +1493,11 @@ Error 2",
 ]
 `;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option when the \`minify\` options is custom option and keep errors: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option when the \`minify\` options is custom option and keep errors: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option when the \`minify\` options is custom option and keep errors: warnings 2`] = `Array []`;
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option when the \`minify\` options is custom option and keep errors: warnings 2`] = `Array []`;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option when the \`minify\` options is custom option and keep warnings: assets 1`] = `
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option when the \`minify\` options is custom option and keep warnings: assets 1`] = `
 Object {
   "main.js": "/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
@@ -1556,7 +1556,7 @@ module.exports = function Foo() {
 }
 `;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option when the \`minify\` options is custom option and keep warnings: assets 2`] = `
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option when the \`minify\` options is custom option and keep warnings: assets 2`] = `
 Object {
   "main.js": "/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
@@ -1615,25 +1615,25 @@ module.exports = function Foo() {
 }
 `;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option when the \`minify\` options is custom option and keep warnings: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option when the \`minify\` options is custom option and keep warnings: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option when the \`minify\` options is custom option and keep warnings: errors 2`] = `Array []`;
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option when the \`minify\` options is custom option and keep warnings: errors 2`] = `Array []`;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option when the \`minify\` options is custom option and keep warnings: warnings 1`] = `
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option when the \`minify\` options is custom option and keep warnings: warnings 1`] = `
 Array [
   "Warning: Error: Warning 1",
   "Warning: Warnings 2",
 ]
 `;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option when the \`minify\` options is custom option and keep warnings: warnings 2`] = `
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option when the \`minify\` options is custom option and keep warnings: warnings 2`] = `
 Array [
   "Error: Error: Warning 1",
   "Error: Warnings 2",
 ]
 `;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option: assets 1`] = `
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option: assets 1`] = `
 Object {
   "five.js": "(()=>{var r={958(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(958)})();",
   "four.js": "(()=>{var r={111(r){r.exports=class{}}},t={};(function e(o){var s=t[o];if(void 0!==s)return s.exports;var p=t[o]={exports:{}};return r[o](p,p.exports,e),p.exports})(111)})();",
@@ -1643,7 +1643,7 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option: assets 2`] = `
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option: assets 2`] = `
 Object {
   "five.js": "(()=>{var r={958(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(958)})();",
   "four.js": "(()=>{var r={111(r){r.exports=class{}}},t={};(function e(o){var s=t[o];if(void 0!==s)return s.exports;var p=t[o]={exports:{}};return r[o](p,p.exports,e),p.exports})(111)})();",
@@ -1653,15 +1653,15 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option: errors 2`] = `Array []`;
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option: errors 2`] = `Array []`;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "filesystem" value for the "cache.type" option: warnings 2`] = `Array []`;
+exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option: warnings 2`] = `Array []`;
 
-exports[`TerserPlugin should work with "memory" value for the "cache.type" option: assets 1`] = `
+exports[`MinimizerPlugin should work with "memory" value for the "cache.type" option: assets 1`] = `
 Object {
   "five.js": "(()=>{var r={958(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(958)})();",
   "four.js": "(()=>{var r={111(r){r.exports=class{}}},t={};(function e(o){var s=t[o];if(void 0!==s)return s.exports;var p=t[o]={exports:{}};return r[o](p,p.exports,e),p.exports})(111)})();",
@@ -1671,7 +1671,7 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with "memory" value for the "cache.type" option: assets 2`] = `
+exports[`MinimizerPlugin should work with "memory" value for the "cache.type" option: assets 2`] = `
 Object {
   "five.js": "(()=>{var r={958(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(958)})();",
   "four.js": "(()=>{var r={111(r){r.exports=class{}}},t={};(function e(o){var s=t[o];if(void 0!==s)return s.exports;var p=t[o]={exports:{}};return r[o](p,p.exports,e),p.exports})(111)})();",
@@ -1681,15 +1681,15 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with "memory" value for the "cache.type" option: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "memory" value for the "cache.type" option: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "memory" value for the "cache.type" option: errors 2`] = `Array []`;
+exports[`MinimizerPlugin should work with "memory" value for the "cache.type" option: errors 2`] = `Array []`;
 
-exports[`TerserPlugin should work with "memory" value for the "cache.type" option: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work with "memory" value for the "cache.type" option: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work with "memory" value for the "cache.type" option: warnings 2`] = `Array []`;
+exports[`MinimizerPlugin should work with "memory" value for the "cache.type" option: warnings 2`] = `Array []`;
 
-exports[`TerserPlugin should work with ES modules: assets 1`] = `
+exports[`MinimizerPlugin should work with ES modules: assets 1`] = `
 Object {
   "copy.cjs": "var foo=12;console.log(foo);",
   "copy.js": "var foo=12;console.log(foo);",
@@ -1698,7 +1698,7 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with ES modules: assets 2`] = `
+exports[`MinimizerPlugin should work with ES modules: assets 2`] = `
 Object {
   "copy.cjs": "var foo=12;console.log(foo);",
   "copy.js": "var foo=12;console.log(foo);",
@@ -1707,15 +1707,15 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with ES modules: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work with ES modules: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work with ES modules: errors 2`] = `Array []`;
+exports[`MinimizerPlugin should work with ES modules: errors 2`] = `Array []`;
 
-exports[`TerserPlugin should work with ES modules: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work with ES modules: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work with ES modules: warnings 2`] = `Array []`;
+exports[`MinimizerPlugin should work with ES modules: warnings 2`] = `Array []`;
 
-exports[`TerserPlugin should work with child compilation: assets 1`] = `
+exports[`MinimizerPlugin should work with child compilation: assets 1`] = `
 Object {
   "file.worker.worker.js": "/*! For license information please see file.worker.worker.js.LICENSE.txt */
 onmessage=function(n){};",
@@ -1732,27 +1732,27 @@ onmessage=function(n){};",
 }
 `;
 
-exports[`TerserPlugin should work with child compilation: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work with child compilation: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work with child compilation: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work with child compilation: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work with empty files: assets 1`] = `
+exports[`MinimizerPlugin should work with empty files: assets 1`] = `
 Object {
   "main.js": "",
 }
 `;
 
-exports[`TerserPlugin should work with empty files: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work with empty files: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work with empty files: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work with empty files: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work with multi compiler mode with source maps: assets 1`] = `
+exports[`MinimizerPlugin should work with multi compiler mode with source maps: assets 1`] = `
 Object {
   "main-1.js": "(()=>{var __webpack_modules__={921(module){eval(\\"{// foo\\\\n/* @preserve*/\\\\n// bar\\\\nconst a = (/* unused pure expression or super */ null && (2 + 2));\\\\n\\\\nmodule.exports = function Foo() {\\\\n  const b = 2 + 2;\\\\n  console.log(b + 1 + 2);\\\\n};\\\\n\\\\n\\\\n//# sourceURL=webpack://minimizer-webpack-plugin/./test/fixtures/entry.js?\\\\n}\\")}},__webpack_module_cache__={};function __webpack_require__(e){var _=__webpack_module_cache__[e];if(void 0!==_)return _.exports;var r=__webpack_module_cache__[e]={exports:{}};return __webpack_modules__[e](r,r.exports,__webpack_require__),r.exports}var __webpack_exports__=__webpack_require__(921)})();",
 }
 `;
 
-exports[`TerserPlugin should work with multi compiler mode with source maps: assets 2`] = `
+exports[`MinimizerPlugin should work with multi compiler mode with source maps: assets 2`] = `
 Object {
   "main-2.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();
 //# sourceMappingURL=main-2.js.map",
@@ -1788,7 +1788,7 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with multi compiler mode with source maps: assets 3`] = `
+exports[`MinimizerPlugin should work with multi compiler mode with source maps: assets 3`] = `
 Object {
   "main-3.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();
 //# sourceMappingURL=main-3.js.map",
@@ -1812,7 +1812,7 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with multi compiler mode with source maps: assets 4`] = `
+exports[`MinimizerPlugin should work with multi compiler mode with source maps: assets 4`] = `
 Object {
   "main-4.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();
 //# sourceMappingURL=main-4.js.map",
@@ -1848,23 +1848,23 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with multi compiler mode with source maps: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work with multi compiler mode with source maps: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work with multi compiler mode with source maps: errors 2`] = `Array []`;
+exports[`MinimizerPlugin should work with multi compiler mode with source maps: errors 2`] = `Array []`;
 
-exports[`TerserPlugin should work with multi compiler mode with source maps: errors 3`] = `Array []`;
+exports[`MinimizerPlugin should work with multi compiler mode with source maps: errors 3`] = `Array []`;
 
-exports[`TerserPlugin should work with multi compiler mode with source maps: errors 4`] = `Array []`;
+exports[`MinimizerPlugin should work with multi compiler mode with source maps: errors 4`] = `Array []`;
 
-exports[`TerserPlugin should work with multi compiler mode with source maps: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work with multi compiler mode with source maps: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work with multi compiler mode with source maps: warnings 2`] = `Array []`;
+exports[`MinimizerPlugin should work with multi compiler mode with source maps: warnings 2`] = `Array []`;
 
-exports[`TerserPlugin should work with multi compiler mode with source maps: warnings 3`] = `Array []`;
+exports[`MinimizerPlugin should work with multi compiler mode with source maps: warnings 3`] = `Array []`;
 
-exports[`TerserPlugin should work with multi compiler mode with source maps: warnings 4`] = `Array []`;
+exports[`MinimizerPlugin should work with multi compiler mode with source maps: warnings 4`] = `Array []`;
 
-exports[`TerserPlugin should work with source map and use memory cache when the "cache" option is "true" and the asset has been changed: assets 1`] = `
+exports[`MinimizerPlugin should work with source map and use memory cache when the "cache" option is "true" and the asset has been changed: assets 1`] = `
 Object {
   "389.389.js": "\\"use strict\\";(self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[389],{389(e,i,n){n.r(i),n.d(i,{default:()=>p});const p=\\"async-dep\\"}}]);
 //# sourceMappingURL=389.389.js.map",
@@ -2112,7 +2112,7 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with source map and use memory cache when the "cache" option is "true" and the asset has been changed: assets 2`] = `
+exports[`MinimizerPlugin should work with source map and use memory cache when the "cache" option is "true" and the asset has been changed: assets 2`] = `
 Object {
   "389.389.js": "\\"use strict\\";(self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[389],{389(e,i,n){n.r(i),n.d(i,{default:()=>p});const p=\\"async-dep\\"}}]);
 //# sourceMappingURL=389.389.js.map",
@@ -2360,15 +2360,15 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with source map and use memory cache when the "cache" option is "true" and the asset has been changed: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work with source map and use memory cache when the "cache" option is "true" and the asset has been changed: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work with source map and use memory cache when the "cache" option is "true" and the asset has been changed: errors 2`] = `Array []`;
+exports[`MinimizerPlugin should work with source map and use memory cache when the "cache" option is "true" and the asset has been changed: errors 2`] = `Array []`;
 
-exports[`TerserPlugin should work with source map and use memory cache when the "cache" option is "true" and the asset has been changed: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work with source map and use memory cache when the "cache" option is "true" and the asset has been changed: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work with source map and use memory cache when the "cache" option is "true" and the asset has been changed: warnings 2`] = `Array []`;
+exports[`MinimizerPlugin should work with source map and use memory cache when the "cache" option is "true" and the asset has been changed: warnings 2`] = `Array []`;
 
-exports[`TerserPlugin should work with source map and use memory cache when the "cache" option is "true": assets 1`] = `
+exports[`MinimizerPlugin should work with source map and use memory cache when the "cache" option is "true": assets 1`] = `
 Object {
   "389.389.js": "\\"use strict\\";(self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[389],{389(e,i,n){n.r(i),n.d(i,{default:()=>p});const p=\\"async-dep\\"}}]);
 //# sourceMappingURL=389.389.js.map",
@@ -2616,7 +2616,7 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with source map and use memory cache when the "cache" option is "true": assets 2`] = `
+exports[`MinimizerPlugin should work with source map and use memory cache when the "cache" option is "true": assets 2`] = `
 Object {
   "389.389.js": "\\"use strict\\";(self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[389],{389(e,i,n){n.r(i),n.d(i,{default:()=>p});const p=\\"async-dep\\"}}]);
 //# sourceMappingURL=389.389.js.map",
@@ -2864,15 +2864,15 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with source map and use memory cache when the "cache" option is "true": errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work with source map and use memory cache when the "cache" option is "true": errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work with source map and use memory cache when the "cache" option is "true": errors 2`] = `Array []`;
+exports[`MinimizerPlugin should work with source map and use memory cache when the "cache" option is "true": errors 2`] = `Array []`;
 
-exports[`TerserPlugin should work with source map and use memory cache when the "cache" option is "true": warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work with source map and use memory cache when the "cache" option is "true": warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work with source map and use memory cache when the "cache" option is "true": warnings 2`] = `Array []`;
+exports[`MinimizerPlugin should work with source map and use memory cache when the "cache" option is "true": warnings 2`] = `Array []`;
 
-exports[`TerserPlugin should work with the "SourceMapDevToolPlugin" plugin (like "cheap-source-map"): assets 1`] = `
+exports[`MinimizerPlugin should work with the "SourceMapDevToolPlugin" plugin (like "cheap-source-map"): assets 1`] = `
 Object {
   "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();
 //# sourceMappingURL=main.js.map",
@@ -2896,11 +2896,11 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with the "SourceMapDevToolPlugin" plugin (like "cheap-source-map"): errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work with the "SourceMapDevToolPlugin" plugin (like "cheap-source-map"): errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work with the "SourceMapDevToolPlugin" plugin (like "cheap-source-map"): warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work with the "SourceMapDevToolPlugin" plugin (like "cheap-source-map"): warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work with the "SourceMapDevToolPlugin" plugin (like "source-map"): assets 1`] = `
+exports[`MinimizerPlugin should work with the "SourceMapDevToolPlugin" plugin (like "source-map"): assets 1`] = `
 Object {
   "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();
 //# sourceMappingURL=main.js.map",
@@ -2936,21 +2936,21 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work with the "SourceMapDevToolPlugin" plugin (like "source-map"): errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work with the "SourceMapDevToolPlugin" plugin (like "source-map"): errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work with the "SourceMapDevToolPlugin" plugin (like "source-map"): warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work with the "SourceMapDevToolPlugin" plugin (like "source-map"): warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work with the "devtool" option and the "false" value: assets 1`] = `
+exports[`MinimizerPlugin should work with the "devtool" option and the "false" value: assets 1`] = `
 Object {
   "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
-exports[`TerserPlugin should work with the "devtool" option and the "false" value: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work with the "devtool" option and the "false" value: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work with the "devtool" option and the "false" value: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work with the "devtool" option and the "false" value: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work, extract comments in different files and use memory cache memory cache when the "cache" option is "true" and the asset has been changed: assets 1`] = `
+exports[`MinimizerPlugin should work, extract comments in different files and use memory cache memory cache when the "cache" option is "true" and the asset has been changed: assets 1`] = `
 Object {
   "203.203.js": "/*! For license information please see 203.203.js.LICENSE.txt */
 (self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[203],{203(e){e.exports=Math.random()}}]);",
@@ -3007,7 +3007,7 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work, extract comments in different files and use memory cache memory cache when the "cache" option is "true" and the asset has been changed: assets 2`] = `
+exports[`MinimizerPlugin should work, extract comments in different files and use memory cache memory cache when the "cache" option is "true" and the asset has been changed: assets 2`] = `
 Object {
   "203.203.js": "/*! For license information please see 203.203.js.LICENSE.txt */
 (self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[203],{203(e){e.exports=Math.random()}}]);",
@@ -3066,15 +3066,15 @@ function changed(){}(()=>{var r={12(r){r.exports=Math.random()}},t={};(function 
 }
 `;
 
-exports[`TerserPlugin should work, extract comments in different files and use memory cache memory cache when the "cache" option is "true" and the asset has been changed: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work, extract comments in different files and use memory cache memory cache when the "cache" option is "true" and the asset has been changed: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work, extract comments in different files and use memory cache memory cache when the "cache" option is "true" and the asset has been changed: errors 2`] = `Array []`;
+exports[`MinimizerPlugin should work, extract comments in different files and use memory cache memory cache when the "cache" option is "true" and the asset has been changed: errors 2`] = `Array []`;
 
-exports[`TerserPlugin should work, extract comments in different files and use memory cache memory cache when the "cache" option is "true" and the asset has been changed: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work, extract comments in different files and use memory cache memory cache when the "cache" option is "true" and the asset has been changed: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work, extract comments in different files and use memory cache memory cache when the "cache" option is "true" and the asset has been changed: warnings 2`] = `Array []`;
+exports[`MinimizerPlugin should work, extract comments in different files and use memory cache memory cache when the "cache" option is "true" and the asset has been changed: warnings 2`] = `Array []`;
 
-exports[`TerserPlugin should work, extract comments in different files and use memory cache memory cache when the "cache" option is "true": assets 1`] = `
+exports[`MinimizerPlugin should work, extract comments in different files and use memory cache memory cache when the "cache" option is "true": assets 1`] = `
 Object {
   "203.203.js": "/*! For license information please see 203.203.js.LICENSE.txt */
 (self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[203],{203(e){e.exports=Math.random()}}]);",
@@ -3131,7 +3131,7 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work, extract comments in different files and use memory cache memory cache when the "cache" option is "true": assets 2`] = `
+exports[`MinimizerPlugin should work, extract comments in different files and use memory cache memory cache when the "cache" option is "true": assets 2`] = `
 Object {
   "203.203.js": "/*! For license information please see 203.203.js.LICENSE.txt */
 (self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[203],{203(e){e.exports=Math.random()}}]);",
@@ -3188,15 +3188,15 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work, extract comments in different files and use memory cache memory cache when the "cache" option is "true": errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work, extract comments in different files and use memory cache memory cache when the "cache" option is "true": errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work, extract comments in different files and use memory cache memory cache when the "cache" option is "true": errors 2`] = `Array []`;
+exports[`MinimizerPlugin should work, extract comments in different files and use memory cache memory cache when the "cache" option is "true": errors 2`] = `Array []`;
 
-exports[`TerserPlugin should work, extract comments in different files and use memory cache memory cache when the "cache" option is "true": warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work, extract comments in different files and use memory cache memory cache when the "cache" option is "true": warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work, extract comments in different files and use memory cache memory cache when the "cache" option is "true": warnings 2`] = `Array []`;
+exports[`MinimizerPlugin should work, extract comments in different files and use memory cache memory cache when the "cache" option is "true": warnings 2`] = `Array []`;
 
-exports[`TerserPlugin should work, extract comments in one file and use memory cache memory cache when the "cache" option is "true" and the asset has been changed: assets 1`] = `
+exports[`MinimizerPlugin should work, extract comments in one file and use memory cache memory cache when the "cache" option is "true" and the asset has been changed: assets 1`] = `
 Object {
   "203.203.js": "/*! For license information please see licenses.txt */
 (self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[203],{203(e){e.exports=Math.random()}}]);",
@@ -3249,7 +3249,7 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work, extract comments in one file and use memory cache memory cache when the "cache" option is "true" and the asset has been changed: assets 2`] = `
+exports[`MinimizerPlugin should work, extract comments in one file and use memory cache memory cache when the "cache" option is "true" and the asset has been changed: assets 2`] = `
 Object {
   "203.203.js": "/*! For license information please see licenses.txt */
 (self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[203],{203(e){e.exports=Math.random()}}]);",
@@ -3304,15 +3304,15 @@ function changed(){}(()=>{var r={12(r){r.exports=Math.random()}},t={};(function 
 }
 `;
 
-exports[`TerserPlugin should work, extract comments in one file and use memory cache memory cache when the "cache" option is "true" and the asset has been changed: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work, extract comments in one file and use memory cache memory cache when the "cache" option is "true" and the asset has been changed: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work, extract comments in one file and use memory cache memory cache when the "cache" option is "true" and the asset has been changed: errors 2`] = `Array []`;
+exports[`MinimizerPlugin should work, extract comments in one file and use memory cache memory cache when the "cache" option is "true" and the asset has been changed: errors 2`] = `Array []`;
 
-exports[`TerserPlugin should work, extract comments in one file and use memory cache memory cache when the "cache" option is "true" and the asset has been changed: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work, extract comments in one file and use memory cache memory cache when the "cache" option is "true" and the asset has been changed: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work, extract comments in one file and use memory cache memory cache when the "cache" option is "true" and the asset has been changed: warnings 2`] = `Array []`;
+exports[`MinimizerPlugin should work, extract comments in one file and use memory cache memory cache when the "cache" option is "true" and the asset has been changed: warnings 2`] = `Array []`;
 
-exports[`TerserPlugin should work, extract comments in one file and use memory cache memory cache when the "cache" option is "true": assets 1`] = `
+exports[`MinimizerPlugin should work, extract comments in one file and use memory cache memory cache when the "cache" option is "true": assets 1`] = `
 Object {
   "203.203.js": "/*! For license information please see licenses.txt */
 (self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[203],{203(e){e.exports=Math.random()}}]);",
@@ -3365,7 +3365,7 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work, extract comments in one file and use memory cache memory cache when the "cache" option is "true": assets 2`] = `
+exports[`MinimizerPlugin should work, extract comments in one file and use memory cache memory cache when the "cache" option is "true": assets 2`] = `
 Object {
   "203.203.js": "/*! For license information please see licenses.txt */
 (self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[203],{203(e){e.exports=Math.random()}}]);",
@@ -3418,56 +3418,56 @@ Object {
 }
 `;
 
-exports[`TerserPlugin should work, extract comments in one file and use memory cache memory cache when the "cache" option is "true": errors 1`] = `Array []`;
+exports[`MinimizerPlugin should work, extract comments in one file and use memory cache memory cache when the "cache" option is "true": errors 1`] = `Array []`;
 
-exports[`TerserPlugin should work, extract comments in one file and use memory cache memory cache when the "cache" option is "true": errors 2`] = `Array []`;
+exports[`MinimizerPlugin should work, extract comments in one file and use memory cache memory cache when the "cache" option is "true": errors 2`] = `Array []`;
 
-exports[`TerserPlugin should work, extract comments in one file and use memory cache memory cache when the "cache" option is "true": warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should work, extract comments in one file and use memory cache memory cache when the "cache" option is "true": warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should work, extract comments in one file and use memory cache memory cache when the "cache" option is "true": warnings 2`] = `Array []`;
+exports[`MinimizerPlugin should work, extract comments in one file and use memory cache memory cache when the "cache" option is "true": warnings 2`] = `Array []`;
 
-exports[`TerserPlugin should write stdout and stderr of workers to stdout and stderr of main process in not parallel mode: assets 1`] = `
+exports[`MinimizerPlugin should write stdout and stderr of workers to stdout and stderr of main process in not parallel mode: assets 1`] = `
 Object {
   "one.js": "",
   "two.js": "",
 }
 `;
 
-exports[`TerserPlugin should write stdout and stderr of workers to stdout and stderr of main process in not parallel mode: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should write stdout and stderr of workers to stdout and stderr of main process in not parallel mode: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should write stdout and stderr of workers to stdout and stderr of main process in not parallel mode: process stderr output 1`] = `
+exports[`MinimizerPlugin should write stdout and stderr of workers to stdout and stderr of main process in not parallel mode: process stderr output 1`] = `
 "stderr
 stderr
 "
 `;
 
-exports[`TerserPlugin should write stdout and stderr of workers to stdout and stderr of main process in not parallel mode: process stdout output 1`] = `
+exports[`MinimizerPlugin should write stdout and stderr of workers to stdout and stderr of main process in not parallel mode: process stdout output 1`] = `
 "stdout
 stdout
 "
 `;
 
-exports[`TerserPlugin should write stdout and stderr of workers to stdout and stderr of main process in not parallel mode: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should write stdout and stderr of workers to stdout and stderr of main process in not parallel mode: warnings 1`] = `Array []`;
 
-exports[`TerserPlugin should write stdout and stderr of workers to stdout and stderr of main process in parallel mode: assets 1`] = `
+exports[`MinimizerPlugin should write stdout and stderr of workers to stdout and stderr of main process in parallel mode: assets 1`] = `
 Object {
   "one.js": "",
   "two.js": "",
 }
 `;
 
-exports[`TerserPlugin should write stdout and stderr of workers to stdout and stderr of main process in parallel mode: errors 1`] = `Array []`;
+exports[`MinimizerPlugin should write stdout and stderr of workers to stdout and stderr of main process in parallel mode: errors 1`] = `Array []`;
 
-exports[`TerserPlugin should write stdout and stderr of workers to stdout and stderr of main process in parallel mode: process stderr output 1`] = `
+exports[`MinimizerPlugin should write stdout and stderr of workers to stdout and stderr of main process in parallel mode: process stderr output 1`] = `
 "stderr
 stderr
 "
 `;
 
-exports[`TerserPlugin should write stdout and stderr of workers to stdout and stderr of main process in parallel mode: process stdout output 1`] = `
+exports[`MinimizerPlugin should write stdout and stderr of workers to stdout and stderr of main process in parallel mode: process stdout output 1`] = `
 "stdout
 stdout
 "
 `;
 
-exports[`TerserPlugin should write stdout and stderr of workers to stdout and stderr of main process in parallel mode: warnings 1`] = `Array []`;
+exports[`MinimizerPlugin should write stdout and stderr of workers to stdout and stderr of main process in parallel mode: warnings 1`] = `Array []`;

@@ -1,6 +1,6 @@
 import path from "path";
 
-import TerserPlugin from "../src/index";
+import MinimizerPlugin from "../src/index";
 
 import {
   compile,
@@ -17,7 +17,7 @@ describe("minimizerOptions option", () => {
       target: ["web", "es5"],
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       minimizerOptions: {
         mangle: false,
         output: {
@@ -34,10 +34,10 @@ describe("minimizerOptions option", () => {
   });
 
   it("should treat `terserOptions` as a deprecated alias of `minimizerOptions`", () => {
-    const pluginA = new TerserPlugin({
+    const pluginA = new MinimizerPlugin({
       minimizerOptions: { mangle: false },
     });
-    const pluginB = new TerserPlugin({
+    const pluginB = new MinimizerPlugin({
       terserOptions: { mangle: false },
     });
 
@@ -47,7 +47,7 @@ describe("minimizerOptions option", () => {
   });
 
   it("should prefer `minimizerOptions` when both `minimizerOptions` and `terserOptions` are provided", () => {
-    const plugin = new TerserPlugin({
+    const plugin = new MinimizerPlugin({
       minimizerOptions: { mangle: false },
       terserOptions: { mangle: true, compress: false },
     });
@@ -56,7 +56,7 @@ describe("minimizerOptions option", () => {
   });
 
   it("should default to an empty object when neither option is provided", () => {
-    const plugin = new TerserPlugin();
+    const plugin = new MinimizerPlugin();
 
     expect(plugin.options.minimizer.options).toEqual({});
   });

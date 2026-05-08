@@ -1,6 +1,6 @@
 import path from "path";
 
-import TerserPlugin from "../src/index";
+import MinimizerPlugin from "../src/index";
 
 import {
   compile,
@@ -24,7 +24,7 @@ describe("exclude option", () => {
   });
 
   it("should match snapshot for a single RegExp value", async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       exclude: /excluded1/i,
     }).apply(compiler);
 
@@ -36,7 +36,7 @@ describe("exclude option", () => {
   });
 
   it("should match snapshot for a single String value", async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       exclude: "excluded1",
     }).apply(compiler);
 
@@ -48,7 +48,7 @@ describe("exclude option", () => {
   });
 
   it("should match snapshot for multiple RegExp values", async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       exclude: [/excluded1/i, /excluded2/i],
     }).apply(compiler);
 
@@ -60,7 +60,7 @@ describe("exclude option", () => {
   });
 
   it("should match snapshot for multiple String values", async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       exclude: ["excluded1", "excluded2"],
     }).apply(compiler);
 

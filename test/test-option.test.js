@@ -1,6 +1,6 @@
 import path from "path";
 
-import TerserPlugin from "../src/index";
+import MinimizerPlugin from "../src/index";
 
 import {
   compile,
@@ -36,7 +36,7 @@ describe("test option", () => {
   });
 
   it("should match snapshot with empty value", async () => {
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -46,7 +46,7 @@ describe("test option", () => {
   });
 
   it("should match snapshot for a single `test` value ({RegExp})", async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       test: /(m)?js\.js(\?.*)?$/i,
     }).apply(compiler);
 
@@ -58,7 +58,7 @@ describe("test option", () => {
   });
 
   it('should match snapshot for a single "test" value ({String})', async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       test: "js.js",
     }).apply(compiler);
 
@@ -70,7 +70,7 @@ describe("test option", () => {
   });
 
   it('should match snapshot for multiple "test" values ({RegExp})', async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       test: [/(m)?js\.js(\?.*)?$/i, /AsyncImportExport\.js(\?.*)?$/i],
     }).apply(compiler);
 
@@ -82,7 +82,7 @@ describe("test option", () => {
   });
 
   it('should match snapshot for multiple "test" values ({String})', async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       test: ["js.js", "AsyncImportExport.js"],
     }).apply(compiler);
 
@@ -114,7 +114,7 @@ describe("test option", () => {
       },
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 

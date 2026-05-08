@@ -1,168 +1,168 @@
-import TerserPlugin from "../src";
+import MinimizerPlugin from "../src";
 
 describe("validation", () => {
   it("validate", () => {
     /* eslint-disable no-new */
     expect(() => {
-      new TerserPlugin({ test: /foo/ });
+      new MinimizerPlugin({ test: /foo/ });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ test: "foo" });
+      new MinimizerPlugin({ test: "foo" });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ test: [/foo/] });
+      new MinimizerPlugin({ test: [/foo/] });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ test: [/foo/, /bar/] });
+      new MinimizerPlugin({ test: [/foo/, /bar/] });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ test: ["foo", "bar"] });
+      new MinimizerPlugin({ test: ["foo", "bar"] });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ test: [/foo/, "bar"] });
+      new MinimizerPlugin({ test: [/foo/, "bar"] });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ test: true });
+      new MinimizerPlugin({ test: true });
     }).toThrowErrorMatchingSnapshot();
 
     expect(() => {
-      new TerserPlugin({ test: [true] });
+      new MinimizerPlugin({ test: [true] });
     }).toThrowErrorMatchingSnapshot();
 
     expect(() => {
-      new TerserPlugin({ include: /foo/ });
+      new MinimizerPlugin({ include: /foo/ });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ include: "foo" });
+      new MinimizerPlugin({ include: "foo" });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ include: [/foo/] });
+      new MinimizerPlugin({ include: [/foo/] });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ include: [/foo/, /bar/] });
+      new MinimizerPlugin({ include: [/foo/, /bar/] });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ include: ["foo", "bar"] });
+      new MinimizerPlugin({ include: ["foo", "bar"] });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ include: [/foo/, "bar"] });
+      new MinimizerPlugin({ include: [/foo/, "bar"] });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ include: true });
+      new MinimizerPlugin({ include: true });
     }).toThrowErrorMatchingSnapshot();
 
     expect(() => {
-      new TerserPlugin({ include: [true] });
+      new MinimizerPlugin({ include: [true] });
     }).toThrowErrorMatchingSnapshot();
 
     expect(() => {
-      new TerserPlugin({ exclude: /foo/ });
+      new MinimizerPlugin({ exclude: /foo/ });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ exclude: "foo" });
+      new MinimizerPlugin({ exclude: "foo" });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ exclude: [/foo/] });
+      new MinimizerPlugin({ exclude: [/foo/] });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ exclude: [/foo/, /bar/] });
+      new MinimizerPlugin({ exclude: [/foo/, /bar/] });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ exclude: ["foo", "bar"] });
+      new MinimizerPlugin({ exclude: ["foo", "bar"] });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ exclude: [/foo/, "bar"] });
+      new MinimizerPlugin({ exclude: [/foo/, "bar"] });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ exclude: true });
+      new MinimizerPlugin({ exclude: true });
     }).toThrowErrorMatchingSnapshot();
 
     expect(() => {
-      new TerserPlugin({ exclude: [true] });
+      new MinimizerPlugin({ exclude: [true] });
     }).toThrowErrorMatchingSnapshot();
 
     expect(() => {
-      new TerserPlugin({ parallel: true });
+      new MinimizerPlugin({ parallel: true });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ parallel: false });
+      new MinimizerPlugin({ parallel: false });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ parallel: 2 });
+      new MinimizerPlugin({ parallel: 2 });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ parallel: "2" });
+      new MinimizerPlugin({ parallel: "2" });
     }).toThrowErrorMatchingSnapshot();
 
     expect(() => {
-      new TerserPlugin({ parallel: {} });
+      new MinimizerPlugin({ parallel: {} });
     }).toThrowErrorMatchingSnapshot();
 
     expect(() => {
-      new TerserPlugin({ minify() {} });
+      new MinimizerPlugin({ minify() {} });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ minify: [() => ({ code: "" })] });
+      new MinimizerPlugin({ minify: [() => ({ code: "" })] });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({
+      new MinimizerPlugin({
         minify: [() => ({ code: "" }), () => ({ code: "" })],
       });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ minify: [] });
+      new MinimizerPlugin({ minify: [] });
     }).toThrowErrorMatchingSnapshot();
 
     expect(() => {
-      new TerserPlugin({ minify: true });
+      new MinimizerPlugin({ minify: true });
     }).toThrowErrorMatchingSnapshot();
 
     expect(() => {
-      new TerserPlugin({ terserOptions: {} });
+      new MinimizerPlugin({ terserOptions: {} });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ terserOptions: [{}] });
+      new MinimizerPlugin({ terserOptions: [{}] });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ terserOptions: [{}, {}] });
+      new MinimizerPlugin({ terserOptions: [{}, {}] });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ terserOptions: [] });
+      new MinimizerPlugin({ terserOptions: [] });
     }).toThrowErrorMatchingSnapshot();
 
     expect(() => {
-      new TerserPlugin({ terserOptions: null });
+      new MinimizerPlugin({ terserOptions: null });
     }).toThrowErrorMatchingSnapshot();
 
     expect(() => {
-      new TerserPlugin({
+      new MinimizerPlugin({
         terserOptions: {
           ecma: undefined,
           parse: {},
@@ -181,31 +181,31 @@ describe("validation", () => {
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ terserOptions: { emca: 5 } });
+      new MinimizerPlugin({ terserOptions: { emca: 5 } });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ extractComments: true });
+      new MinimizerPlugin({ extractComments: true });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ extractComments: false });
+      new MinimizerPlugin({ extractComments: false });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ extractComments: "comment" });
+      new MinimizerPlugin({ extractComments: "comment" });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ extractComments: /comment/ });
+      new MinimizerPlugin({ extractComments: /comment/ });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ extractComments() {} });
+      new MinimizerPlugin({ extractComments() {} });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({
+      new MinimizerPlugin({
         extractComments: {
           condition: true,
         },
@@ -213,7 +213,7 @@ describe("validation", () => {
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({
+      new MinimizerPlugin({
         extractComments: {
           condition: "comment",
         },
@@ -221,7 +221,7 @@ describe("validation", () => {
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({
+      new MinimizerPlugin({
         extractComments: {
           condition: /comment/,
         },
@@ -229,7 +229,7 @@ describe("validation", () => {
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({
+      new MinimizerPlugin({
         extractComments: {
           condition() {},
         },
@@ -237,7 +237,7 @@ describe("validation", () => {
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({
+      new MinimizerPlugin({
         extractComments: {
           condition: {},
         },
@@ -245,7 +245,7 @@ describe("validation", () => {
     }).toThrowErrorMatchingSnapshot();
 
     expect(() => {
-      new TerserPlugin({
+      new MinimizerPlugin({
         extractComments: {
           filename: "test.js",
         },
@@ -253,7 +253,7 @@ describe("validation", () => {
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({
+      new MinimizerPlugin({
         extractComments: {
           filename() {},
         },
@@ -261,7 +261,7 @@ describe("validation", () => {
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({
+      new MinimizerPlugin({
         extractComments: {
           filename: true,
         },
@@ -269,7 +269,7 @@ describe("validation", () => {
     }).toThrowErrorMatchingSnapshot();
 
     expect(() => {
-      new TerserPlugin({
+      new MinimizerPlugin({
         extractComments: {
           banner: true,
         },
@@ -277,7 +277,7 @@ describe("validation", () => {
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({
+      new MinimizerPlugin({
         extractComments: {
           banner: "banner",
         },
@@ -285,7 +285,7 @@ describe("validation", () => {
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({
+      new MinimizerPlugin({
         extractComments: {
           banner() {},
         },
@@ -293,7 +293,7 @@ describe("validation", () => {
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({
+      new MinimizerPlugin({
         extractComments: {
           banner: /test/,
         },
@@ -301,35 +301,35 @@ describe("validation", () => {
     }).toThrowErrorMatchingSnapshot();
 
     expect(() => {
-      new TerserPlugin({ extractComments: { unknown: true } });
+      new MinimizerPlugin({ extractComments: { unknown: true } });
     }).toThrowErrorMatchingSnapshot();
 
     expect(() => {
-      new TerserPlugin({ unknown: true });
+      new MinimizerPlugin({ unknown: true });
     }).toThrowErrorMatchingSnapshot();
 
     expect(() => {
-      new TerserPlugin({ minimizerOptions: {} });
+      new MinimizerPlugin({ minimizerOptions: {} });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ minimizerOptions: [{}] });
+      new MinimizerPlugin({ minimizerOptions: [{}] });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ minimizerOptions: [{}, {}] });
+      new MinimizerPlugin({ minimizerOptions: [{}, {}] });
     }).not.toThrow();
 
     expect(() => {
-      new TerserPlugin({ minimizerOptions: [] });
+      new MinimizerPlugin({ minimizerOptions: [] });
     }).toThrowErrorMatchingSnapshot();
 
     expect(() => {
-      new TerserPlugin({ minimizerOptions: null });
+      new MinimizerPlugin({ minimizerOptions: null });
     }).toThrowErrorMatchingSnapshot();
 
     expect(() => {
-      new TerserPlugin({
+      new MinimizerPlugin({
         minimizerOptions: { ecma: 5 },
         terserOptions: { ecma: 5 },
       });

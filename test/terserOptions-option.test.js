@@ -1,6 +1,6 @@
 import path from "path";
 
-import TerserPlugin from "../src/index";
+import MinimizerPlugin from "../src/index";
 
 import {
   compile,
@@ -17,7 +17,7 @@ describe("terserOptions option", () => {
       target: ["web", "es3"],
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         mangle: false,
         output: {
@@ -39,7 +39,7 @@ describe("terserOptions option", () => {
       target: ["web", "es5"],
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         mangle: false,
         output: {
@@ -61,7 +61,7 @@ describe("terserOptions option", () => {
       target: ["web", "es2020"],
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         mangle: false,
         output: {
@@ -82,7 +82,7 @@ describe("terserOptions option", () => {
       entry: path.resolve(__dirname, "./fixtures/ecma-5/entry.js"),
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         ecma: 5,
         mangle: false,
@@ -104,8 +104,8 @@ describe("terserOptions option", () => {
       entry: path.resolve(__dirname, "./fixtures/ecma-5/entry.js"),
     });
 
-    new TerserPlugin({
-      minify: TerserPlugin.swcMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.swcMinify,
       terserOptions: {
         ecma: 5,
         mangle: false,
@@ -127,7 +127,7 @@ describe("terserOptions option", () => {
       entry: path.resolve(__dirname, "./fixtures/ecma-6/entry.js"),
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         ecma: 6,
         mangle: false,
@@ -149,8 +149,8 @@ describe("terserOptions option", () => {
       entry: path.resolve(__dirname, "./fixtures/ecma-6/entry.js"),
     });
 
-    new TerserPlugin({
-      minify: TerserPlugin.swcMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.swcMinify,
       terserOptions: {
         ecma: 6,
         mangle: false,
@@ -172,7 +172,7 @@ describe("terserOptions option", () => {
       entry: path.resolve(__dirname, "./fixtures/ecma-7/entry.js"),
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         ecma: 7,
         mangle: false,
@@ -194,7 +194,7 @@ describe("terserOptions option", () => {
       entry: path.resolve(__dirname, "./fixtures/ecma-8/entry.js"),
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         ecma: 8,
         mangle: false,
@@ -214,7 +214,7 @@ describe("terserOptions option", () => {
   it('should match snapshot for the "parse.ecma" option with the "8" value', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         parse: {
           ecma: 8,
@@ -232,7 +232,7 @@ describe("terserOptions option", () => {
   it('should match snapshot for the "compress" option with the "false" value', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         compress: false,
       },
@@ -248,7 +248,7 @@ describe("terserOptions option", () => {
   it('should match snapshot for the "compress" option with the "true" value', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         compress: true,
       },
@@ -264,7 +264,7 @@ describe("terserOptions option", () => {
   it('should match snapshot for the "compress" option with an object value', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         compress: {
           join_vars: false,
@@ -282,7 +282,7 @@ describe("terserOptions option", () => {
   it('should match snapshot for the "mangle" option with the "false" value', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         mangle: false,
       },
@@ -298,7 +298,7 @@ describe("terserOptions option", () => {
   it('should match snapshot for the "mangle" option with the "true" value', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         mangle: true,
       },
@@ -314,7 +314,7 @@ describe("terserOptions option", () => {
   it('should match snapshot for the "mangle" option with object values', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         mangle: {
           reserved: ["baz"],
@@ -332,7 +332,7 @@ describe("terserOptions option", () => {
   it('should match snapshot for the "module" option with the "false" value', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         module: false,
       },
@@ -348,7 +348,7 @@ describe("terserOptions option", () => {
   it('should match snapshot for the "module" option with the "true" value', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         module: true,
       },
@@ -364,7 +364,7 @@ describe("terserOptions option", () => {
   it('should match snapshot for the "output.beautify" option with "true" value', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         output: {
           beautify: true,
@@ -382,7 +382,7 @@ describe("terserOptions option", () => {
   it('should match snapshot for the "output.comments" option with the "true"', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         output: {
           comments: true,
@@ -400,7 +400,7 @@ describe("terserOptions option", () => {
   it('should match snapshot for the "format.beautify" option with "true" value', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         format: {
           beautify: true,
@@ -418,7 +418,7 @@ describe("terserOptions option", () => {
   it('should match snapshot for the "format.comments" option with the "true"', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         format: {
           comments: true,
@@ -436,7 +436,7 @@ describe("terserOptions option", () => {
   it('should match snapshot for the "toplevel" option with the "false" value', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         toplevel: false,
       },
@@ -452,7 +452,7 @@ describe("terserOptions option", () => {
   it('should match snapshot for the "toplevel" option with the "true" value', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         toplevel: true,
       },
@@ -468,7 +468,7 @@ describe("terserOptions option", () => {
   it('should match snapshot for the "nameCache" option with a empty object value', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         nameCache: {},
       },
@@ -484,7 +484,7 @@ describe("terserOptions option", () => {
   it('should match snapshot for the "ie8" option with the "false" value', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         ie8: false,
       },
@@ -500,7 +500,7 @@ describe("terserOptions option", () => {
   it('should match snapshot for the "ie8" option with the "true" value', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         ie8: true,
       },
@@ -516,7 +516,7 @@ describe("terserOptions option", () => {
   it('should match snapshot for the "keep_classnames" option with the "false" value', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         keep_classnames: false,
       },
@@ -532,7 +532,7 @@ describe("terserOptions option", () => {
   it('should match snapshot for the "keep_classnames" option with the "true" value', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         keep_classnames: true,
       },
@@ -548,7 +548,7 @@ describe("terserOptions option", () => {
   it('should match snapshot for the "keep_fnames" option with the "false" value', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         keep_fnames: false,
       },
@@ -564,7 +564,7 @@ describe("terserOptions option", () => {
   it('should match snapshot for the "keep_fnames" option with the "true" value', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         keep_fnames: true,
       },
@@ -580,7 +580,7 @@ describe("terserOptions option", () => {
   it('should match snapshot for the "safari10" option with the "false" value', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         safari10: false,
       },
@@ -596,7 +596,7 @@ describe("terserOptions option", () => {
   it('should match snapshot for the "safari10" option with the "true" value', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         safari10: true,
       },
@@ -612,7 +612,7 @@ describe("terserOptions option", () => {
   it('should match snapshot for the "unknown" option', async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       parallel: false,
       terserOptions: {
         output: {

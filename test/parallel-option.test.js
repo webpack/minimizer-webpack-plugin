@@ -3,7 +3,7 @@ import path from "path";
 
 import { Worker } from "jest-worker";
 
-import TerserPlugin from "../src/index";
+import MinimizerPlugin from "../src/index";
 
 import {
   compile,
@@ -73,7 +73,7 @@ describe("parallel option", () => {
   });
 
   it("should match snapshot when a value is not specify", async () => {
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -93,7 +93,7 @@ describe("parallel option", () => {
   });
 
   it('should match snapshot for the "false" value', async () => {
-    new TerserPlugin({ parallel: false }).apply(compiler);
+    new MinimizerPlugin({ parallel: false }).apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -105,7 +105,7 @@ describe("parallel option", () => {
   });
 
   it('should match snapshot for the "true" value', async () => {
-    new TerserPlugin({ parallel: true }).apply(compiler);
+    new MinimizerPlugin({ parallel: true }).apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -125,7 +125,7 @@ describe("parallel option", () => {
   });
 
   it('should match snapshot for the "undefined" value', async () => {
-    new TerserPlugin({ parallel: undefined }).apply(compiler);
+    new MinimizerPlugin({ parallel: undefined }).apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -145,7 +145,7 @@ describe("parallel option", () => {
   });
 
   it('should match snapshot for the "2" value', async () => {
-    new TerserPlugin({ parallel: 2 }).apply(compiler);
+    new MinimizerPlugin({ parallel: 2 }).apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -169,7 +169,7 @@ describe("parallel option", () => {
       entry: path.resolve(__dirname, "./fixtures/entry.js"),
     });
 
-    new TerserPlugin({ parallel: true }).apply(compiler);
+    new MinimizerPlugin({ parallel: true }).apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -197,7 +197,7 @@ describe("parallel option", () => {
 
     compiler = getCompiler({ entry: entries });
 
-    new TerserPlugin({ parallel: true }).apply(compiler);
+    new MinimizerPlugin({ parallel: true }).apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -225,7 +225,7 @@ describe("parallel option", () => {
 
     compiler = getCompiler({ entry: entries });
 
-    new TerserPlugin({ parallel: true }).apply(compiler);
+    new MinimizerPlugin({ parallel: true }).apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -264,7 +264,7 @@ describe("parallel option", () => {
       },
     });
 
-    new TerserPlugin({ parallel: true }).apply(compiler);
+    new MinimizerPlugin({ parallel: true }).apply(compiler);
 
     const stats = await compile(compiler);
 

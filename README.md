@@ -20,33 +20,33 @@ with the [`minify`](#minify) option and target the right files with
 
 JavaScript minimizers:
 
-- [`terser`](https://github.com/terser/terser) — `TerserPlugin.terserMinify` (default). The same JavaScript-based minifier that webpack uses out of the box; produces small, well-tested output and supports the full set of `extractComments` modes.
-- [`uglify-js`](https://github.com/mishoo/UglifyJS) — `TerserPlugin.uglifyJsMinify`. ES5-only minifier, useful when you specifically need UglifyJS-compatible output. Requires `npm install --save-dev uglify-js`.
-- [`@swc/core`](https://github.com/swc-project/swc) — `TerserPlugin.swcMinify`. A very fast Rust-based JavaScript/TypeScript minifier. Requires `npm install --save-dev @swc/core`.
-- [`esbuild`](https://github.com/evanw/esbuild) — `TerserPlugin.esbuildMinify`. An extremely fast JS bundler/minifier; legal comments are always preserved (no `extractComments` support). Requires `npm install --save-dev esbuild`.
+- [`terser`](https://github.com/terser/terser) — `MinimizerPlugin.terserMinify` (default). The same JavaScript-based minifier that webpack uses out of the box; produces small, well-tested output and supports the full set of `extractComments` modes.
+- [`uglify-js`](https://github.com/mishoo/UglifyJS) — `MinimizerPlugin.uglifyJsMinify`. ES5-only minifier, useful when you specifically need UglifyJS-compatible output. Requires `npm install --save-dev uglify-js`.
+- [`@swc/core`](https://github.com/swc-project/swc) — `MinimizerPlugin.swcMinify`. A very fast Rust-based JavaScript/TypeScript minifier. Requires `npm install --save-dev @swc/core`.
+- [`esbuild`](https://github.com/evanw/esbuild) — `MinimizerPlugin.esbuildMinify`. An extremely fast JS bundler/minifier; legal comments are always preserved (no `extractComments` support). Requires `npm install --save-dev esbuild`.
 
 JSON minimizer:
 
-- `JSON.stringify` — `TerserPlugin.jsonMinify`. Built in (no extra dependency); supports `space` and `replacer` options.
+- `JSON.stringify` — `MinimizerPlugin.jsonMinify`. Built in (no extra dependency); supports `space` and `replacer` options.
 
 HTML minimizers:
 
-- [`html-minifier-terser`](https://github.com/terser/html-minifier-terser) — `TerserPlugin.htmlMinifierTerser`. The default HTML minimizer. JavaScript-based, no native dependency. Requires `npm install --save-dev html-minifier-terser`.
-- [`@swc/html`](https://github.com/swc-project/swc) — `TerserPlugin.swcMinifyHtml` (full HTML documents) and `TerserPlugin.swcMinifyHtmlFragment` (HTML fragments, e.g. `<template>` content). Very fast Rust-based platform for the Web. Requires `npm install --save-dev @swc/html`.
-- [`@minify-html/node`](https://github.com/wilsonzlin/minify-html) — `TerserPlugin.minifyHtmlNode`. A Rust HTML minifier optimised for speed and effectiveness. Requires `npm install --save-dev @minify-html/node`.
+- [`html-minifier-terser`](https://github.com/terser/html-minifier-terser) — `MinimizerPlugin.htmlMinifierTerser`. The default HTML minimizer. JavaScript-based, no native dependency. Requires `npm install --save-dev html-minifier-terser`.
+- [`@swc/html`](https://github.com/swc-project/swc) — `MinimizerPlugin.swcMinifyHtml` (full HTML documents) and `MinimizerPlugin.swcMinifyHtmlFragment` (HTML fragments, e.g. `<template>` content). Very fast Rust-based platform for the Web. Requires `npm install --save-dev @swc/html`.
+- [`@minify-html/node`](https://github.com/wilsonzlin/minify-html) — `MinimizerPlugin.minifyHtmlNode`. A Rust HTML minifier optimised for speed and effectiveness. Requires `npm install --save-dev @minify-html/node`.
 
 CSS minimizers:
 
-- [`cssnano`](https://cssnano.github.io/cssnano/) — `TerserPlugin.cssnanoMinify`. The default CSS minimizer. Built on top of [PostCSS](https://postcss.org/). Requires `npm install --save-dev cssnano postcss`.
-- [`csso`](https://github.com/css/csso) — `TerserPlugin.cssoMinify`. A CSS minifier with structural optimisations. Requires `npm install --save-dev csso`.
-- [`clean-css`](https://github.com/clean-css/clean-css) — `TerserPlugin.cleanCssMinify`. A widely-used CSS optimiser. Requires `npm install --save-dev clean-css`.
-- [`esbuild`](https://github.com/evanw/esbuild) — `TerserPlugin.esbuildMinifyCss`. Very fast CSS minification using esbuild's CSS loader. Requires `npm install --save-dev esbuild`.
-- [`lightningcss`](https://github.com/parcel-bundler/lightningcss) — `TerserPlugin.lightningCssMinify`. A Rust-based CSS parser, transformer, and minifier. Requires `npm install --save-dev lightningcss`.
-- [`@swc/css`](https://github.com/swc-project/swc) — `TerserPlugin.swcMinifyCss`. A very fast Rust-based CSS minifier. Requires `npm install --save-dev @swc/css`.
+- [`cssnano`](https://cssnano.github.io/cssnano/) — `MinimizerPlugin.cssnanoMinify`. The default CSS minimizer. Built on top of [PostCSS](https://postcss.org/). Requires `npm install --save-dev cssnano postcss`.
+- [`csso`](https://github.com/css/csso) — `MinimizerPlugin.cssoMinify`. A CSS minifier with structural optimisations. Requires `npm install --save-dev csso`.
+- [`clean-css`](https://github.com/clean-css/clean-css) — `MinimizerPlugin.cleanCssMinify`. A widely-used CSS optimiser. Requires `npm install --save-dev clean-css`.
+- [`esbuild`](https://github.com/evanw/esbuild) — `MinimizerPlugin.esbuildMinifyCss`. Very fast CSS minification using esbuild's CSS loader. Requires `npm install --save-dev esbuild`.
+- [`lightningcss`](https://github.com/parcel-bundler/lightningcss) — `MinimizerPlugin.lightningCssMinify`. A Rust-based CSS parser, transformer, and minifier. Requires `npm install --save-dev lightningcss`.
+- [`@swc/css`](https://github.com/swc-project/swc) — `MinimizerPlugin.swcMinifyCss`. A very fast Rust-based CSS minifier. Requires `npm install --save-dev @swc/css`.
 
 All of the non-default minimizers are declared as **optional** peer
 dependencies — install only the ones you actually use. You can also stack
-multiple `TerserPlugin` instances in the same build to handle different
+multiple `MinimizerPlugin` instances in the same build to handle different
 file types with different minimizers (see [Examples](#examples)).
 
 ## Getting Started
@@ -78,12 +78,12 @@ Then add the plugin to your `webpack` configuration. For example:
 **webpack.config.js**
 
 ```js
-const TerserPlugin = require("minimizer-webpack-plugin");
+const MinimizerPlugin = require("minimizer-webpack-plugin");
 
 module.exports = {
   optimization: {
     minimize: true,
-    minimizer: [new TerserPlugin()],
+    minimizer: [new MinimizerPlugin()],
   },
 };
 ```
@@ -130,7 +130,7 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      new TerserPlugin({
+      new MinimizerPlugin({
         test: /\.js(\?.*)?$/i,
       }),
     ],
@@ -157,7 +157,7 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      new TerserPlugin({
+      new MinimizerPlugin({
         include: /\/includes/,
       }),
     ],
@@ -184,7 +184,7 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      new TerserPlugin({
+      new MinimizerPlugin({
         exclude: /\/excludes/,
       }),
     ],
@@ -225,7 +225,7 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      new TerserPlugin({
+      new MinimizerPlugin({
         parallel: true,
       }),
     ],
@@ -244,7 +244,7 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      new TerserPlugin({
+      new MinimizerPlugin({
         parallel: 4,
       }),
     ],
@@ -315,7 +315,7 @@ type minifyFn = (
 type minify = minifyFn | minifyFn[];
 ```
 
-Default: `TerserPlugin.terserMinify`
+Default: `MinimizerPlugin.terserMinify`
 
 Allows you to override the default minify function.
 By default plugin uses [terser](https://github.com/terser/terser) package.
@@ -327,17 +327,17 @@ asset; the plugin dispatches each asset only to the minimizers whose `filter`
 accepts it (or runs them all when no filter is set). All built-in minimizers
 ship with a `filter` that matches their natural extension, so a single plugin
 instance and a single worker pool can handle JS, CSS, HTML and JSON together
-without juggling multiple `TerserPlugin` instances — just widen `test` to
+without juggling multiple `MinimizerPlugin` instances — just widen `test` to
 let those asset types reach the dispatcher:
 
 ```js
-new TerserPlugin({
+new MinimizerPlugin({
   test: /\.(?:[cm]?js|css|html?|json)(\?.*)?$/i,
   minify: [
-    TerserPlugin.terserMinify,
-    TerserPlugin.cssnanoMinify,
-    TerserPlugin.htmlMinifierTerser,
-    TerserPlugin.jsonMinify,
+    MinimizerPlugin.terserMinify,
+    MinimizerPlugin.cssnanoMinify,
+    MinimizerPlugin.htmlMinifierTerser,
+    MinimizerPlugin.jsonMinify,
   ],
 });
 ```
@@ -401,7 +401,7 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      new TerserPlugin({
+      new MinimizerPlugin({
         minimizerOptions: {
           myCustomOption: true,
         },
@@ -429,13 +429,13 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      new TerserPlugin({
-        minify: [TerserPlugin.terserMinify, TerserPlugin.swcMinify],
+      new MinimizerPlugin({
+        minify: [MinimizerPlugin.terserMinify, MinimizerPlugin.swcMinify],
         // `minimizerOptions` can be an array of options, one per `minify` entry
         minimizerOptions: [
-          // Options for `TerserPlugin.terserMinify`
+          // Options for `MinimizerPlugin.terserMinify`
           { mangle: false },
-          // Options for `TerserPlugin.swcMinify`
+          // Options for `MinimizerPlugin.swcMinify`
           {},
         ],
       }),
@@ -453,15 +453,15 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      new TerserPlugin({
+      new MinimizerPlugin({
         // `test` still defaults to JS only, so widen it to catch every
         // asset type you want the dispatcher to consider.
         test: /\.(?:[cm]?js|css|html?|json)(\?.*)?$/i,
         minify: [
-          TerserPlugin.terserMinify,
-          TerserPlugin.cssnanoMinify,
-          TerserPlugin.htmlMinifierTerser,
-          TerserPlugin.jsonMinify,
+          MinimizerPlugin.terserMinify,
+          MinimizerPlugin.cssnanoMinify,
+          MinimizerPlugin.htmlMinifierTerser,
+          MinimizerPlugin.jsonMinify,
         ],
       }),
     ],
@@ -519,7 +519,7 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      new TerserPlugin({
+      new MinimizerPlugin({
         minimizerOptions: {
           ecma: undefined,
           parse: {},
@@ -608,7 +608,7 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      new TerserPlugin({
+      new MinimizerPlugin({
         extractComments: true,
       }),
     ],
@@ -627,7 +627,7 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      new TerserPlugin({
+      new MinimizerPlugin({
         extractComments: "all",
       }),
     ],
@@ -646,7 +646,7 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      new TerserPlugin({
+      new MinimizerPlugin({
         extractComments: /@extract/i,
       }),
     ],
@@ -665,7 +665,7 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      new TerserPlugin({
+      new MinimizerPlugin({
         extractComments: (astNode, comment) => {
           if (/@extract/i.test(comment.value)) {
             return true;
@@ -690,7 +690,7 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      new TerserPlugin({
+      new MinimizerPlugin({
         extractComments: {
           condition: /^\**!|@preserve|@license|@cc_on/i,
           filename: (fileData) =>
@@ -737,7 +737,7 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      new TerserPlugin({
+      new MinimizerPlugin({
         extractComments: {
           condition: "some",
           filename: (fileData) =>
@@ -779,7 +779,7 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      new TerserPlugin({
+      new MinimizerPlugin({
         extractComments: {
           condition: /^\**!|@preserve|@license|@cc_on/i,
           filename: "extracted-comments.js",
@@ -815,7 +815,7 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      new TerserPlugin({
+      new MinimizerPlugin({
         extractComments: {
           condition: true,
           filename: (fileData) =>
@@ -843,7 +843,7 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      new TerserPlugin({
+      new MinimizerPlugin({
         minimizerOptions: {
           format: {
             comments: /@license/i,
@@ -867,7 +867,7 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      new TerserPlugin({
+      new MinimizerPlugin({
         minimizerOptions: {
           format: {
             comments: false,
@@ -891,8 +891,8 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      new TerserPlugin({
-        minify: TerserPlugin.uglifyJsMinify,
+      new MinimizerPlugin({
+        minify: MinimizerPlugin.uglifyJsMinify,
         // `minimizerOptions` will be passed to `uglify-js`
         // Link to options - https://github.com/mishoo/UglifyJS#minify-options
         minimizerOptions: {},
@@ -919,8 +919,8 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      new TerserPlugin({
-        minify: TerserPlugin.swcMinify,
+      new MinimizerPlugin({
+        minify: MinimizerPlugin.swcMinify,
         // `minimizerOptions` will be passed to `swc` (`@swc/core`)
         // Link to options - https://swc.rs/docs/config-js-minify
         minimizerOptions: {},
@@ -945,8 +945,8 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      new TerserPlugin({
-        minify: TerserPlugin.esbuildMinify,
+      new MinimizerPlugin({
+        minify: MinimizerPlugin.esbuildMinify,
         // `minimizerOptions` will be passed to `esbuild`
         // Link to options - https://esbuild.github.io/api/#minify
         // Note: the `minify` options is true by default (and override other `minify*` options), so if you want to disable the `minifyIdentifiers` option (or other `minify*` options) please use:
@@ -977,9 +977,9 @@ module.exports = {
       // Keeps original terser plugin to minify JS files
       "...",
       // Will minify JSON files (they can come from copy-webpack-plugin or when you are using asset modules)
-      new TerserPlugin({
+      new MinimizerPlugin({
         test: /\.json$/,
-        minify: TerserPlugin.jsonMinify,
+        minify: MinimizerPlugin.jsonMinify,
         // We are supporting `space` and `replacer` options, you can set them below
         minimizerOptions: {},
       }),
@@ -995,10 +995,10 @@ minimizers and set `test` to match your HTML files.
 
 Available HTML minimizers:
 
-- `TerserPlugin.htmlMinifierTerser` — uses [`html-minifier-terser`](https://github.com/terser/html-minifier-terser).
-- `TerserPlugin.swcMinifyHtml` — uses [`@swc/html`](https://github.com/swc-project/swc) for full HTML documents (with doctype and `<html>`/`<head>`/`<body>` tags).
-- `TerserPlugin.swcMinifyHtmlFragment` — uses [`@swc/html`](https://github.com/swc-project/swc) for HTML fragments (e.g. content inside `<template></template>` or partial HTML strings).
-- `TerserPlugin.minifyHtmlNode` — uses [`@minify-html/node`](https://github.com/wilsonzlin/minify-html).
+- `MinimizerPlugin.htmlMinifierTerser` — uses [`html-minifier-terser`](https://github.com/terser/html-minifier-terser).
+- `MinimizerPlugin.swcMinifyHtml` — uses [`@swc/html`](https://github.com/swc-project/swc) for full HTML documents (with doctype and `<html>`/`<head>`/`<body>` tags).
+- `MinimizerPlugin.swcMinifyHtmlFragment` — uses [`@swc/html`](https://github.com/swc-project/swc) for HTML fragments (e.g. content inside `<template></template>` or partial HTML strings).
+- `MinimizerPlugin.minifyHtmlNode` — uses [`@minify-html/node`](https://github.com/wilsonzlin/minify-html).
 
 The HTML minimizers are optional peer dependencies — install only the one
 you actually use:
@@ -1033,7 +1033,7 @@ npm install --save-dev @minify-html/node
 **webpack.config.js**
 
 ```js
-const TerserPlugin = require("minimizer-webpack-plugin");
+const MinimizerPlugin = require("minimizer-webpack-plugin");
 
 module.exports = {
   optimization: {
@@ -1041,9 +1041,9 @@ module.exports = {
     minimizer: [
       // Keeps the default Terser plugin for JS files
       "...",
-      new TerserPlugin({
+      new MinimizerPlugin({
         test: /\.html(\?.*)?$/i,
-        minify: TerserPlugin.htmlMinifierTerser,
+        minify: MinimizerPlugin.htmlMinifierTerser,
         // Options - https://github.com/terser/html-minifier-terser#options-quick-reference
         minimizerOptions: {
           collapseWhitespace: true,
@@ -1062,16 +1062,16 @@ Use `swcMinifyHtml` for complete HTML documents (i.e. with a doctype and `<html>
 **webpack.config.js**
 
 ```js
-const TerserPlugin = require("minimizer-webpack-plugin");
+const MinimizerPlugin = require("minimizer-webpack-plugin");
 
 module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
       "...",
-      new TerserPlugin({
+      new MinimizerPlugin({
         test: /\.html(\?.*)?$/i,
-        minify: TerserPlugin.swcMinifyHtml,
+        minify: MinimizerPlugin.swcMinifyHtml,
         // Options - https://github.com/swc-project/bindings/blob/main/packages/html/index.ts
         minimizerOptions: {},
       }),
@@ -1087,16 +1087,16 @@ Use `swcMinifyHtmlFragment` for partial HTML — for example, content of `<templ
 **webpack.config.js**
 
 ```js
-const TerserPlugin = require("minimizer-webpack-plugin");
+const MinimizerPlugin = require("minimizer-webpack-plugin");
 
 module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
       "...",
-      new TerserPlugin({
+      new MinimizerPlugin({
         test: /\.template\.html$/i,
-        minify: TerserPlugin.swcMinifyHtmlFragment,
+        minify: MinimizerPlugin.swcMinifyHtmlFragment,
         // Options - https://github.com/swc-project/bindings/blob/main/packages/html/index.ts
         minimizerOptions: {},
       }),
@@ -1117,16 +1117,16 @@ module.exports = {
 **webpack.config.js**
 
 ```js
-const TerserPlugin = require("minimizer-webpack-plugin");
+const Minimizer = require("minimizer-webpack-plugin");
 
 module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
       "...",
-      new TerserPlugin({
+      new Minimizer({
         test: /\.html(\?.*)?$/i,
-        minify: TerserPlugin.minifyHtmlNode,
+        minify: Minimizer.minifyHtmlNode,
         // Options - https://github.com/wilsonzlin/minify-html#minification
         minimizerOptions: {},
       }),
@@ -1135,7 +1135,7 @@ module.exports = {
 };
 ```
 
-You can also stack multiple `TerserPlugin` instances to compress different files with different `minify` functions in the same build (e.g. JS with `terserMinify`, HTML with `htmlMinifierTerser`, JSON with `jsonMinify`).
+You can also stack multiple `MinimizerPlugin` instances to compress different files with different `minify` functions in the same build (e.g. JS with `terserMinify`, HTML with `htmlMinifierTerser`, JSON with `jsonMinify`).
 
 ### CSS
 
@@ -1144,12 +1144,12 @@ minimizers and set `test` to match your CSS files.
 
 Available CSS minimizers:
 
-- `TerserPlugin.cssnanoMinify` — uses [`cssnano`](https://cssnano.github.io/cssnano/) (via [`postcss`](https://postcss.org/)).
-- `TerserPlugin.cssoMinify` — uses [`csso`](https://github.com/css/csso).
-- `TerserPlugin.cleanCssMinify` — uses [`clean-css`](https://github.com/clean-css/clean-css).
-- `TerserPlugin.esbuildMinifyCss` — uses [`esbuild`](https://github.com/evanw/esbuild) with the CSS loader.
-- `TerserPlugin.lightningCssMinify` — uses [`lightningcss`](https://github.com/parcel-bundler/lightningcss).
-- `TerserPlugin.swcMinifyCss` — uses [`@swc/css`](https://github.com/swc-project/swc).
+- `MinimizerPlugin.cssnanoMinify` — uses [`cssnano`](https://cssnano.github.io/cssnano/) (via [`postcss`](https://postcss.org/)).
+- `MinimizerPlugin.cssoMinify` — uses [`csso`](https://github.com/css/csso).
+- `MinimizerPlugin.cleanCssMinify` — uses [`clean-css`](https://github.com/clean-css/clean-css).
+- `MinimizerPlugin.esbuildMinifyCss` — uses [`esbuild`](https://github.com/evanw/esbuild) with the CSS loader.
+- `MinimizerPlugin.lightningCssMinify` — uses [`lightningcss`](https://github.com/parcel-bundler/lightningcss).
+- `MinimizerPlugin.swcMinifyCss` — uses [`@swc/css`](https://github.com/swc-project/swc).
 
 The CSS minimizers are optional peer dependencies — install only the ones
 you actually use:
@@ -1181,7 +1181,7 @@ npm install --save-dev @swc/css
 **webpack.config.js**
 
 ```js
-const TerserPlugin = require("minimizer-webpack-plugin");
+const MinimizerPlugin = require("minimizer-webpack-plugin");
 
 module.exports = {
   optimization: {
@@ -1189,9 +1189,9 @@ module.exports = {
     minimizer: [
       // Keeps the default Terser plugin for JS files
       "...",
-      new TerserPlugin({
+      new MinimizerPlugin({
         test: /\.css(\?.*)?$/i,
-        minify: TerserPlugin.cssnanoMinify,
+        minify: MinimizerPlugin.cssnanoMinify,
         // Options - https://cssnano.github.io/cssnano/docs/config-file/
         minimizerOptions: {
           preset: "default",
@@ -1209,16 +1209,16 @@ module.exports = {
 **webpack.config.js**
 
 ```js
-const TerserPlugin = require("minimizer-webpack-plugin");
+const MinimizerPlugin = require("minimizer-webpack-plugin");
 
 module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
       "...",
-      new TerserPlugin({
+      new MinimizerPlugin({
         test: /\.css(\?.*)?$/i,
-        minify: TerserPlugin.cssoMinify,
+        minify: MinimizerPlugin.cssoMinify,
         // Options - https://github.com/css/csso#minifysource-options
         minimizerOptions: {},
       }),
@@ -1234,16 +1234,16 @@ module.exports = {
 **webpack.config.js**
 
 ```js
-const TerserPlugin = require("minimizer-webpack-plugin");
+const MinimizerPlugin = require("minimizer-webpack-plugin");
 
 module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
       "...",
-      new TerserPlugin({
+      new MinimizerPlugin({
         test: /\.css(\?.*)?$/i,
-        minify: TerserPlugin.cleanCssMinify,
+        minify: MinimizerPlugin.cleanCssMinify,
         // Options - https://github.com/clean-css/clean-css#constructor-options
         minimizerOptions: {},
       }),
@@ -1259,16 +1259,16 @@ module.exports = {
 **webpack.config.js**
 
 ```js
-const TerserPlugin = require("minimizer-webpack-plugin");
+const MinimizerPlugin = require("minimizer-webpack-plugin");
 
 module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
       "...",
-      new TerserPlugin({
+      new MinimizerPlugin({
         test: /\.css(\?.*)?$/i,
-        minify: TerserPlugin.esbuildMinifyCss,
+        minify: MinimizerPlugin.esbuildMinifyCss,
         // Options - https://esbuild.github.io/api/#transform-api
         minimizerOptions: {},
       }),
@@ -1284,16 +1284,16 @@ module.exports = {
 **webpack.config.js**
 
 ```js
-const TerserPlugin = require("minimizer-webpack-plugin");
+const MinimizerPlugin = require("minimizer-webpack-plugin");
 
 module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
       "...",
-      new TerserPlugin({
+      new MinimizerPlugin({
         test: /\.css(\?.*)?$/i,
-        minify: TerserPlugin.lightningCssMinify,
+        minify: MinimizerPlugin.lightningCssMinify,
         // Options - https://lightningcss.dev/transpilation.html
         minimizerOptions: {},
       }),
@@ -1309,16 +1309,16 @@ module.exports = {
 **webpack.config.js**
 
 ```js
-const TerserPlugin = require("minimizer-webpack-plugin");
+const MinimizerPlugin = require("minimizer-webpack-plugin");
 
 module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
       "...",
-      new TerserPlugin({
+      new MinimizerPlugin({
         test: /\.css(\?.*)?$/i,
-        minify: TerserPlugin.swcMinifyCss,
+        minify: MinimizerPlugin.swcMinifyCss,
         // Options - https://github.com/swc-project/bindings/blob/main/packages/css/index.ts
         minimizerOptions: {},
       }),
@@ -1338,7 +1338,7 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      new TerserPlugin({
+      new MinimizerPlugin({
         minify: (file, sourceMap) => {
           // https://github.com/mishoo/UglifyJS2#minify-options
           const uglifyJsOptions = {
@@ -1368,7 +1368,7 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      new TerserPlugin({
+      new MinimizerPlugin({
         minimizerOptions: {
           compress: true,
         },
@@ -1400,95 +1400,95 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      new TerserPlugin<SwcOptions>({
-        minify: TerserPlugin.swcMinify,
+      new MinimizerPlugin<SwcOptions>({
+        minify: MinimizerPlugin.swcMinify,
         minimizerOptions: {
           // `swc` options
         },
       }),
-      new TerserPlugin<UglifyJSOptions>({
-        minify: TerserPlugin.uglifyJsMinify,
+      new MinimizerPlugin<UglifyJSOptions>({
+        minify: MinimizerPlugin.uglifyJsMinify,
         minimizerOptions: {
           // `uglif-js` options
         },
       }),
-      new TerserPlugin<EsbuildOptions>({
-        minify: TerserPlugin.esbuildMinify,
+      new MinimizerPlugin<EsbuildOptions>({
+        minify: MinimizerPlugin.esbuildMinify,
         minimizerOptions: {
           // `esbuild` options
         },
       }),
 
       // Alternative usage:
-      new TerserPlugin<TerserOptions>({
-        minify: TerserPlugin.terserMinify,
+      new MinimizerPlugin<TerserOptions>({
+        minify: MinimizerPlugin.terserMinify,
         minimizerOptions: {
           // `terser` options
         },
       }),
 
       // HTML minimizers
-      new TerserPlugin<HtmlMinifierTerserOptions>({
+      new MinimizerPlugin<HtmlMinifierTerserOptions>({
         test: /\.html(\?.*)?$/i,
-        minify: TerserPlugin.htmlMinifierTerser,
+        minify: MinimizerPlugin.htmlMinifierTerser,
         minimizerOptions: {
           // `html-minifier-terser` options
         },
       }),
-      new TerserPlugin<SwcHtmlOptions>({
+      new MinimizerPlugin<SwcHtmlOptions>({
         test: /\.html(\?.*)?$/i,
-        minify: TerserPlugin.swcMinifyHtml,
+        minify: MinimizerPlugin.swcMinifyHtml,
         minimizerOptions: {
           // `@swc/html` options
         },
       }),
-      new TerserPlugin<SwcHtmlFragmentOptions>({
+      new MinimizerPlugin<SwcHtmlFragmentOptions>({
         test: /\.template\.html$/i,
-        minify: TerserPlugin.swcMinifyHtmlFragment,
+        minify: MinimizerPlugin.swcMinifyHtmlFragment,
         minimizerOptions: {
           // `@swc/html` fragment options
         },
       }),
 
       // CSS minimizers
-      new TerserPlugin<CssnanoOptions>({
+      new MinimizerPlugin<CssnanoOptions>({
         test: /\.css(\?.*)?$/i,
-        minify: TerserPlugin.cssnanoMinify,
+        minify: MinimizerPlugin.cssnanoMinify,
         minimizerOptions: {
           // `cssnano` options
         },
       }),
-      new TerserPlugin<CssoOptions>({
+      new MinimizerPlugin<CssoOptions>({
         test: /\.css(\?.*)?$/i,
-        minify: TerserPlugin.cssoMinify,
+        minify: MinimizerPlugin.cssoMinify,
         minimizerOptions: {
           // `csso` options
         },
       }),
-      new TerserPlugin<CleanCssOptions>({
+      new MinimizerPlugin<CleanCssOptions>({
         test: /\.css(\?.*)?$/i,
-        minify: TerserPlugin.cleanCssMinify,
+        minify: MinimizerPlugin.cleanCssMinify,
         minimizerOptions: {
           // `clean-css` options
         },
       }),
-      new TerserPlugin<EsbuildOptions>({
+      new MinimizerPlugin<EsbuildOptions>({
         test: /\.css(\?.*)?$/i,
-        minify: TerserPlugin.esbuildMinifyCss,
+        minify: MinimizerPlugin.esbuildMinifyCss,
         minimizerOptions: {
           // `esbuild` options (CSS loader)
         },
       }),
-      new TerserPlugin<LightningCssOptions>({
+      new MinimizerPlugin<LightningCssOptions>({
         test: /\.css(\?.*)?$/i,
-        minify: TerserPlugin.lightningCssMinify,
+        minify: MinimizerPlugin.lightningCssMinify,
         minimizerOptions: {
           // `lightningcss` options
         },
       }),
-      new TerserPlugin<SwcCssOptions>({
+      new MinimizerPlugin<SwcCssOptions>({
         test: /\.css(\?.*)?$/i,
-        minify: TerserPlugin.swcMinifyCss,
+        minify: MinimizerPlugin.swcMinifyCss,
         minimizerOptions: {
           // `@swc/css` options
         },

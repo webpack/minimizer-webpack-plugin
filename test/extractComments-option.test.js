@@ -2,7 +2,7 @@ import path from "path";
 
 import webpack from "webpack";
 
-import TerserPlugin from "../src/index";
+import MinimizerPlugin from "../src/index";
 
 import {
   ExistingCommentsFile,
@@ -42,7 +42,7 @@ describe("extractComments option", () => {
   });
 
   it("should match snapshot when a value is not specify", async () => {
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -52,7 +52,7 @@ describe("extractComments option", () => {
   });
 
   it('should match snapshot for the "false" value', async () => {
-    new TerserPlugin({ extractComments: false }).apply(compiler);
+    new MinimizerPlugin({ extractComments: false }).apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -62,7 +62,7 @@ describe("extractComments option", () => {
   });
 
   it('should match snapshot for the "true" value', async () => {
-    new TerserPlugin({ extractComments: true }).apply(compiler);
+    new MinimizerPlugin({ extractComments: true }).apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -72,7 +72,7 @@ describe("extractComments option", () => {
   });
 
   it('should match snapshot for the "/Foo/" value', async () => {
-    new TerserPlugin({ extractComments: /Foo/ }).apply(compiler);
+    new MinimizerPlugin({ extractComments: /Foo/ }).apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -82,7 +82,7 @@ describe("extractComments option", () => {
   });
 
   it('should match snapshot for the "all" value', async () => {
-    new TerserPlugin({ extractComments: "all" }).apply(compiler);
+    new MinimizerPlugin({ extractComments: "all" }).apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -92,7 +92,7 @@ describe("extractComments option", () => {
   });
 
   it('should match snapshot for the "some" value', async () => {
-    new TerserPlugin({ extractComments: "some" }).apply(compiler);
+    new MinimizerPlugin({ extractComments: "some" }).apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -102,7 +102,7 @@ describe("extractComments option", () => {
   });
 
   it('should match snapshot for the "Foo" value', async () => {
-    new TerserPlugin({ extractComments: "Foo" }).apply(compiler);
+    new MinimizerPlugin({ extractComments: "Foo" }).apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -112,7 +112,7 @@ describe("extractComments option", () => {
   });
 
   it('should match snapshot for a "function" value', async () => {
-    new TerserPlugin({ extractComments: () => true }).apply(compiler);
+    new MinimizerPlugin({ extractComments: () => true }).apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -122,7 +122,7 @@ describe("extractComments option", () => {
   });
 
   it('should match snapshot for the "extractComments.condition" with the "true" value', async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: {
         condition: true,
       },
@@ -138,7 +138,7 @@ describe("extractComments option", () => {
   it("should match snapshot when extracts comments to multiple files", async () => {
     expect.assertions(8);
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: {
         condition: true,
         filename: createFilenameFn(),
@@ -155,7 +155,7 @@ describe("extractComments option", () => {
   });
 
   it("should match snapshot when extracts comments to a single file", async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: {
         condition: true,
         filename: "extracted-comments.js",
@@ -173,7 +173,7 @@ describe("extractComments option", () => {
   });
 
   it("should match snapshot when extracts without condition", async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: {
         condition: true,
         filename: "extracted-comments.js",
@@ -191,7 +191,7 @@ describe("extractComments option", () => {
   });
 
   it('should match snapshot for the `true` value and preserve "@license" comments', async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         output: {
           comments: /@license/i,
@@ -210,7 +210,7 @@ describe("extractComments option", () => {
   it('should match snapshot when no condition, preserve only `/@license/i` comments and extract "some" comments', async () => {
     expect.assertions(8);
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         output: {
           comments: /@license/i,
@@ -231,7 +231,7 @@ describe("extractComments option", () => {
   });
 
   it("should match snapshot for the `true` value and dedupe duplicate comments", async () => {
-    new TerserPlugin({ extractComments: true }).apply(compiler);
+    new MinimizerPlugin({ extractComments: true }).apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -241,7 +241,7 @@ describe("extractComments option", () => {
   });
 
   it("should match snapshot when extracts comments to a single file and dedupe duplicate comments", async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: {
         condition: true,
         filename: "extracted-comments.js",
@@ -272,7 +272,7 @@ describe("extractComments option", () => {
       },
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -295,7 +295,7 @@ describe("extractComments option", () => {
       },
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: {
         condition: true,
         filename: "[file].LICENSE.txt?query=[query]&filebase=[base]",
@@ -328,7 +328,7 @@ describe("extractComments option", () => {
       },
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: {
         condition: true,
         filename: createFilenameFn(),
@@ -349,7 +349,7 @@ describe("extractComments option", () => {
       },
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: {
         condition: true,
         filename: "comments/directory/one.js",
@@ -373,7 +373,7 @@ describe("extractComments option", () => {
       },
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: {
         condition: true,
         filename: "one.js",
@@ -388,7 +388,7 @@ describe("extractComments option", () => {
   });
 
   it('should match snapshot and extract "some" comments', async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: true,
     }).apply(compiler);
 
@@ -400,7 +400,7 @@ describe("extractComments option", () => {
   });
 
   it('should match snapshot and preserve "all" and extract "some" comments', async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: true,
       terserOptions: {
         output: {
@@ -417,7 +417,7 @@ describe("extractComments option", () => {
   });
 
   it('should match snapshot and do not preserve and extract "all" comments', async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: "all",
     }).apply(compiler);
 
@@ -429,7 +429,7 @@ describe("extractComments option", () => {
   });
 
   it('should match snapshot and preserve "all" and extract "all" comments', async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: "all",
       terserOptions: {
         output: {
@@ -446,7 +446,7 @@ describe("extractComments option", () => {
   });
 
   it('should match snapshot and do not preserve and extract "all" comments when the option if a function', async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: () => true,
     }).apply(compiler);
 
@@ -458,7 +458,7 @@ describe("extractComments option", () => {
   });
 
   it('should match snapshot and preserve "all" and extract "all" comments with output.comments "all"', async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: () => true,
       terserOptions: {
         output: {
@@ -475,7 +475,7 @@ describe("extractComments option", () => {
   });
 
   it('should match snapshot and do not preserve and extract "some" comments', async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: {},
     }).apply(compiler);
 
@@ -487,7 +487,7 @@ describe("extractComments option", () => {
   });
 
   it('should match snapshot and preserve "all" and extract comments with output.comments "all"', async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: {},
       terserOptions: {
         output: {
@@ -504,7 +504,7 @@ describe("extractComments option", () => {
   });
 
   it('should match snapshot and preserve "all" and extract "some" comments with output.comments "all"', async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: {
         condition: "some",
       },
@@ -523,7 +523,7 @@ describe("extractComments option", () => {
   });
 
   it('should match snapshot and preserve "all" and do not extract comments', async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: {
         condition: false,
       },
@@ -542,7 +542,7 @@ describe("extractComments option", () => {
   });
 
   it('should match snapshot and preserve "some" do not extract comments', async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: false,
     }).apply(compiler);
 
@@ -554,7 +554,7 @@ describe("extractComments option", () => {
   });
 
   it('should match snapshot and preserve "all" do not extract comments', async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: false,
       terserOptions: {
         output: {
@@ -571,7 +571,7 @@ describe("extractComments option", () => {
   });
 
   it("should match snapshot and do not preserve or extract comments", async () => {
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: false,
       terserOptions: {
         output: {
@@ -599,7 +599,7 @@ describe("extractComments option", () => {
       ],
     });
 
-    new TerserPlugin().apply(compiler);
+    new MinimizerPlugin().apply(compiler);
 
     const stats = await compile(compiler);
 
@@ -610,7 +610,7 @@ describe("extractComments option", () => {
 
   it("should work with the existing licenses file", async () => {
     new ExistingCommentsFile().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: {
         filename: "licenses.txt",
       },

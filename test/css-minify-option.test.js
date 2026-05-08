@@ -1,6 +1,6 @@
 import path from "path";
 
-import TerserPlugin from "../src";
+import MinimizerPlugin from "../src";
 
 import {
   compile,
@@ -22,10 +22,10 @@ describe("css minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/css.js"),
     });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin().apply(compiler);
+    new MinimizerPlugin({
       test: /\.css(\?.*)?$/i,
-      minify: TerserPlugin.cssnanoMinify,
+      minify: MinimizerPlugin.cssnanoMinify,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -40,10 +40,10 @@ describe("css minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/css.js"),
     });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin().apply(compiler);
+    new MinimizerPlugin({
       test: /\.css(\?.*)?$/i,
-      minify: TerserPlugin.cssnanoMinify,
+      minify: MinimizerPlugin.cssnanoMinify,
       minimizerOptions: { preset: ["default", { discardComments: false }] },
     }).apply(compiler);
 
@@ -59,10 +59,10 @@ describe("css minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/css.js"),
     });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin().apply(compiler);
+    new MinimizerPlugin({
       test: /\.css(\?.*)?$/i,
-      minify: TerserPlugin.cssoMinify,
+      minify: MinimizerPlugin.cssoMinify,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -77,10 +77,10 @@ describe("css minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/css.js"),
     });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin().apply(compiler);
+    new MinimizerPlugin({
       test: /\.css(\?.*)?$/i,
-      minify: TerserPlugin.cssoMinify,
+      minify: MinimizerPlugin.cssoMinify,
       minimizerOptions: { comments: false },
     }).apply(compiler);
 
@@ -96,10 +96,10 @@ describe("css minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/css.js"),
     });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin().apply(compiler);
+    new MinimizerPlugin({
       test: /\.css(\?.*)?$/i,
-      minify: TerserPlugin.cleanCssMinify,
+      minify: MinimizerPlugin.cleanCssMinify,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -114,10 +114,10 @@ describe("css minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/css.js"),
     });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin().apply(compiler);
+    new MinimizerPlugin({
       test: /\.css(\?.*)?$/i,
-      minify: TerserPlugin.cleanCssMinify,
+      minify: MinimizerPlugin.cleanCssMinify,
       minimizerOptions: { format: "beautify" },
     }).apply(compiler);
 
@@ -133,10 +133,10 @@ describe("css minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/css.js"),
     });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin().apply(compiler);
+    new MinimizerPlugin({
       test: /\.css(\?.*)?$/i,
-      minify: TerserPlugin.esbuildMinifyCss,
+      minify: MinimizerPlugin.esbuildMinifyCss,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -151,10 +151,10 @@ describe("css minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/css.js"),
     });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin().apply(compiler);
+    new MinimizerPlugin({
       test: /\.css(\?.*)?$/i,
-      minify: TerserPlugin.lightningCssMinify,
+      minify: MinimizerPlugin.lightningCssMinify,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -169,10 +169,10 @@ describe("css minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/css.js"),
     });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin().apply(compiler);
+    new MinimizerPlugin({
       test: /\.css(\?.*)?$/i,
-      minify: TerserPlugin.swcMinifyCss,
+      minify: MinimizerPlugin.swcMinifyCss,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -187,11 +187,11 @@ describe("css minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/css.js"),
     });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin().apply(compiler);
+    new MinimizerPlugin({
       test: /\.css(\?.*)?$/i,
       minify: [
-        TerserPlugin.cssnanoMinify,
+        MinimizerPlugin.cssnanoMinify,
         // Second pass: pass-through that asserts the previous minimizer
         // produced a string we can keep working with.
         (data) => {
@@ -221,8 +221,8 @@ describe("css minify option", () => {
       },
     });
 
-    new TerserPlugin({
-      minify: [TerserPlugin.terserMinify, TerserPlugin.terserMinify],
+    new MinimizerPlugin({
+      minify: [MinimizerPlugin.terserMinify, MinimizerPlugin.terserMinify],
       minimizerOptions: [{ mangle: false }, { mangle: true }],
     }).apply(compiler);
 
@@ -244,8 +244,8 @@ describe("css minify option", () => {
       },
     });
 
-    new TerserPlugin({
-      minify: [TerserPlugin.terserMinify, TerserPlugin.uglifyJsMinify],
+    new MinimizerPlugin({
+      minify: [MinimizerPlugin.terserMinify, MinimizerPlugin.uglifyJsMinify],
       minimizerOptions: [{ mangle: false }, { mangle: true }],
     }).apply(compiler);
 
@@ -262,10 +262,10 @@ describe("css minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/css.js"),
     });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin().apply(compiler);
+    new MinimizerPlugin({
       test: /\.css(\?.*)?$/i,
-      minify: [TerserPlugin.cssnanoMinify, TerserPlugin.cssnanoMinify],
+      minify: [MinimizerPlugin.cssnanoMinify, MinimizerPlugin.cssnanoMinify],
       minimizerOptions: [{ preset: "default" }, { preset: "default" }],
     }).apply(compiler);
 
@@ -287,8 +287,8 @@ describe("css minify option", () => {
       },
     });
 
-    new TerserPlugin({
-      minify: [TerserPlugin.terserMinify, TerserPlugin.swcMinify],
+    new MinimizerPlugin({
+      minify: [MinimizerPlugin.terserMinify, MinimizerPlugin.swcMinify],
       minimizerOptions: [{ mangle: false }, {}],
     }).apply(compiler);
 
@@ -310,8 +310,8 @@ describe("css minify option", () => {
       },
     });
 
-    new TerserPlugin({
-      minify: [TerserPlugin.terserMinify, TerserPlugin.esbuildMinify],
+    new MinimizerPlugin({
+      minify: [MinimizerPlugin.terserMinify, MinimizerPlugin.esbuildMinify],
       minimizerOptions: [{ mangle: false }, {}],
     }).apply(compiler);
 
@@ -327,14 +327,14 @@ describe("css minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/multi-asset.js"),
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       test: /\.([cm]?js|json|css|html?)(\?.*)?$/i,
       parallel: false,
       minify: [
-        TerserPlugin.terserMinify,
-        TerserPlugin.jsonMinify,
-        TerserPlugin.cleanCssMinify,
-        TerserPlugin.htmlMinifierTerser,
+        MinimizerPlugin.terserMinify,
+        MinimizerPlugin.jsonMinify,
+        MinimizerPlugin.cleanCssMinify,
+        MinimizerPlugin.htmlMinifierTerser,
       ],
     }).apply(compiler);
 
@@ -353,16 +353,16 @@ describe("css minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/css.js"),
     });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin().apply(compiler);
+    new MinimizerPlugin({
       test: /\.css(\?.*)?$/i,
       minify: [
-        TerserPlugin.cssnanoMinify,
-        TerserPlugin.cssoMinify,
-        TerserPlugin.cleanCssMinify,
-        TerserPlugin.lightningCssMinify,
-        TerserPlugin.swcMinifyCss,
-        TerserPlugin.esbuildMinifyCss,
+        MinimizerPlugin.cssnanoMinify,
+        MinimizerPlugin.cssoMinify,
+        MinimizerPlugin.cleanCssMinify,
+        MinimizerPlugin.lightningCssMinify,
+        MinimizerPlugin.swcMinifyCss,
+        MinimizerPlugin.esbuildMinifyCss,
       ],
       minimizerOptions: [{ preset: "default" }, {}, {}, {}, {}, {}],
     }).apply(compiler);

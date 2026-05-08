@@ -1,6 +1,6 @@
 import path from "path";
 
-import TerserPlugin from "../src";
+import MinimizerPlugin from "../src";
 
 import {
   BrokenCodePlugin,
@@ -22,7 +22,7 @@ describe("minify option", () => {
       },
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       terserOptions: {
         keep_fnames: true,
         mangle: {
@@ -51,7 +51,7 @@ describe("minify option", () => {
       },
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       parallel: true,
       minify(file, inputSourceMap, minimizerOptions) {
         return require("terser").minify(file, minimizerOptions);
@@ -75,7 +75,7 @@ describe("minify option", () => {
       },
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       parallel: false,
       minify(file, inputSourceMap, minimizerOptions) {
         return require("terser").minify(file, minimizerOptions);
@@ -99,7 +99,7 @@ describe("minify option", () => {
       },
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       minify() {
         throw new Error("Error");
       },
@@ -121,7 +121,7 @@ describe("minify option", () => {
       },
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       parallel: true,
       minify: () => {
         throw new Error("Error");
@@ -144,7 +144,7 @@ describe("minify option", () => {
       },
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       parallel: false,
       minify: () => {
         throw new Error("Error");
@@ -160,7 +160,7 @@ describe("minify option", () => {
   it("should output errors and warning", async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       minify: () => ({
         code: "1",
         errors: ["error"],
@@ -184,7 +184,7 @@ describe("minify option", () => {
       },
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       extractComments: true,
       async minify(file) {
         const result = await require("terser").minify(file, {
@@ -215,7 +215,7 @@ describe("minify option", () => {
       },
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       minify(file, sourceMap) {
         const terserOption = {
           mangle: {
@@ -251,7 +251,7 @@ describe("minify option", () => {
       },
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       minify(file) {
         return require("uglify-js").minify(file, {
           mangle: {
@@ -278,7 +278,7 @@ describe("minify option", () => {
       },
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       minify(file) {
         return require("terser").minify(file, {
           mangle: {
@@ -305,7 +305,7 @@ describe("minify option", () => {
       },
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       minify(file) {
         const isOldNodeJs = process.version.match(/^v(\d+)/)[1] === "10";
         const [[, code]] = Object.entries(file);
@@ -339,8 +339,8 @@ describe("minify option", () => {
   it("should work using when the `minify` option is `terserMinify`", async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
-      minify: TerserPlugin.terserMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.terserMinify,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -353,8 +353,8 @@ describe("minify option", () => {
   it("should work using when the `minify` option is `terserMinify` and generate source maps", async () => {
     const compiler = getCompiler({ devtool: "source-map" });
 
-    new TerserPlugin({
-      minify: TerserPlugin.terserMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.terserMinify,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -367,8 +367,8 @@ describe("minify option", () => {
   it("should work using when the `minify` option is `terserMinify` and allows to set `terser` options", async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
-      minify: TerserPlugin.terserMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.terserMinify,
       terserOptions: {
         mangle: false,
       },
@@ -397,8 +397,8 @@ describe("minify option", () => {
       },
     });
 
-    new TerserPlugin({
-      minify: TerserPlugin.terserMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.terserMinify,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -413,8 +413,8 @@ describe("minify option", () => {
 
     new BrokenCodePlugin().apply(compiler);
 
-    new TerserPlugin({
-      minify: TerserPlugin.terserMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.terserMinify,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -428,8 +428,8 @@ describe("minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/comments.js"),
     });
 
-    new TerserPlugin({
-      minify: TerserPlugin.terserMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.terserMinify,
       extractComments: true,
     }).apply(compiler);
 
@@ -445,8 +445,8 @@ describe("minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/comments.js"),
     });
 
-    new TerserPlugin({
-      minify: TerserPlugin.terserMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.terserMinify,
       extractComments: false,
     }).apply(compiler);
 
@@ -460,8 +460,8 @@ describe("minify option", () => {
   it("should work using when the `minify` option is `terserMinify` and allows to disable `compress` options", async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
-      minify: TerserPlugin.terserMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.terserMinify,
       terserOptions: {
         compress: false,
       },
@@ -479,8 +479,8 @@ describe("minify option", () => {
       target: ["web", "es5"],
     });
 
-    new TerserPlugin({
-      minify: TerserPlugin.uglifyJsMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.uglifyJsMinify,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -496,8 +496,8 @@ describe("minify option", () => {
       target: ["web", "es5"],
     });
 
-    new TerserPlugin({
-      minify: TerserPlugin.uglifyJsMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.uglifyJsMinify,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -512,8 +512,8 @@ describe("minify option", () => {
       target: ["web", "es5"],
     });
 
-    new TerserPlugin({
-      minify: TerserPlugin.uglifyJsMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.uglifyJsMinify,
       terserOptions: {
         mangle: false,
       },
@@ -536,8 +536,8 @@ describe("minify option", () => {
 
     new BrokenCodePlugin().apply(compiler);
 
-    new TerserPlugin({
-      minify: TerserPlugin.uglifyJsMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.uglifyJsMinify,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -551,8 +551,8 @@ describe("minify option", () => {
       target: ["web", "es6"],
     });
 
-    new TerserPlugin({
-      minify: TerserPlugin.uglifyJsMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.uglifyJsMinify,
       terserOptions: {
         warnings: true,
       },
@@ -571,8 +571,8 @@ describe("minify option", () => {
       target: ["web", "es5"],
     });
 
-    new TerserPlugin({
-      minify: TerserPlugin.uglifyJsMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.uglifyJsMinify,
       extractComments: true,
     }).apply(compiler);
 
@@ -589,8 +589,8 @@ describe("minify option", () => {
       target: ["web", "es5"],
     });
 
-    new TerserPlugin({
-      minify: TerserPlugin.uglifyJsMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.uglifyJsMinify,
       extractComments: false,
     }).apply(compiler);
 
@@ -604,8 +604,8 @@ describe("minify option", () => {
   it("should work using when the `minify` option is `swcMinify`", async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
-      minify: TerserPlugin.swcMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.swcMinify,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -618,8 +618,8 @@ describe("minify option", () => {
   it("should work using when the `minify` option is `swcMinify` and generate source maps", async () => {
     const compiler = getCompiler({ devtool: "source-map" });
 
-    new TerserPlugin({
-      minify: TerserPlugin.swcMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.swcMinify,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -632,8 +632,8 @@ describe("minify option", () => {
   it("should work using when the `minify` option is `swcMinify` and allows to set `swc` options", async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
-      minify: TerserPlugin.swcMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.swcMinify,
       terserOptions: {
         mangle: false,
       },
@@ -662,8 +662,8 @@ describe("minify option", () => {
       },
     });
 
-    new TerserPlugin({
-      minify: TerserPlugin.swcMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.swcMinify,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -681,8 +681,8 @@ describe("minify option", () => {
 
     new BrokenCodePlugin().apply(compiler);
 
-    new TerserPlugin({
-      minify: TerserPlugin.swcMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.swcMinify,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -698,8 +698,8 @@ describe("minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/comments.js"),
     });
 
-    new TerserPlugin({
-      minify: TerserPlugin.swcMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.swcMinify,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -714,8 +714,8 @@ describe("minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/comments.js"),
     });
 
-    new TerserPlugin({
-      minify: TerserPlugin.swcMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.swcMinify,
       extractComments: {
         condition: "all",
         filename: "licenses.txt",
@@ -735,8 +735,8 @@ describe("minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/comments.js"),
     });
 
-    new TerserPlugin({
-      minify: TerserPlugin.swcMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.swcMinify,
       extractComments: /moon/,
     }).apply(compiler);
 
@@ -753,8 +753,8 @@ describe("minify option", () => {
       bail: false,
     });
 
-    new TerserPlugin({
-      minify: TerserPlugin.swcMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.swcMinify,
       parallel: false,
       extractComments: {
         condition: () => true,
@@ -770,8 +770,8 @@ describe("minify option", () => {
   it("should work using when the `minify` option is `esbuildMinify`", async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
-      minify: TerserPlugin.esbuildMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.esbuildMinify,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -784,8 +784,8 @@ describe("minify option", () => {
   it("should work using when the `minify` option is `esbuildMinify` and generate source maps", async () => {
     const compiler = getCompiler({ devtool: "source-map" });
 
-    new TerserPlugin({
-      minify: TerserPlugin.esbuildMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.esbuildMinify,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -798,8 +798,8 @@ describe("minify option", () => {
   it("should work using when the `minify` option is `esbuildMinify` and allows to set `esbuild` options", async () => {
     const compiler = getCompiler();
 
-    new TerserPlugin({
-      minify: TerserPlugin.esbuildMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.esbuildMinify,
       terserOptions: {
         minify: false,
         minifyWhitespace: true,
@@ -831,8 +831,8 @@ describe("minify option", () => {
       },
     });
 
-    new TerserPlugin({
-      minify: TerserPlugin.esbuildMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.esbuildMinify,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -847,8 +847,8 @@ describe("minify option", () => {
 
     new BrokenCodePlugin().apply(compiler);
 
-    new TerserPlugin({
-      minify: TerserPlugin.esbuildMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.esbuildMinify,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -862,10 +862,10 @@ describe("minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/json.js"),
     });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin().apply(compiler);
+    new MinimizerPlugin({
       test: /\.json$/i,
-      minify: TerserPlugin.jsonMinify,
+      minify: MinimizerPlugin.jsonMinify,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -880,10 +880,10 @@ describe("minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/json.js"),
     });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin().apply(compiler);
+    new MinimizerPlugin({
       test: /\.json$/i,
-      minify: TerserPlugin.jsonMinify,
+      minify: MinimizerPlugin.jsonMinify,
       terserOptions: { space: 4, replacer: null },
     }).apply(compiler);
 
@@ -899,10 +899,10 @@ describe("minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/json-error.js"),
     });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin().apply(compiler);
+    new MinimizerPlugin({
       test: /\.json$/i,
-      minify: TerserPlugin.jsonMinify,
+      minify: MinimizerPlugin.jsonMinify,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -917,8 +917,8 @@ describe("minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/comments.js"),
     });
 
-    new TerserPlugin({
-      minify: TerserPlugin.esbuildMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.esbuildMinify,
       terserOptions: {
         legalComments: "inline",
       },
@@ -936,8 +936,8 @@ describe("minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/warning.js"),
     });
 
-    new TerserPlugin({
-      minify: TerserPlugin.esbuildMinify,
+    new MinimizerPlugin({
+      minify: MinimizerPlugin.esbuildMinify,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -957,7 +957,7 @@ describe("minify option", () => {
       },
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       minify: [
         (file, sourceMap, minimizerOptions) =>
           require("terser").minify(file, minimizerOptions),
@@ -989,7 +989,7 @@ describe("minify option", () => {
       },
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       minify: [
         (file, sourceMap, minimizerOptions) =>
           require("terser").minify(file, minimizerOptions),
@@ -1014,7 +1014,7 @@ describe("minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       parallel: false,
       minify: [
         async (file) => ({
@@ -1041,7 +1041,7 @@ describe("minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       parallel: false,
       minify: async () => ({ warnings: ["just a warning, no code"] }),
     }).apply(compiler);
@@ -1057,7 +1057,7 @@ describe("minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       parallel: false,
       minify: async () => ({
         extractedComments: ["/*! @license from no-code minimizer */"],
@@ -1075,7 +1075,7 @@ describe("minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       parallel: false,
       minify: [
         (file, sourceMap, minimizerOptions) =>
@@ -1102,10 +1102,10 @@ describe("minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/html.js"),
     });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin().apply(compiler);
+    new MinimizerPlugin({
       test: /\.html(\?.*)?$/i,
-      minify: TerserPlugin.htmlMinifierTerser,
+      minify: MinimizerPlugin.htmlMinifierTerser,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -1120,10 +1120,10 @@ describe("minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/html.js"),
     });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin().apply(compiler);
+    new MinimizerPlugin({
       test: /\.html(\?.*)?$/i,
-      minify: TerserPlugin.htmlMinifierTerser,
+      minify: MinimizerPlugin.htmlMinifierTerser,
       minimizerOptions: {
         collapseWhitespace: false,
         removeComments: false,
@@ -1142,10 +1142,10 @@ describe("minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/html.js"),
     });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin().apply(compiler);
+    new MinimizerPlugin({
       test: /\.html(\?.*)?$/i,
-      minify: TerserPlugin.htmlMinifierTerser,
+      minify: MinimizerPlugin.htmlMinifierTerser,
       parallel: true,
     }).apply(compiler);
 
@@ -1161,10 +1161,10 @@ describe("minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/html.js"),
     });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin().apply(compiler);
+    new MinimizerPlugin({
       test: /\.html(\?.*)?$/i,
-      minify: TerserPlugin.htmlMinifierTerser,
+      minify: MinimizerPlugin.htmlMinifierTerser,
       parallel: false,
     }).apply(compiler);
 
@@ -1180,10 +1180,10 @@ describe("minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/html.js"),
     });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin().apply(compiler);
+    new MinimizerPlugin({
       test: /\.html(\?.*)?$/i,
-      minify: TerserPlugin.swcMinifyHtml,
+      minify: MinimizerPlugin.swcMinifyHtml,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -1198,10 +1198,10 @@ describe("minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/html.js"),
     });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin().apply(compiler);
+    new MinimizerPlugin({
       test: /\.html(\?.*)?$/i,
-      minify: TerserPlugin.swcMinifyHtml,
+      minify: MinimizerPlugin.swcMinifyHtml,
       minimizerOptions: {
         removeComments: false,
       },
@@ -1219,10 +1219,10 @@ describe("minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/html-fragment.js"),
     });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin().apply(compiler);
+    new MinimizerPlugin({
       test: /\.html(\?.*)?$/i,
-      minify: TerserPlugin.swcMinifyHtmlFragment,
+      minify: MinimizerPlugin.swcMinifyHtmlFragment,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -1237,10 +1237,10 @@ describe("minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/html.js"),
     });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin().apply(compiler);
+    new MinimizerPlugin({
       test: /\.html(\?.*)?$/i,
-      minify: TerserPlugin.minifyHtmlNode,
+      minify: MinimizerPlugin.minifyHtmlNode,
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -1255,10 +1255,10 @@ describe("minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/html.js"),
     });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin().apply(compiler);
+    new MinimizerPlugin({
       test: /\.html(\?.*)?$/i,
-      minify: TerserPlugin.minifyHtmlNode,
+      minify: MinimizerPlugin.minifyHtmlNode,
       minimizerOptions: {
         keep_comments: true,
       },
@@ -1276,11 +1276,11 @@ describe("minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/html.js"),
     });
 
-    new TerserPlugin().apply(compiler);
-    new TerserPlugin({
+    new MinimizerPlugin().apply(compiler);
+    new MinimizerPlugin({
       test: /\.html(\?.*)?$/i,
       minify: [
-        TerserPlugin.htmlMinifierTerser,
+        MinimizerPlugin.htmlMinifierTerser,
         // Second pass: pass-through that asserts the previous minimizer
         // produced a string we can keep working with.
         (data) => {
@@ -1307,9 +1307,9 @@ describe("minify option", () => {
       entry: path.resolve(__dirname, "./fixtures/html.js"),
     });
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       test: /\.(?:[cm]?js|html?)(\?.*)?$/i,
-      minify: [TerserPlugin.terserMinify, TerserPlugin.htmlMinifierTerser],
+      minify: [MinimizerPlugin.terserMinify, MinimizerPlugin.htmlMinifierTerser],
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -1337,7 +1337,7 @@ describe("minify option", () => {
 
     minify.filter = () => false;
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       parallel: false,
       minify,
     }).apply(compiler);
@@ -1367,7 +1367,7 @@ describe("minify option", () => {
 
     minify.filter = () => undefined;
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       parallel: false,
       minify,
     }).apply(compiler);
@@ -1405,7 +1405,7 @@ describe("minify option", () => {
 
     htmlOnly.filter = (name) => /\.html?(\?.*)?$/i.test(name);
 
-    new TerserPlugin({
+    new MinimizerPlugin({
       parallel: false,
       minify: [cssOnly, htmlOnly],
     }).apply(compiler);

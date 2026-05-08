@@ -33,7 +33,7 @@
       ]
     }
   },
-  "title": "TerserPluginOptions",
+  "title": "MinimizerPluginOptions",
   "type": "object",
   "additionalProperties": false,
   "properties": {
