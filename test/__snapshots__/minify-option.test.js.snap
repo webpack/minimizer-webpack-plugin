@@ -77,6 +77,68 @@ The 'extractComments' option for 'swcMinify' only supports booleans, \\"some\\",
 
 exports[`minify option should report an error when the \`extractComments\` option for \`swcMinify\` uses a function condition: warnings 1`] = `Array []`;
 
+exports[`minify option should skip assets when every minimizer in the \`minify\` array rejects them via \`filter\`: assets 1`] = `
+Object {
+  "main.js": "/******/ (() => { // webpackBootstrap
+/******/ 	\\"use strict\\";
+class Point {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+
+  static distance(a, b) {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+
+    return Math.hypot(dx, dy);
+  }
+}
+
+console.log('HERE');
+
+/* unused harmony default export */ var __WEBPACK_DEFAULT_EXPORT__ = ((/* unused pure expression or super */ null && (Point)));
+
+/******/ })()
+;",
+}
+`;
+
+exports[`minify option should skip assets when every minimizer in the \`minify\` array rejects them via \`filter\`: errors 1`] = `Array []`;
+
+exports[`minify option should skip assets when every minimizer in the \`minify\` array rejects them via \`filter\`: warnings 1`] = `Array []`;
+
+exports[`minify option should skip assets when the only minimizer's \`filter\` returns \`false\`: assets 1`] = `
+Object {
+  "main.js": "/******/ (() => { // webpackBootstrap
+/******/ 	\\"use strict\\";
+class Point {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+
+  static distance(a, b) {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+
+    return Math.hypot(dx, dy);
+  }
+}
+
+console.log('HERE');
+
+/* unused harmony default export */ var __WEBPACK_DEFAULT_EXPORT__ = ((/* unused pure expression or super */ null && (Point)));
+
+/******/ })()
+;",
+}
+`;
+
+exports[`minify option should skip assets when the only minimizer's \`filter\` returns \`false\`: errors 1`] = `Array []`;
+
+exports[`minify option should skip assets when the only minimizer's \`filter\` returns \`false\`: warnings 1`] = `Array []`;
+
 exports[`minify option should snapshot with extracting comments: assets 1`] = `
 Object {
   "main.js": "/*! For license information please see main.js.LICENSE.txt */
@@ -116,6 +178,37 @@ Error",
 `;
 
 exports[`minify option should throw an error when an error: warnings 1`] = `Array []`;
+
+exports[`minify option should treat a \`filter\` returning \`undefined\` as accept: assets 1`] = `
+Object {
+  "main.js": "/* undef-filter *//******/ (() => { // webpackBootstrap
+/******/ 	\\"use strict\\";
+class Point {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+
+  static distance(a, b) {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+
+    return Math.hypot(dx, dy);
+  }
+}
+
+console.log('HERE');
+
+/* unused harmony default export */ var __WEBPACK_DEFAULT_EXPORT__ = ((/* unused pure expression or super */ null && (Point)));
+
+/******/ })()
+;",
+}
+`;
+
+exports[`minify option should treat a \`filter\` returning \`undefined\` as accept: errors 1`] = `Array []`;
+
+exports[`minify option should treat a \`filter\` returning \`undefined\` as accept: warnings 1`] = `Array []`;
 
 exports[`minify option should work using when the \`minify\` option is \`esbuildMinify\` and ECMA modules output: assets 1`] = `
 Object {
@@ -894,6 +987,17 @@ Object {
 exports[`minify option should work when \`minify\` and \`terserOptions\` are both arrays: errors 1`] = `Array []`;
 
 exports[`minify option should work when \`minify\` and \`terserOptions\` are both arrays: warnings 1`] = `Array []`;
+
+exports[`minify option should work when \`minify\` is an array of functions and dispatches by \`filter\`: assets 1`] = `
+Object {
+  "1d477fcae4c6c3852830.html": "<!doctype html> <html lang=\\"en\\"> <head> <meta charset=\\"utf-8\\"/> <title>Hello</title> </head> <body> <h1>Hello, World!</h1> <p> Hello there </p> </body> </html> ",
+  "main.js": "(()=>{var t={740(t,r,e){\\"use strict\\";t.exports=e.p+\\"1d477fcae4c6c3852830.html\\"}},r={};function e(o){var n=r[o];if(void 0!==n)return n.exports;var c=r[o]={exports:{}};return t[o](c,c.exports,e),c.exports}e.m=t,e.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(t){if(\\"object\\"==typeof window)return window}}(),e.o=(t,r)=>Object.prototype.hasOwnProperty.call(t,r),(()=>{var t;e.g.importScripts&&(t=e.g.location+\\"\\");var r=e.g.document;if(!t&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(t=r.currentScript.src),!t)){var o=r.getElementsByTagName(\\"script\\");if(o.length)for(var n=o.length-1;n>-1&&(!t||!/^http(s?):/.test(t));)t=o[n--].src}if(!t)throw new Error(\\"Automatic publicPath is not supported in this browser\\");t=t.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),e.p=t})(),e.b=\\"undefined\\"!=typeof document&&document.baseURI||self.location.href,console.log(new URL(e(740),e.b))})();",
+}
+`;
+
+exports[`minify option should work when \`minify\` is an array of functions and dispatches by \`filter\`: errors 1`] = `Array []`;
+
+exports[`minify option should work when \`minify\` is an array of functions and dispatches by \`filter\`: warnings 1`] = `Array []`;
 
 exports[`minify option should work when \`minify\` is an array of functions using \`htmlMinifierTerser\`: assets 1`] = `
 Object {

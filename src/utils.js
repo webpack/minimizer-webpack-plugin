@@ -11,6 +11,11 @@
  * @typedef {string[]} ExtractedComments
  */
 
+const JS_FILE_RE = /\.[cm]?js(\?.*)?$/i;
+const JSON_FILE_RE = /\.json(\?.*)?$/i;
+const HTML_FILE_RE = /\.html?(\?.*)?$/i;
+const CSS_FILE_RE = /\.css(\?.*)?$/i;
+
 /**
  * Map a webpack `output.environment` configuration to the highest
  * ECMAScript version that the target is known to support. Returns `5`
@@ -355,6 +360,12 @@ terserMinify.getMinimizerVersion = () => {
  */
 terserMinify.supportsWorkerThreads = () => true;
 
+/**
+ * @param {string} name asset name
+ * @returns {boolean} true if `name` looks like a JavaScript file
+ */
+terserMinify.filter = (name) => JS_FILE_RE.test(name);
+
 /* istanbul ignore next */
 /**
  * @param {Input} input input
@@ -585,6 +596,12 @@ uglifyJsMinify.getMinimizerVersion = () => {
  * @returns {boolean | undefined} true if worker thread is supported, false otherwise
  */
 uglifyJsMinify.supportsWorkerThreads = () => true;
+
+/**
+ * @param {string} name asset name
+ * @returns {boolean} true if `name` looks like a JavaScript file
+ */
+uglifyJsMinify.filter = (name) => JS_FILE_RE.test(name);
 
 /* istanbul ignore next */
 /**
@@ -817,6 +834,12 @@ swcMinify.getMinimizerVersion = () => {
  */
 swcMinify.supportsWorkerThreads = () => false;
 
+/**
+ * @param {string} name asset name
+ * @returns {boolean} true if `name` looks like a JavaScript file
+ */
+swcMinify.filter = (name) => JS_FILE_RE.test(name);
+
 /* istanbul ignore next */
 /**
  * @param {Input} input input
@@ -932,6 +955,12 @@ esbuildMinify.getMinimizerVersion = () => {
  */
 esbuildMinify.supportsWorkerThreads = () => false;
 
+/**
+ * @param {string} name asset name
+ * @returns {boolean} true if `name` looks like a JavaScript file
+ */
+esbuildMinify.filter = (name) => JS_FILE_RE.test(name);
+
 /* istanbul ignore next */
 /**
  * @param {Input} input input
@@ -957,6 +986,12 @@ async function jsonMinify(input, sourceMap, minimizerOptions) {
 jsonMinify.getMinimizerVersion = () => "1.0.0";
 jsonMinify.supportsWorker = () => false;
 jsonMinify.supportsWorkerThreads = () => false;
+
+/**
+ * @param {string} name asset name
+ * @returns {boolean} true if `name` looks like a JSON file
+ */
+jsonMinify.filter = (name) => JSON_FILE_RE.test(name);
 
 /* istanbul ignore next */
 /**
@@ -1024,6 +1059,12 @@ htmlMinifierTerser.getMinimizerVersion = () => {
  */
 htmlMinifierTerser.supportsWorkerThreads = () => true;
 
+/**
+ * @param {string} name asset name
+ * @returns {boolean} true if `name` looks like an HTML file
+ */
+htmlMinifierTerser.filter = (name) => HTML_FILE_RE.test(name);
+
 /* istanbul ignore next */
 /**
  * Minify HTML using `@minify-html/node`.
@@ -1070,6 +1111,12 @@ minifyHtmlNode.getMinimizerVersion = () => {
  * @returns {boolean | undefined} false because `@minify-html/node` is a native binding
  */
 minifyHtmlNode.supportsWorkerThreads = () => false;
+
+/**
+ * @param {string} name asset name
+ * @returns {boolean} true if `name` looks like an HTML file
+ */
+minifyHtmlNode.filter = (name) => HTML_FILE_RE.test(name);
 
 /* istanbul ignore next */
 /**
@@ -1141,6 +1188,12 @@ swcMinifyHtml.getMinimizerVersion = () => {
  */
 swcMinifyHtml.supportsWorkerThreads = () => false;
 
+/**
+ * @param {string} name asset name
+ * @returns {boolean} true if `name` looks like an HTML file
+ */
+swcMinifyHtml.filter = (name) => HTML_FILE_RE.test(name);
+
 /* istanbul ignore next */
 /**
  * Minify an HTML fragment using `@swc/html`.
@@ -1194,6 +1247,12 @@ swcMinifyHtmlFragment.getMinimizerVersion = () => {
  * @returns {boolean | undefined} false because `@swc/html` is a native binding
  */
 swcMinifyHtmlFragment.supportsWorkerThreads = () => false;
+
+/**
+ * @param {string} name asset name
+ * @returns {boolean} true if `name` looks like an HTML file
+ */
+swcMinifyHtmlFragment.filter = (name) => HTML_FILE_RE.test(name);
 
 /* istanbul ignore next */
 /**
@@ -1341,6 +1400,12 @@ cssnanoMinify.getMinimizerVersion = () => {
  */
 cssnanoMinify.supportsWorkerThreads = () => true;
 
+/**
+ * @param {string} name asset name
+ * @returns {boolean} true if `name` looks like a CSS file
+ */
+cssnanoMinify.filter = (name) => CSS_FILE_RE.test(name);
+
 /* istanbul ignore next */
 /**
  * Minify CSS using `csso`.
@@ -1394,6 +1459,12 @@ cssoMinify.getMinimizerVersion = () => {
  * @returns {boolean | undefined} true if worker threads are supported
  */
 cssoMinify.supportsWorkerThreads = () => true;
+
+/**
+ * @param {string} name asset name
+ * @returns {boolean} true if `name` looks like a CSS file
+ */
+cssoMinify.filter = (name) => CSS_FILE_RE.test(name);
 
 /* istanbul ignore next */
 /**
@@ -1466,6 +1537,12 @@ cleanCssMinify.getMinimizerVersion = () => {
  * @returns {boolean | undefined} true if worker threads are supported
  */
 cleanCssMinify.supportsWorkerThreads = () => true;
+
+/**
+ * @param {string} name asset name
+ * @returns {boolean} true if `name` looks like a CSS file
+ */
+cleanCssMinify.filter = (name) => CSS_FILE_RE.test(name);
 
 /* istanbul ignore next */
 /**
@@ -1582,6 +1659,12 @@ esbuildMinifyCss.getMinimizerVersion = () => {
  */
 esbuildMinifyCss.supportsWorkerThreads = () => false;
 
+/**
+ * @param {string} name asset name
+ * @returns {boolean} true if `name` looks like a CSS file
+ */
+esbuildMinifyCss.filter = (name) => CSS_FILE_RE.test(name);
+
 /* istanbul ignore next */
 /**
  * Minify CSS using `lightningcss`.
@@ -1650,6 +1733,12 @@ lightningCssMinify.getMinimizerVersion = () => {
  * @returns {boolean | undefined} false because `lightningcss` is a native binding
  */
 lightningCssMinify.supportsWorkerThreads = () => false;
+
+/**
+ * @param {string} name asset name
+ * @returns {boolean} true if `name` looks like a CSS file
+ */
+lightningCssMinify.filter = (name) => CSS_FILE_RE.test(name);
 
 /* istanbul ignore next */
 /**
@@ -1734,6 +1823,12 @@ swcMinifyCss.getMinimizerVersion = () => {
  * @returns {boolean | undefined} false because `@swc/css` is a native binding
  */
 swcMinifyCss.supportsWorkerThreads = () => false;
+
+/**
+ * @param {string} name asset name
+ * @returns {boolean} true if `name` looks like a CSS file
+ */
+swcMinifyCss.filter = (name) => CSS_FILE_RE.test(name);
 
 /**
  * @template T

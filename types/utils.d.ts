@@ -1,3 +1,5 @@
+export type Task<T> = () => Promise<T>;
+export type FunctionReturning<T> = () => T;
 export type ExtractCommentsOptions =
   import("./index.js").ExtractCommentsOptions;
 export type ExtractCommentsFunction =
@@ -10,8 +12,6 @@ export type CustomOptions = import("./index.js").CustomOptions;
 export type RawSourceMap = import("./index.js").RawSourceMap;
 export type EXPECTED_OBJECT = import("./index.js").EXPECTED_OBJECT;
 export type ExtractedComments = string[];
-export type Task<T> = () => Promise<T>;
-export type FunctionReturning<T> = () => T;
 /**
  * Minify CSS using `clean-css`.
  * @param {Input} input input
@@ -33,6 +33,11 @@ export namespace cleanCssMinify {
    * @returns {boolean | undefined} true if worker threads are supported
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like a CSS file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * Minify CSS using `cssnano` (via `postcss`).
@@ -55,6 +60,11 @@ export namespace cssnanoMinify {
    * @returns {boolean | undefined} true if worker threads are supported
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like a CSS file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * Minify CSS using `csso`.
@@ -77,6 +87,11 @@ export namespace cssoMinify {
    * @returns {boolean | undefined} true if worker threads are supported
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like a CSS file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * @param {Input} input input
@@ -98,6 +113,11 @@ export namespace esbuildMinify {
    * @returns {boolean | undefined} true if worker thread is supported, false otherwise
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like a JavaScript file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * Minify CSS using `esbuild` (with the CSS loader).
@@ -120,18 +140,12 @@ export namespace esbuildMinifyCss {
    * @returns {boolean | undefined} false because `esbuild` is a native binding
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like a CSS file
+   */
+  function filter(name: string): boolean;
 }
-/** @typedef {import("./index.js").ExtractCommentsOptions} ExtractCommentsOptions */
-/** @typedef {import("./index.js").ExtractCommentsFunction} ExtractCommentsFunction */
-/** @typedef {import("./index.js").ExtractCommentsCondition} ExtractCommentsCondition */
-/** @typedef {import("./index.js").Input} Input */
-/** @typedef {import("./index.js").MinimizedResult} MinimizedResult */
-/** @typedef {import("./index.js").CustomOptions} CustomOptions */
-/** @typedef {import("./index.js").RawSourceMap} RawSourceMap */
-/** @typedef {import("./index.js").EXPECTED_OBJECT} EXPECTED_OBJECT */
-/**
- * @typedef {string[]} ExtractedComments
- */
 /**
  * Map a webpack `output.environment` configuration to the highest
  * ECMAScript version that the target is known to support. Returns `5`
@@ -165,6 +179,11 @@ export namespace htmlMinifierTerser {
    * @returns {boolean | undefined} true if worker threads are supported
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like an HTML file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * @param {Input} input input
@@ -181,6 +200,11 @@ export namespace jsonMinify {
   function getMinimizerVersion(): string;
   function supportsWorker(): boolean;
   function supportsWorkerThreads(): boolean;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like a JSON file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * Minify CSS using `lightningcss`.
@@ -203,6 +227,11 @@ export namespace lightningCssMinify {
    * @returns {boolean | undefined} false because `lightningcss` is a native binding
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like a CSS file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * @template T
@@ -235,6 +264,11 @@ export namespace minifyHtmlNode {
    * @returns {boolean | undefined} false because `@minify-html/node` is a native binding
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like an HTML file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * @param {Input} input input
@@ -258,6 +292,11 @@ export namespace swcMinify {
    * @returns {boolean | undefined} true if worker thread is supported, false otherwise
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like a JavaScript file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * Minify CSS using `@swc/css`.
@@ -280,6 +319,11 @@ export namespace swcMinifyCss {
    * @returns {boolean | undefined} false because `@swc/css` is a native binding
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like a CSS file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * Minify a complete HTML document using `@swc/html`.
@@ -302,6 +346,11 @@ export namespace swcMinifyHtml {
    * @returns {boolean | undefined} false because `@swc/html` is a native binding
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like an HTML file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * Minify an HTML fragment using `@swc/html`.
@@ -327,6 +376,11 @@ export namespace swcMinifyHtmlFragment {
    * @returns {boolean | undefined} false because `@swc/html` is a native binding
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like an HTML file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * @param {Input} input input
@@ -350,6 +404,11 @@ export namespace terserMinify {
    * @returns {boolean | undefined} true if worker thread is supported, false otherwise
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like a JavaScript file
+   */
+  function filter(name: string): boolean;
 }
 /**
  * @template T
@@ -385,4 +444,9 @@ export namespace uglifyJsMinify {
    * @returns {boolean | undefined} true if worker thread is supported, false otherwise
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @param {string} name asset name
+   * @returns {boolean} true if `name` looks like a JavaScript file
+   */
+  function filter(name: string): boolean;
 }

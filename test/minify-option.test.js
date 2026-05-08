@@ -1301,4 +1301,119 @@ describe("minify option", () => {
     expect(getErrors(stats)).toMatchSnapshot("errors");
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
+
+  it("should work when `minify` is an array of functions and dispatches by `filter`", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/html.js"),
+    });
+
+    new TerserPlugin({
+      test: /\.(?:[cm]?js|html?)(\?.*)?$/i,
+      minify: [TerserPlugin.terserMinify, TerserPlugin.htmlMinifierTerser],
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should skip assets when the only minimizer's `filter` returns `false`", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+      output: {
+        path: path.resolve(__dirname, "./dist-terser"),
+        filename: "[name].js",
+        chunkFilename: "[id].[name].js",
+      },
+    });
+
+    const minify = (file) => {
+      const [[, code]] = Object.entries(file);
+
+      return { code: `/* minified */${code}` };
+    };
+
+    minify.filter = () => false;
+
+    new TerserPlugin({
+      parallel: false,
+      minify,
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should treat a `filter` returning `undefined` as accept", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+      output: {
+        path: path.resolve(__dirname, "./dist-terser"),
+        filename: "[name].js",
+        chunkFilename: "[id].[name].js",
+      },
+    });
+
+    const minify = (file) => {
+      const [[, code]] = Object.entries(file);
+
+      return { code: `/* undef-filter */${code}` };
+    };
+
+    minify.filter = () => undefined;
+
+    new TerserPlugin({
+      parallel: false,
+      minify,
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should skip assets when every minimizer in the `minify` array rejects them via `filter`", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+      output: {
+        path: path.resolve(__dirname, "./dist-terser"),
+        filename: "[name].js",
+        chunkFilename: "[id].[name].js",
+      },
+    });
+
+    const cssOnly = (file) => {
+      const [[, code]] = Object.entries(file);
+
+      return { code: `/* css */${code}` };
+    };
+
+    cssOnly.filter = (name) => /\.css(\?.*)?$/i.test(name);
+
+    const htmlOnly = (file) => {
+      const [[, code]] = Object.entries(file);
+
+      return { code: `/* html */${code}` };
+    };
+
+    htmlOnly.filter = (name) => /\.html?(\?.*)?$/i.test(name);
+
+    new TerserPlugin({
+      parallel: false,
+      minify: [cssOnly, htmlOnly],
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
 });

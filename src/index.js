@@ -124,6 +124,7 @@ const {
  * @property {() => string | undefined=} getMinimizerVersion function that returns version of minimizer
  * @property {() => boolean | undefined=} supportsWorkerThreads true when minimizer support worker threads, otherwise false
  * @property {() => boolean | undefined=} supportsWorker true when minimizer support worker, otherwise false
+ * @property {(name: string, info?: AssetInfo) => boolean | undefined=} filter return true when the minimizer supports the asset, otherwise false. When an array of minimizers is configured, each asset is dispatched only to the minimizers whose `filter` accepts it. Assets rejected by every minimizer in the array are skipped entirely.
  */
 
 /**
@@ -377,6 +378,43 @@ class TerserPlugin {
   async optimize(compiler, compilation, assets, optimizeOptions) {
     const cache = compilation.getCache("TerserWebpackPlugin");
     let numberOfAssets = 0;
+
+    // Normalize the implementation list to an array so dispatch and the
+    // worker-pool capability checks below can iterate uniformly. The
+    // original shape on `this.options.minimizer.implementation` is preserved
+    // for chunk hashing.
+    const implementations = Array.isArray(this.options.minimizer.implementation)
+      ? this.options.minimizer.implementation
+      : [this.options.minimizer.implementation];
+
+    /**
+     * Collect the indices of minimizers whose `filter` accepts `name`.
+     * Filters returning `undefined` are treated as accept (matches the
+     * convention used by `supportsWorkerThreads`).
+     * @param {string} name asset name
+     * @param {AssetInfo} info asset info
+     * @returns {number[]} indices into `implementations` that accept the asset
+     */
+    const matchingMinimizers = (name, info) => {
+      const matched = [];
+
+      for (let i = 0; i < implementations.length; i++) {
+        const impl = implementations[i];
+
+        if (
+          typeof impl.filter !== "function" ||
+          // eslint-disable-next-line unicorn/no-array-method-this-argument
+          impl.filter(name, info) !== false
+        ) {
+          matched.push(i);
+        }
+      }
+
+      return matched;
+    };
+    /** @type {Map<string, number[]>} */
+    const matchedByName = new Map();
+
     const assetsForMinify = await Promise.all(
       Object.keys(assets)
         .filter((name) => {
@@ -400,6 +438,16 @@ class TerserPlugin {
             return false;
           }
 
+          // Compute the matching minimizers once and carry the result to the
+          // per-asset task via `matchedByName` so the regexes don't run again.
+          const matched = matchingMinimizers(name, info);
+
+          if (matched.length === 0) {
+            return false;
+          }
+
+          matchedByName.set(name, matched);
+
           return true;
         })
         .map(async (name) => {
@@ -415,7 +463,14 @@ class TerserPlugin {
             numberOfAssets += 1;
           }
 
-          return { name, info, inputSource: source, output, cacheItem };
+          return {
+            name,
+            info,
+            inputSource: source,
+            output,
+            cacheItem,
+            matched: /** @type {number[]} */ (matchedByName.get(name)),
+          };
         }),
     );
 
@@ -429,10 +484,6 @@ class TerserPlugin {
     let initializedWorker;
     /** @type {undefined | number} */
     let numberOfWorkers;
-
-    const implementations = Array.isArray(this.options.minimizer.implementation)
-      ? this.options.minimizer.implementation
-      : [this.options.minimizer.implementation];
 
     const needCreateWorker =
       optimizeOptions.availableNumberOfCores > 0 &&
@@ -496,7 +547,7 @@ class TerserPlugin {
 
     for (const asset of assetsForMinify) {
       scheduledTasks.push(async () => {
-        const { name, inputSource, info, cacheItem } = asset;
+        const { name, inputSource, info, cacheItem, matched } = asset;
         let { output } = asset;
 
         if (!output) {
@@ -523,11 +574,23 @@ class TerserPlugin {
             input = input.toString();
           }
 
-          const clonedMinimizerOptions = Array.isArray(
-            this.options.minimizer.options,
-          )
-            ? this.options.minimizer.options.map((item) => ({ ...item }))
-            : { .../** @type {T} */ (this.options.minimizer.options) };
+          // Dispatch to only the minimizers whose `filter` accepted this
+          // asset (computed once when collecting `assetsForMinify`).
+          // `minify.js` already normalizes a single implementation into a
+          // one-element array, so we always hand it the matching subset.
+          // Options are sliced as references — `minify.js` overlays
+          // `module`/`ecma` without mutating the caller's object.
+          const assetImplementation =
+            /** @type {MinimizerImplementation<T>} */
+            (matched.map((i) => implementations[i]));
+          const sourceOptions = this.options.minimizer.options;
+          const assetMinimizerOptions =
+            /** @type {MinimizerOptions<T>} */
+            (
+              Array.isArray(sourceOptions)
+                ? matched.map((i) => sourceOptions[i] || {})
+                : sourceOptions
+            );
 
           /**
            * @type {InternalOptions<T>}
@@ -537,10 +600,8 @@ class TerserPlugin {
             input,
             inputSourceMap,
             minimizer: {
-              implementation: this.options.minimizer.implementation,
-              options:
-                /** @type {MinimizerOptions<T>} */
-                (clonedMinimizerOptions),
+              implementation: assetImplementation,
+              options: assetMinimizerOptions,
             },
             extractComments: this.options.extractComments,
           };
