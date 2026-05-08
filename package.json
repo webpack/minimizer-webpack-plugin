@@ -68,7 +68,8 @@
     "pretest": "npm run lint",
     "test": "npm run test:coverage",
     "prepare": "husky install && npm run build",
-    "release": "standard-version"
+    "version": "changeset version",
+    "release": "npm run build && changeset publish"
   },
   "dependencies": {
     "@jridgewell/trace-mapping": "^0.3.25",
@@ -80,6 +81,8 @@
     "@babel/cli": "^7.24.7",
     "@babel/core": "^7.24.7",
     "@babel/preset-env": "^7.24.7",
+    "@changesets/cli": "^2.30.0",
+    "@changesets/get-github-info": "^0.8.0",
     "@commitlint/cli": "^17.7.1",
     "@commitlint/config-conventional": "^17.7.0",
     "@minify-html/node": "^0.16.4",
@@ -115,7 +118,6 @@
     "prettier": "^3.6.0",
     "prettier-2": "npm:prettier@^2",
     "serialize-javascript": "^7.0.5",
-    "standard-version": "^9.3.1",
     "typescript": "^5.9.2",
     "uglify-js": "^3.19.3",
     "webpack": "^5.101.0",
