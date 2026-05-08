@@ -563,9 +563,15 @@ describe("MinimizerPlugin", () => {
     expect(MinimizerPlugin.isSourceMap({ version: 3 })).toBe(false);
     expect(MinimizerPlugin.isSourceMap({ sources: "" })).toBe(false);
     expect(MinimizerPlugin.isSourceMap({ mappings: [] })).toBe(false);
-    expect(MinimizerPlugin.isSourceMap({ version: 3, sources: "" })).toBe(false);
-    expect(MinimizerPlugin.isSourceMap({ version: 3, mappings: [] })).toBe(false);
-    expect(MinimizerPlugin.isSourceMap({ sources: "", mappings: [] })).toBe(false);
+    expect(MinimizerPlugin.isSourceMap({ version: 3, sources: "" })).toBe(
+      false,
+    );
+    expect(MinimizerPlugin.isSourceMap({ version: 3, mappings: [] })).toBe(
+      false,
+    );
+    expect(MinimizerPlugin.isSourceMap({ sources: "", mappings: [] })).toBe(
+      false,
+    );
     expect(
       MinimizerPlugin.isSourceMap({ version: 3, sources: "", mappings: [] }),
     ).toBe(false);
