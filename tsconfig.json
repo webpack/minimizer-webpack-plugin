@@ -7,7 +7,9 @@
     "strict": true,
     "types": ["node"],
     "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "rootDir": "./src",
+    "ignoreDeprecations": "6.0"
   },
   "include": ["./src/**/*"]
 }
