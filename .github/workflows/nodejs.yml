@@ -118,6 +118,14 @@ jobs:
         if: matrix.node-version == '14.x' || matrix.node-version == '16.x'
         run: npm install -D --no-save cssnano@^6 --force
 
+      - name: Install older jest (Node 10/12)
+        if: matrix.node-version == '10.x' || matrix.node-version == '12.x'
+        run: npm install -D --no-save jest@^27 --force
+
+      - name: Install older jest (Node 14/16)
+        if: matrix.node-version == '14.x' || matrix.node-version == '16.x'
+        run: npm install -D --no-save jest@^29 --force
+
       - name: Install webpack ${{ matrix.webpack-version }}
         if: matrix.webpack-version != 'latest'
         run: npm i webpack@${{ matrix.webpack-version }}
