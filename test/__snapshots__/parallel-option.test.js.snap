@@ -1,7 +1,7 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`parallel option should match snapshot for the "2" value: assets 1`] = `
-Object {
+{
   "four.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
   "one.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
   "three.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
@@ -9,12 +9,12 @@ Object {
 }
 `;
 
-exports[`parallel option should match snapshot for the "2" value: errors 1`] = `Array []`;
+exports[`parallel option should match snapshot for the "2" value: errors 1`] = `[]`;
 
-exports[`parallel option should match snapshot for the "2" value: warnings 1`] = `Array []`;
+exports[`parallel option should match snapshot for the "2" value: warnings 1`] = `[]`;
 
 exports[`parallel option should match snapshot for the "false" value: assets 1`] = `
-Object {
+{
   "four.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
   "one.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
   "three.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
@@ -22,23 +22,23 @@ Object {
 }
 `;
 
-exports[`parallel option should match snapshot for the "false" value: errors 1`] = `Array []`;
+exports[`parallel option should match snapshot for the "false" value: errors 1`] = `[]`;
 
-exports[`parallel option should match snapshot for the "false" value: warnings 1`] = `Array []`;
+exports[`parallel option should match snapshot for the "false" value: warnings 1`] = `[]`;
 
 exports[`parallel option should match snapshot for the "true" value and the number of files is less than the number of cores: assets 1`] = `
-Object {
+{
   "entry-0.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
   "entry-1.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
-exports[`parallel option should match snapshot for the "true" value and the number of files is less than the number of cores: errors 1`] = `Array []`;
+exports[`parallel option should match snapshot for the "true" value and the number of files is less than the number of cores: errors 1`] = `[]`;
 
-exports[`parallel option should match snapshot for the "true" value and the number of files is less than the number of cores: warnings 1`] = `Array []`;
+exports[`parallel option should match snapshot for the "true" value and the number of files is less than the number of cores: warnings 1`] = `[]`;
 
 exports[`parallel option should match snapshot for the "true" value and the number of files is more than the number of cores: assets 1`] = `
-Object {
+{
   "eight.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
   "five.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
   "four.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
@@ -50,12 +50,12 @@ Object {
 }
 `;
 
-exports[`parallel option should match snapshot for the "true" value and the number of files is more than the number of cores: errors 1`] = `Array []`;
+exports[`parallel option should match snapshot for the "true" value and the number of files is more than the number of cores: errors 1`] = `[]`;
 
-exports[`parallel option should match snapshot for the "true" value and the number of files is more than the number of cores: warnings 1`] = `Array []`;
+exports[`parallel option should match snapshot for the "true" value and the number of files is more than the number of cores: warnings 1`] = `[]`;
 
 exports[`parallel option should match snapshot for the "true" value and the number of files is same than the number of cores: assets 1`] = `
-Object {
+{
   "entry-0.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
   "entry-1.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
   "entry-2.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
@@ -63,22 +63,22 @@ Object {
 }
 `;
 
-exports[`parallel option should match snapshot for the "true" value and the number of files is same than the number of cores: errors 1`] = `Array []`;
+exports[`parallel option should match snapshot for the "true" value and the number of files is same than the number of cores: errors 1`] = `[]`;
 
-exports[`parallel option should match snapshot for the "true" value and the number of files is same than the number of cores: warnings 1`] = `Array []`;
+exports[`parallel option should match snapshot for the "true" value and the number of files is same than the number of cores: warnings 1`] = `[]`;
 
 exports[`parallel option should match snapshot for the "true" value when only one file passed: assets 1`] = `
-Object {
+{
   "main.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
 }
 `;
 
-exports[`parallel option should match snapshot for the "true" value when only one file passed: errors 1`] = `Array []`;
+exports[`parallel option should match snapshot for the "true" value when only one file passed: errors 1`] = `[]`;
 
-exports[`parallel option should match snapshot for the "true" value when only one file passed: warnings 1`] = `Array []`;
+exports[`parallel option should match snapshot for the "true" value when only one file passed: warnings 1`] = `[]`;
 
 exports[`parallel option should match snapshot for the "true" value: assets 1`] = `
-Object {
+{
   "four.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
   "one.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
   "three.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
@@ -86,12 +86,12 @@ Object {
 }
 `;
 
-exports[`parallel option should match snapshot for the "true" value: errors 1`] = `Array []`;
+exports[`parallel option should match snapshot for the "true" value: errors 1`] = `[]`;
 
-exports[`parallel option should match snapshot for the "true" value: warnings 1`] = `Array []`;
+exports[`parallel option should match snapshot for the "true" value: warnings 1`] = `[]`;
 
 exports[`parallel option should match snapshot for the "undefined" value: assets 1`] = `
-Object {
+{
   "four.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
   "one.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
   "three.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
@@ -99,12 +99,12 @@ Object {
 }
 `;
 
-exports[`parallel option should match snapshot for the "undefined" value: errors 1`] = `Array []`;
+exports[`parallel option should match snapshot for the "undefined" value: errors 1`] = `[]`;
 
-exports[`parallel option should match snapshot for the "undefined" value: warnings 1`] = `Array []`;
+exports[`parallel option should match snapshot for the "undefined" value: warnings 1`] = `[]`;
 
 exports[`parallel option should match snapshot when a value is not specify: assets 1`] = `
-Object {
+{
   "four.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
   "one.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
   "three.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
@@ -112,6 +112,6 @@ Object {
 }
 `;
 
-exports[`parallel option should match snapshot when a value is not specify: errors 1`] = `Array []`;
+exports[`parallel option should match snapshot when a value is not specify: errors 1`] = `[]`;
 
-exports[`parallel option should match snapshot when a value is not specify: warnings 1`] = `Array []`;
+exports[`parallel option should match snapshot when a value is not specify: warnings 1`] = `[]`;

@@ -1,7 +1,7 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`include option should match snapshot for a single RegExp value: assets 1`] = `
-Object {
+{
   "entry.js": "/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -109,12 +109,12 @@ module.exports = function Bar2() {
 }
 `;
 
-exports[`include option should match snapshot for a single RegExp value: errors 1`] = `Array []`;
+exports[`include option should match snapshot for a single RegExp value: errors 1`] = `[]`;
 
-exports[`include option should match snapshot for a single RegExp value: warnings 1`] = `Array []`;
+exports[`include option should match snapshot for a single RegExp value: warnings 1`] = `[]`;
 
 exports[`include option should match snapshot for a single String value: assets 1`] = `
-Object {
+{
   "entry.js": "/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -222,12 +222,12 @@ module.exports = function Bar2() {
 }
 `;
 
-exports[`include option should match snapshot for a single String value: errors 1`] = `Array []`;
+exports[`include option should match snapshot for a single String value: errors 1`] = `[]`;
 
-exports[`include option should match snapshot for a single String value: warnings 1`] = `Array []`;
+exports[`include option should match snapshot for a single String value: warnings 1`] = `[]`;
 
 exports[`include option should match snapshot for multiple RegExp values: assets 1`] = `
-Object {
+{
   "entry.js": "/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -287,12 +287,12 @@ module.exports = function Foo() {
 }
 `;
 
-exports[`include option should match snapshot for multiple RegExp values: errors 1`] = `Array []`;
+exports[`include option should match snapshot for multiple RegExp values: errors 1`] = `[]`;
 
-exports[`include option should match snapshot for multiple RegExp values: warnings 1`] = `Array []`;
+exports[`include option should match snapshot for multiple RegExp values: warnings 1`] = `[]`;
 
 exports[`include option should match snapshot for multiple String values: assets 1`] = `
-Object {
+{
   "entry.js": "/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -352,6 +352,6 @@ module.exports = function Foo() {
 }
 `;
 
-exports[`include option should match snapshot for multiple String values: errors 1`] = `Array []`;
+exports[`include option should match snapshot for multiple String values: errors 1`] = `[]`;
 
-exports[`include option should match snapshot for multiple String values: warnings 1`] = `Array []`;
+exports[`include option should match snapshot for multiple String values: warnings 1`] = `[]`;

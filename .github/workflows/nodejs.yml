@@ -123,7 +123,24 @@ jobs:
         run: npm i webpack@${{ matrix.webpack-version }}
 
       - name: Run tests for webpack version ${{ matrix.webpack-version }}
-        run: npm run test:coverage -- --ci
+        # Skip tests whose minimizers can't run on the current Node version
+        # (`-t` is a Jest test-name pattern with a negative lookahead).
+        # `swcMinify`/`swcMinifyHtml`/`swcMinifyCss` need @swc/* binaries that
+        # aren't available on Node 10/12; `htmlMinifierTerser` requires Node
+        # 14.13+; `esbuildMinify`/`esbuildMinifyCss` require Node 18+.
+        shell: bash
+        run: |
+          case "${{ matrix.node-version }}" in
+            10.x|12.x)
+              npm run test:coverage -- --ci -t '^(?!.*(swcMinify|esbuildMinify|htmlMinifierTerser)).*$'
+              ;;
+            14.x|16.x)
+              npm run test:coverage -- --ci -t '^(?!.*esbuildMinify).*$'
+              ;;
+            *)
+              npm run test:coverage -- --ci
+              ;;
+          esac
 
       - name: Submit coverage data to codecov
         uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
