@@ -100,10 +100,24 @@ jobs:
           architecture: ${{ steps.calculate_architecture.outputs.result }}
           cache: "npm"
 
+      - name: Pin older jest in package.json (Node 10/12)
+        if: matrix.node-version == '10.x' || matrix.node-version == '12.x'
+        shell: bash
+        # Rewrite the jest devDependency before installing so npm resolves a
+        # consistent @jest/* tree. jest@30 only supports Node >=18.14.
+        run: |
+          node -e "const fs=require('fs');const p=require('./package.json');p.devDependencies.jest='^27.5.1';fs.writeFileSync('./package.json',JSON.stringify(p,null,2)+'\n');"
+
+      - name: Pin older jest in package.json (Node 14/16)
+        if: matrix.node-version == '14.x' || matrix.node-version == '16.x'
+        shell: bash
+        run: |
+          node -e "const fs=require('fs');const p=require('./package.json');p.devDependencies.jest='^29.7.0';fs.writeFileSync('./package.json',JSON.stringify(p,null,2)+'\n');"
+
       - name: Install dependencies (old)
         run: |
           npm install -D typescript@4 --force
-          npm install --ignore-scripts
+          npm install --ignore-scripts --force
         if: matrix.node-version == '10.x' || matrix.node-version == '12.x' || matrix.node-version == '14.x' || matrix.node-version == '16.x' || matrix.node-version == '18.x'
 
       - name: Install dependencies
@@ -117,14 +131,6 @@ jobs:
       - name: Install older cssnano (Node 14/16)
         if: matrix.node-version == '14.x' || matrix.node-version == '16.x'
         run: npm install -D --no-save cssnano@^6 --force
-
-      - name: Install older jest (Node 10/12)
-        if: matrix.node-version == '10.x' || matrix.node-version == '12.x'
-        run: npm install -D --no-save jest@^27 --force
-
-      - name: Install older jest (Node 14/16)
-        if: matrix.node-version == '14.x' || matrix.node-version == '16.x'
-        run: npm install -D --no-save jest@^29 --force
 
       - name: Install webpack ${{ matrix.webpack-version }}
         if: matrix.webpack-version != 'latest'
