@@ -1,7 +1,7 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`minimizerOptions option should accept \`minimizerOptions\` and apply them like \`terserOptions\`: assets 1`] = `
-Object {
+{
   "main.js": "!function() {
     var __webpack_modules__ = {
         326: function(module) {
@@ -49,6 +49,6 @@ Object {
 }
 `;
 
-exports[`minimizerOptions option should accept \`minimizerOptions\` and apply them like \`terserOptions\`: errors 1`] = `Array []`;
+exports[`minimizerOptions option should accept \`minimizerOptions\` and apply them like \`terserOptions\`: errors 1`] = `[]`;
 
-exports[`minimizerOptions option should accept \`minimizerOptions\` and apply them like \`terserOptions\`: warnings 1`] = `Array []`;
+exports[`minimizerOptions option should accept \`minimizerOptions\` and apply them like \`terserOptions\`: warnings 1`] = `[]`;
