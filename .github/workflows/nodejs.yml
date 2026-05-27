@@ -118,6 +118,22 @@ jobs:
         if: matrix.node-version == '14.x' || matrix.node-version == '16.x'
         run: npm install -D --no-save cssnano@^6 --force
 
+      - name: Pin terser to the locked version (Node 10/12/14)
+        # npm 6 (bundled with Node <= 14) can't read the lockfileVersion 3
+        # package-lock.json, so the install step re-resolves `terser` to the
+        # latest match of its range instead of the locked version (and
+        # rewrites package-lock.json to v1 in the process). A newer terser
+        # changes the minified output, which breaks the snapshots. Read the
+        # locked version from the pristine committed lockfile and reinstall
+        # that exact version so these rows match the snapshots.
+        if: matrix.node-version == '10.x' || matrix.node-version == '12.x' || matrix.node-version == '14.x'
+        shell: bash
+        run: |
+          git show HEAD:package-lock.json > pristine-package-lock.json
+          TERSER_VERSION="$(node -e "process.stdout.write(require('./pristine-package-lock.json').packages['node_modules/terser'].version)")"
+          rm -f pristine-package-lock.json
+          npm install -D --no-save --ignore-scripts --force "terser@${TERSER_VERSION}"
+
       - name: Install webpack ${{ matrix.webpack-version }}
         if: matrix.webpack-version != 'latest'
         run: npm i webpack@${{ matrix.webpack-version }}
