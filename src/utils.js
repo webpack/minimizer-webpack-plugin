@@ -223,6 +223,8 @@ async function terserMinify(
 
     // Redefine the comments function to extract and preserve
     // comments according to the two conditions
+    const seenComments = new Set(extractedComments);
+
     return (astNode, comment) => {
       if (
         /** @type {{ extract: ExtractCommentsFunction }} */
@@ -234,7 +236,8 @@ async function terserMinify(
             : `//${comment.value}`;
 
         // Don't include duplicate comments
-        if (!extractedComments.includes(commentText)) {
+        if (!seenComments.has(commentText)) {
+          seenComments.add(commentText);
           extractedComments.push(commentText);
         }
       }
@@ -477,6 +480,8 @@ async function uglifyJsMinify(
 
     // Redefine the comments function to extract and preserve
     // comments according to the two conditions
+    const seenComments = new Set(extractedComments);
+
     return (astNode, comment) => {
       if (
         /** @type {{ extract: ExtractCommentsFunction }} */
@@ -488,7 +493,8 @@ async function uglifyJsMinify(
             : `//${comment.value}`;
 
         // Don't include duplicate comments
-        if (!extractedComments.includes(commentText)) {
+        if (!seenComments.has(commentText)) {
+          seenComments.add(commentText);
           extractedComments.push(commentText);
         }
       }
