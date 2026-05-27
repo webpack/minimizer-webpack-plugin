@@ -13,6 +13,7 @@ module.exports = {
   // routinely take longer than that.
   testTimeout: 60000,
   coveragePathIgnorePatterns: ["src/serialize-javascript.js"],
+  snapshotSerializers: ["<rootDir>/test/helpers/snapshotHashSerializer.js"],
   testPathIgnorePatterns: RUN_CSS_TESTS
     ? []
     : ["/test/css-minify-option\\.test\\.js$"],
