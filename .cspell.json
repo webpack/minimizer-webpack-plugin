@@ -46,7 +46,8 @@
     "lightningcss",
     "sourcefile",
     "stringifier",
-    "sourcesContent"
+    "sourcesContent",
+    "GHSA"
   ],
   "ignorePaths": [
     "CHANGELOG.md",
