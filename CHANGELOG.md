@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.6.1
+
+### Patch Changes
+
+- deduplicate extracted comments in linear time, so builds stay fast when an asset contains many distinct preserved comments (by [@alexander-akait](https://github.com/alexander-akait) in [#682](https://github.com/webpack/minimizer-webpack-plugin/pull/682))
+
 ## 5.6.0
 
 ### Minor Changes
