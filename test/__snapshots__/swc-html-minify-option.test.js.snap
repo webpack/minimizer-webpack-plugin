@@ -1,41 +1,41 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`swc html minify option should work using when the \`minify\` option is \`swcMinifyHtml\` and allows to set \`@swc/html\` options: assets 1`] = `
-Object {
+{
   "__hash0__.html": "<!doctype html><html lang=en><meta charset=utf-8><title>Hello</title><body><!-- a comment -->
     <h1>Hello,    World!</h1>
     <p>     Hello there      ",
-  "main.js": "(()=>{var t={740(t,r,e){\\"use strict\\";t.exports=e.p+\\"__hash0__.html\\"}},r={};function e(o){var n=r[o];if(void 0!==n)return n.exports;var c=r[o]={exports:{}};return t[o](c,c.exports,e),c.exports}e.m=t,e.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(t){if(\\"object\\"==typeof window)return window}}(),e.o=(t,r)=>Object.prototype.hasOwnProperty.call(t,r),(()=>{var t;e.g.importScripts&&(t=e.g.location+\\"\\");var r=e.g.document;if(!t&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(t=r.currentScript.src),!t)){var o=r.getElementsByTagName(\\"script\\");if(o.length)for(var n=o.length-1;n>-1&&(!t||!/^http(s?):/.test(t));)t=o[n--].src}if(!t)throw new Error(\\"Automatic publicPath is not supported in this browser\\");t=t.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),e.p=t})(),e.b=\\"undefined\\"!=typeof document&&document.baseURI||self.location.href,console.log(new URL(e(740),e.b))})();",
+  "main.js": "(()=>{var t={740(t,r,e){"use strict";t.exports=e.p+"__hash0__.html"}},r={};function e(o){var n=r[o];if(void 0!==n)return n.exports;var c=r[o]={exports:{}};return t[o](c,c.exports,e),c.exports}e.m=t,e.g=function(){if("object"==typeof globalThis)return globalThis;try{return this||new Function("return this")()}catch(t){if("object"==typeof window)return window}}(),e.o=(t,r)=>Object.prototype.hasOwnProperty.call(t,r),(()=>{var t;e.g.importScripts&&(t=e.g.location+"");var r=e.g.document;if(!t&&r&&(r.currentScript&&"SCRIPT"===r.currentScript.tagName.toUpperCase()&&(t=r.currentScript.src),!t)){var o=r.getElementsByTagName("script");if(o.length)for(var n=o.length-1;n>-1&&(!t||!/^http(s?):/.test(t));)t=o[n--].src}if(!t)throw new Error("Automatic publicPath is not supported in this browser");t=t.replace(/^blob:/,"").replace(/#.*$/,"").replace(/\\?.*$/,"").replace(/\\/[^\\/]+$/,"/"),e.p=t})(),e.b="undefined"!=typeof document&&document.baseURI||self.location.href,console.log(new URL(e(740),e.b))})();",
 }
 `;
 
-exports[`swc html minify option should work using when the \`minify\` option is \`swcMinifyHtml\` and allows to set \`@swc/html\` options: errors 1`] = `Array []`;
+exports[`swc html minify option should work using when the \`minify\` option is \`swcMinifyHtml\` and allows to set \`@swc/html\` options: errors 1`] = `[]`;
 
-exports[`swc html minify option should work using when the \`minify\` option is \`swcMinifyHtml\` and allows to set \`@swc/html\` options: warnings 1`] = `Array []`;
+exports[`swc html minify option should work using when the \`minify\` option is \`swcMinifyHtml\` and allows to set \`@swc/html\` options: warnings 1`] = `[]`;
 
 exports[`swc html minify option should work using when the \`minify\` option is \`swcMinifyHtml\`: assets 1`] = `
-Object {
+{
   "__hash0__.html": "<!doctype html><html lang=en><meta charset=utf-8><title>Hello</title><h1>Hello,    World!</h1>
     <p>     Hello there      ",
-  "main.js": "(()=>{var t={740(t,r,e){\\"use strict\\";t.exports=e.p+\\"__hash0__.html\\"}},r={};function e(o){var n=r[o];if(void 0!==n)return n.exports;var c=r[o]={exports:{}};return t[o](c,c.exports,e),c.exports}e.m=t,e.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(t){if(\\"object\\"==typeof window)return window}}(),e.o=(t,r)=>Object.prototype.hasOwnProperty.call(t,r),(()=>{var t;e.g.importScripts&&(t=e.g.location+\\"\\");var r=e.g.document;if(!t&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(t=r.currentScript.src),!t)){var o=r.getElementsByTagName(\\"script\\");if(o.length)for(var n=o.length-1;n>-1&&(!t||!/^http(s?):/.test(t));)t=o[n--].src}if(!t)throw new Error(\\"Automatic publicPath is not supported in this browser\\");t=t.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),e.p=t})(),e.b=\\"undefined\\"!=typeof document&&document.baseURI||self.location.href,console.log(new URL(e(740),e.b))})();",
+  "main.js": "(()=>{var t={740(t,r,e){"use strict";t.exports=e.p+"__hash0__.html"}},r={};function e(o){var n=r[o];if(void 0!==n)return n.exports;var c=r[o]={exports:{}};return t[o](c,c.exports,e),c.exports}e.m=t,e.g=function(){if("object"==typeof globalThis)return globalThis;try{return this||new Function("return this")()}catch(t){if("object"==typeof window)return window}}(),e.o=(t,r)=>Object.prototype.hasOwnProperty.call(t,r),(()=>{var t;e.g.importScripts&&(t=e.g.location+"");var r=e.g.document;if(!t&&r&&(r.currentScript&&"SCRIPT"===r.currentScript.tagName.toUpperCase()&&(t=r.currentScript.src),!t)){var o=r.getElementsByTagName("script");if(o.length)for(var n=o.length-1;n>-1&&(!t||!/^http(s?):/.test(t));)t=o[n--].src}if(!t)throw new Error("Automatic publicPath is not supported in this browser");t=t.replace(/^blob:/,"").replace(/#.*$/,"").replace(/\\?.*$/,"").replace(/\\/[^\\/]+$/,"/"),e.p=t})(),e.b="undefined"!=typeof document&&document.baseURI||self.location.href,console.log(new URL(e(740),e.b))})();",
 }
 `;
 
-exports[`swc html minify option should work using when the \`minify\` option is \`swcMinifyHtml\`: errors 1`] = `Array []`;
+exports[`swc html minify option should work using when the \`minify\` option is \`swcMinifyHtml\`: errors 1`] = `[]`;
 
-exports[`swc html minify option should work using when the \`minify\` option is \`swcMinifyHtml\`: warnings 1`] = `Array []`;
+exports[`swc html minify option should work using when the \`minify\` option is \`swcMinifyHtml\`: warnings 1`] = `[]`;
 
 exports[`swc html minify option should work using when the \`minify\` option is \`swcMinifyHtmlFragment\`: assets 1`] = `
-Object {
+{
   "__hash0__.html": "<div class=x>
   
   <p>     hello     </p>
 </div>
 ",
-  "main.js": "(()=>{var t={806(t,r,e){\\"use strict\\";t.exports=e.p+\\"__hash0__.html\\"}},r={};function e(o){var c=r[o];if(void 0!==c)return c.exports;var n=r[o]={exports:{}};return t[o](n,n.exports,e),n.exports}e.m=t,e.g=function(){if(\\"object\\"==typeof globalThis)return globalThis;try{return this||new Function(\\"return this\\")()}catch(t){if(\\"object\\"==typeof window)return window}}(),e.o=(t,r)=>Object.prototype.hasOwnProperty.call(t,r),(()=>{var t;e.g.importScripts&&(t=e.g.location+\\"\\");var r=e.g.document;if(!t&&r&&(r.currentScript&&\\"SCRIPT\\"===r.currentScript.tagName.toUpperCase()&&(t=r.currentScript.src),!t)){var o=r.getElementsByTagName(\\"script\\");if(o.length)for(var c=o.length-1;c>-1&&(!t||!/^http(s?):/.test(t));)t=o[c--].src}if(!t)throw new Error(\\"Automatic publicPath is not supported in this browser\\");t=t.replace(/^blob:/,\\"\\").replace(/#.*$/,\\"\\").replace(/\\\\?.*$/,\\"\\").replace(/\\\\/[^\\\\/]+$/,\\"/\\"),e.p=t})(),e.b=\\"undefined\\"!=typeof document&&document.baseURI||self.location.href,console.log(new URL(e(806),e.b))})();",
+  "main.js": "(()=>{var t={806(t,r,e){"use strict";t.exports=e.p+"__hash0__.html"}},r={};function e(o){var c=r[o];if(void 0!==c)return c.exports;var n=r[o]={exports:{}};return t[o](n,n.exports,e),n.exports}e.m=t,e.g=function(){if("object"==typeof globalThis)return globalThis;try{return this||new Function("return this")()}catch(t){if("object"==typeof window)return window}}(),e.o=(t,r)=>Object.prototype.hasOwnProperty.call(t,r),(()=>{var t;e.g.importScripts&&(t=e.g.location+"");var r=e.g.document;if(!t&&r&&(r.currentScript&&"SCRIPT"===r.currentScript.tagName.toUpperCase()&&(t=r.currentScript.src),!t)){var o=r.getElementsByTagName("script");if(o.length)for(var c=o.length-1;c>-1&&(!t||!/^http(s?):/.test(t));)t=o[c--].src}if(!t)throw new Error("Automatic publicPath is not supported in this browser");t=t.replace(/^blob:/,"").replace(/#.*$/,"").replace(/\\?.*$/,"").replace(/\\/[^\\/]+$/,"/"),e.p=t})(),e.b="undefined"!=typeof document&&document.baseURI||self.location.href,console.log(new URL(e(806),e.b))})();",
 }
 `;
 
-exports[`swc html minify option should work using when the \`minify\` option is \`swcMinifyHtmlFragment\`: errors 1`] = `Array []`;
+exports[`swc html minify option should work using when the \`minify\` option is \`swcMinifyHtmlFragment\`: errors 1`] = `[]`;
 
-exports[`swc html minify option should work using when the \`minify\` option is \`swcMinifyHtmlFragment\`: warnings 1`] = `Array []`;
+exports[`swc html minify option should work using when the \`minify\` option is \`swcMinifyHtmlFragment\`: warnings 1`] = `[]`;
