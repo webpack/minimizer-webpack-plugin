@@ -1,7 +1,7 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`exclude option should match snapshot for a single RegExp value: assets 1`] = `
-Object {
+{
   "entry.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
   "excluded1.js": "/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
@@ -55,12 +55,12 @@ module.exports = function Bar1() {
 }
 `;
 
-exports[`exclude option should match snapshot for a single RegExp value: errors 1`] = `Array []`;
+exports[`exclude option should match snapshot for a single RegExp value: errors 1`] = `[]`;
 
-exports[`exclude option should match snapshot for a single RegExp value: warnings 1`] = `Array []`;
+exports[`exclude option should match snapshot for a single RegExp value: warnings 1`] = `[]`;
 
 exports[`exclude option should match snapshot for a single String value: assets 1`] = `
-Object {
+{
   "entry.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
   "excluded1.js": "/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
@@ -114,12 +114,12 @@ module.exports = function Bar1() {
 }
 `;
 
-exports[`exclude option should match snapshot for a single String value: errors 1`] = `Array []`;
+exports[`exclude option should match snapshot for a single String value: errors 1`] = `[]`;
 
-exports[`exclude option should match snapshot for a single String value: warnings 1`] = `Array []`;
+exports[`exclude option should match snapshot for a single String value: warnings 1`] = `[]`;
 
 exports[`exclude option should match snapshot for multiple RegExp values: assets 1`] = `
-Object {
+{
   "entry.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
   "excluded1.js": "/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
@@ -220,12 +220,12 @@ module.exports = function Bar2() {
 }
 `;
 
-exports[`exclude option should match snapshot for multiple RegExp values: errors 1`] = `Array []`;
+exports[`exclude option should match snapshot for multiple RegExp values: errors 1`] = `[]`;
 
-exports[`exclude option should match snapshot for multiple RegExp values: warnings 1`] = `Array []`;
+exports[`exclude option should match snapshot for multiple RegExp values: warnings 1`] = `[]`;
 
 exports[`exclude option should match snapshot for multiple String values: assets 1`] = `
-Object {
+{
   "entry.js": "(()=>{var r={921(r){r.exports=function(){console.log(7)}}},o={};(function t(e){var n=o[e];if(void 0!==n)return n.exports;var s=o[e]={exports:{}};return r[e](s,s.exports,t),s.exports})(921)})();",
   "excluded1.js": "/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
@@ -326,6 +326,6 @@ module.exports = function Bar2() {
 }
 `;
 
-exports[`exclude option should match snapshot for multiple String values: errors 1`] = `Array []`;
+exports[`exclude option should match snapshot for multiple String values: errors 1`] = `[]`;
 
-exports[`exclude option should match snapshot for multiple String values: warnings 1`] = `Array []`;
+exports[`exclude option should match snapshot for multiple String values: warnings 1`] = `[]`;
