@@ -1,5 +1,15 @@
 # Changelog
 
+## 5.10.0
+
+### Minor Changes
+
+- add the `imageminGenerate` generator, which runs the `imagemin` plugins you name and renames the asset to the format they wrote (by [@alexander-akait](https://github.com/alexander-akait) in [#723](https://github.com/webpack/minimizer-webpack-plugin/pull/723))
+
+### Patch Changes
+
+- invalidate the persistent cache when `generate` or `generatorOptions` change, so a restored module no longer keeps the previous generator's bytes and name (by [@alexander-akait](https://github.com/alexander-akait) in [#722](https://github.com/webpack/minimizer-webpack-plugin/pull/722))
+
 ## 5.9.0
 
 ### Minor Changes
