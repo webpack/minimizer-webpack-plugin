@@ -24,6 +24,13 @@ function createFilenameFn() {
   };
 }
 
+function pluginWithFunctionExtractComments(options) {
+  return new MinimizerPlugin({
+    minify: MinimizerPlugin.terserMinify,
+    ...options,
+  });
+}
+
 describe("extractComments option", () => {
   let compiler;
 
@@ -113,7 +120,9 @@ describe("extractComments option", () => {
   });
 
   it('should match snapshot for a "function" value', async () => {
-    new MinimizerPlugin({ extractComments: () => true }).apply(compiler);
+    pluginWithFunctionExtractComments({ extractComments: () => true }).apply(
+      compiler,
+    );
 
     const stats = await compile(compiler);
 
@@ -139,7 +148,7 @@ describe("extractComments option", () => {
   it("should match snapshot when extracts comments to multiple files", async () => {
     expect.assertions(8);
 
-    new MinimizerPlugin({
+    pluginWithFunctionExtractComments({
       extractComments: {
         condition: true,
         filename: createFilenameFn(),
@@ -156,7 +165,7 @@ describe("extractComments option", () => {
   });
 
   it("should match snapshot when extracts comments to a single file", async () => {
-    new MinimizerPlugin({
+    pluginWithFunctionExtractComments({
       extractComments: {
         condition: true,
         filename: "extracted-comments.js",
@@ -174,7 +183,7 @@ describe("extractComments option", () => {
   });
 
   it("should match snapshot when extracts without condition", async () => {
-    new MinimizerPlugin({
+    pluginWithFunctionExtractComments({
       extractComments: {
         condition: true,
         filename: "extracted-comments.js",
@@ -211,7 +220,7 @@ describe("extractComments option", () => {
   it('should match snapshot when no condition, preserve only `/@license/i` comments and extract "some" comments', async () => {
     expect.assertions(8);
 
-    new MinimizerPlugin({
+    pluginWithFunctionExtractComments({
       terserOptions: {
         output: {
           comments: /@license/i,
@@ -242,7 +251,7 @@ describe("extractComments option", () => {
   });
 
   it("should match snapshot when extracts comments to a single file and dedupe duplicate comments", async () => {
-    new MinimizerPlugin({
+    pluginWithFunctionExtractComments({
       extractComments: {
         condition: true,
         filename: "extracted-comments.js",
@@ -296,7 +305,7 @@ describe("extractComments option", () => {
       },
     });
 
-    new MinimizerPlugin({
+    pluginWithFunctionExtractComments({
       extractComments: {
         condition: true,
         filename: "[file].LICENSE.txt?query=[query]&filebase=[base]",
@@ -329,7 +338,7 @@ describe("extractComments option", () => {
       },
     });
 
-    new MinimizerPlugin({
+    pluginWithFunctionExtractComments({
       extractComments: {
         condition: true,
         filename: createFilenameFn(),
@@ -447,7 +456,7 @@ describe("extractComments option", () => {
   });
 
   it('should match snapshot and do not preserve and extract "all" comments when the option if a function', async () => {
-    new MinimizerPlugin({
+    pluginWithFunctionExtractComments({
       extractComments: () => true,
     }).apply(compiler);
 
@@ -459,7 +468,7 @@ describe("extractComments option", () => {
   });
 
   it('should match snapshot and preserve "all" and extract "all" comments with output.comments "all"', async () => {
-    new MinimizerPlugin({
+    pluginWithFunctionExtractComments({
       extractComments: () => true,
       terserOptions: {
         output: {
@@ -642,7 +651,7 @@ describe("extractComments option", () => {
       },
     });
 
-    new MinimizerPlugin({
+    pluginWithFunctionExtractComments({
       extractComments: {
         filename: (fileData) =>
           fileData.filename === "b.js" ? "b.txt" : "shared.txt",
