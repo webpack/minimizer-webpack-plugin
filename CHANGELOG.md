@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.10.1
+
+### Patch Changes
+
+- fix(extract-comments): decode Buffer sources before merging (by [@tlaurie-cl](https://github.com/tlaurie-cl) in [#731](https://github.com/webpack/minimizer-webpack-plugin/pull/731))
+
 ## 5.10.0
 
 ### Minor Changes
