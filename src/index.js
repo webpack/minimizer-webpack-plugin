@@ -1032,12 +1032,19 @@ class TerserPlugin {
           let source = await cache.getPromise(name, eTag);
 
           if (!source) {
+            const prevValue = prevSource.source();
+            const extractedValue = extractedCommentsSource.source();
+
             source = new ConcatSource(
               [
                 ...new Set([
-                  .../** @type {string} */ (prevSource.source()).split("\n\n"),
-                  .../** @type {string} */ (
-                    extractedCommentsSource.source()
+                  ...(typeof prevValue === "string"
+                    ? prevValue
+                    : prevValue.toString("utf8")
+                  ).split("\n\n"),
+                  ...(typeof extractedValue === "string"
+                    ? extractedValue
+                    : extractedValue.toString("utf8")
                   ).split("\n\n"),
                 ]),
               ].join("\n\n"),

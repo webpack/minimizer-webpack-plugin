@@ -6088,6 +6088,65 @@ exports[`extractComments option should match snapshot when no condition, preserv
 
 exports[`extractComments option should match snapshot when no condition, preserve only \`/@license/i\` comments and extract "some" comments: warnings 1`] = `[]`;
 
+exports[`extractComments option should work with the existing licenses file, when it is a Buffer: assets 1`] = `
+{
+  "chunks/203.203.js": "/*! For license information please see ../licenses.txt */
+(self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[]).push([[203],{203(e){e.exports=Math.random()}}]);",
+  "filename/four.js": "/*! For license information please see ../licenses.txt */
+(()=>{var t={250(t){t.exports=Math.random()}};const o={};(function r(n){const s=o[n];if(void 0!==s)return s.exports;const e=o[n]={exports:{}};return t[n](e,e.exports,r),e.exports})(250)})();",
+  "filename/one.js": "/*! For license information please see ../licenses.txt */
+(()=>{var e={855(e,t,r){r.e(203).then(r.t.bind(r,203,23)),e.exports=Math.random()}};const t={};function r(o){const n=t[o];if(void 0!==n)return n.exports;const i=t[o]={exports:{}};return e[o](i,i.exports,r),i.exports}r.m=e,(()=>{const e=Object.getPrototypeOf?e=>Object.getPrototypeOf(e):e=>e.__proto__;let t;r.t=function(o,n){if(1&n&&(o=this(o)),8&n)return o;if("object"==typeof o&&o){if(4&n&&o.__esModule)return o;if(16&n&&"function"==typeof o.then)return o}const i=Object.create(null);r.r(i);const c={};t=t||[null,e({}),e([]),e(e)];for(var a=2&n&&o;("object"==typeof a||"function"==typeof a)&&!~t.indexOf(a);a=e(a))Object.getOwnPropertyNames(a).forEach(e=>c[e]=()=>o[e]);return c.default=()=>o,r.d(i,c),i}})(),r.d=(e,t)=>{if(Array.isArray(t))for(var o=0;o<t.length;){var n=t[o++],i=t[o++];r.o(e,n)?0===i&&o++:0===i?Object.defineProperty(e,n,{enumerable:!0,value:t[o++]}):Object.defineProperty(e,n,{enumerable:!0,get:i})}else for(var n in t)r.o(t,n)&&!r.o(e,n)&&Object.defineProperty(e,n,{enumerable:!0,get:t[n]})},r.f={},r.e=e=>Promise.all(Object.keys(r.f).reduce((t,o)=>(r.f[o](e,t),t),[])),r.u=e=>"chunks/"+e+"."+e+".js",r.g=function(){if("object"==typeof globalThis)return globalThis;try{return this||new Function("return this")()}catch(e){if("object"==typeof window)return window}}(),r.o=(e,t)=>Object.prototype.hasOwnProperty.call(e,t),(()=>{const e={},t="minimizer-webpack-plugin:";r.l=(o,n,i,c)=>{if(e[o])return void e[o].push(n);let a,l;if(void 0!==i){const e=document.getElementsByTagName("script");for(var s=0;s<e.length;s++){const r=e[s];if(r.getAttribute("src")==o||r.getAttribute("data-webpack")==t+i){a=r;break}}}a||(l=!0,a=document.createElement("script"),a.charset="utf-8",r.nc&&a.setAttribute("nonce",r.nc),a.setAttribute("data-webpack",t+i),a.src=o),e[o]=[n];const u=(t,r)=>{a.onerror=a.onload=null,clearTimeout(p);const n=e[o];if(delete e[o],a.parentNode?.removeChild(a),n?.forEach(e=>e(r)),t)return t(r)},p=setTimeout(u.bind(null,void 0,{type:"timeout",target:a}),12e4);a.onerror=u.bind(null,a.onerror),a.onload=u.bind(null,a.onload),l&&document.head.appendChild(a)}})(),r.r=e=>{Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(e,"__esModule",{value:!0})},(()=>{let e;r.g.importScripts&&(e=r.g.location+"");const t=r.g.document;if(!e&&t&&("SCRIPT"===t.currentScript?.tagName.toUpperCase()&&(e=t.currentScript.src),!e)){const r=t.getElementsByTagName("script");if(r.length){let t=r.length-1;for(;t>-1&&(!e||!/^http(s?):/.test(e));)e=r[t--].src}}if(!e)throw new Error("Automatic publicPath is not supported in this browser");e=e.replace(/^blob:/,"").replace(/#.*$/,"").replace(/\\?.*$/,"").replace(/\\/[^\\/]+$/,"/"),r.p=e+"../"})(),(()=>{const e={101:0};r.f.j=(t,o)=>{let n=r.o(e,t)?e[t]:void 0;if(0!==n)if(n)o.push(n[2]);else{const i=new Promise((r,o)=>n=e[t]=[r,o]);o.push(n[2]=i);const c=r.p+r.u(t),a=new Error,l=o=>{if(r.o(e,t)&&(n=e[t],0!==n&&(e[t]=void 0),n)){const e=o&&("load"===o.type?"missing":o.type),r=o&&o.target&&o.target.src;a.message="Loading chunk "+t+" failed.\\n("+e+": "+r+")",a.name="ChunkLoadError",a.type=e,a.request=r,a.event=o,n[1](a)}};r.l(c,l,"chunk-"+t,t)}};const t=(t,o)=>{let[n,i,c]=o;var a,l,s=0;if(n.some(t=>0!==e[t])){for(a in i)r.o(i,a)&&(r.m[a]=i[a]);if(c)c(r)}for(t&&t(o);s<n.length;s++)l=n[s],r.o(e,l)&&e[l]&&e[l][0](),e[l]=0},o=self.webpackChunkminimizer_webpack_plugin=self.webpackChunkminimizer_webpack_plugin||[];o.forEach(t.bind(null,0)),o.push=t.bind(null,o.push.bind(o))})();r(855)})();",
+  "filename/three.js": "/*! For license information please see ../licenses.txt */
+(()=>{var t={35(t){t.exports=Math.random()}};const o={};(function r(n){const s=o[n];if(void 0!==s)return s.exports;const e=o[n]={exports:{}};return t[n](e,e.exports,r),e.exports})(35)})();",
+  "filename/two.js": "/*! For license information please see ../licenses.txt */
+(()=>{var t={12(t){t.exports=Math.random()}};const o={};(function r(n){const s=o[n];if(void 0!==s)return s.exports;const e=o[n]={exports:{}};return t[n](e,e.exports,r),e.exports})(12)})();",
+  "licenses.txt": "// Existing Comment
+
+/*! Legal Comment */
+
+/** @license Copyright 2112 Moon. **/
+
+
+/**
+ * Duplicate comment in difference files.
+ * @license MIT
+ */
+
+
+/*! Legal Foo */
+
+/**
+ * @preserve Copyright 2009 SomeThirdParty.
+ * Here is the full license text and copyright
+ * notice for this file. Note that the notice can span several
+ * lines and is only terminated by the closing star and slash:
+ */
+
+/**
+ * Utility functions for the foo package.
+ * @license Apache-2.0
+ */
+
+// @lic
+
+/**
+ * Duplicate comment in same file.
+ * @license MIT
+ */
+
+
+/**
+ * Information.
+ * @license MIT
+ */
+",
+}
+`;
+
+exports[`extractComments option should work with the existing licenses file, when it is a Buffer: errors 1`] = `[]`;
+
+exports[`extractComments option should work with the existing licenses file, when it is a Buffer: warnings 1`] = `[]`;
+
 exports[`extractComments option should work with the existing licenses file: assets 1`] = `
 {
   "chunks/203.203.js": "/*! For license information please see ../licenses.txt */

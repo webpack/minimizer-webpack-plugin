@@ -631,6 +631,26 @@ describe("extractComments option", () => {
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
 
+  it("should work with the existing licenses file, when it is a Buffer", async () => {
+    new ExistingCommentsFile({ asBuffer: true }).apply(compiler);
+    new MinimizerPlugin({
+      extractComments: {
+        filename: "licenses.txt",
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    const licenses = readAsset("licenses.txt", compiler, stats);
+
+    expect(licenses).toContain("// Existing Comment");
+    expect(licenses).toContain("/*! Legal Comment */");
+
+    expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
   it("should keep the comments of every asset sharing a file, when they are not adjacent", async () => {
     // Assets reach the comments file in name order, so `b` sits between the two
     // that share `shared.txt`.
