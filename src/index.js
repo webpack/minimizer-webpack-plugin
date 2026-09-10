@@ -2,6 +2,11 @@ const crypto = require("crypto");
 const os = require("os");
 const path = require("path");
 
+const {
+  canMinifyByPath,
+  getImplementationModuleRef,
+  loadImplementation,
+} = require("./implementation");
 const { minify } = require("./minify");
 const {
   cleanCssMinify,
@@ -176,8 +181,19 @@ const {
  */
 
 /**
+ * Module path form of `minimizer.implementation` (like sass-loader): the worker
+ * `require`s it instead of evaluating serialized function source via `new Function`.
+ * @typedef {{ path: string, export?: string }} ImplementationModuleRef
+ */
+
+/**
  * @template T
- * @typedef {T extends EXPECTED_ANY[] ? { [P in keyof T]: BasicMinimizerImplementation<T[P]> & MinimizeFunctionHelpers } : BasicMinimizerImplementation<T> & MinimizeFunctionHelpers} MinimizerImplementation
+ * @typedef {(BasicMinimizerImplementation<T> & MinimizeFunctionHelpers) | string | ImplementationModuleRef} MinimizerImplementationValue
+ */
+
+/**
+ * @template T
+ * @typedef {T extends EXPECTED_ANY[] ? { [P in keyof T]: MinimizerImplementationValue<T[P]> } : MinimizerImplementationValue<T>} MinimizerImplementation
  */
 
 /**
@@ -188,7 +204,7 @@ const {
  * @property {RawSourceMap | undefined} inputSourceMap input source map
  * @property {ExtractCommentsOptions | undefined} extractComments extract comments option
  * @property {{ implementation: MinimizerImplementation<T>, options: MinimizerOptions<T> }} minimizer minimizer
- * @property {{ implementation: MinimizerImplementation<T>, options: MinimizerOptions<T>, claims: string[][], offers: string[][], at: number[] }=} embedded every configured minimizer, for source one language embeds in another: it carries no filename, so `minimizer` — which holds only what this asset's name matched — is not the set to dispatch it across. `claims` is the languages each minifies and `offers` the languages each can hand out, both as data and both parallel to `implementation`, since a minify function reaches a worker as source and carries none of its properties; `at` says which of them `minimizer` holds. Absent when no nested language is reachable at all
+ * @property {{ implementation: MinimizerImplementation<T>, options: MinimizerOptions<T>, claims: string[][], offers: string[][], at: number[] }=} embedded every configured minimizer, for source one language embeds in another: it carries no filename, so `minimizer` — which holds only what this asset's name matched — is not the set to dispatch it across. `claims` / `offers` travel as data parallel to `implementation` so the legacy serialize path still knows what each entry minifies and can nest (a function shipped as source loses its helpers; a module path `require` restores them, but the arrays stay so both paths share one shape). `at` says which of them `minimizer` holds. Absent when no nested language is reachable at all
  * @property {boolean=} module true when code is a EC module, otherwise false
  * @property {number | string=} ecma ecma version
  */
@@ -253,7 +269,10 @@ class TerserPlugin {
     // TODO make `minimizer` option instead `minify` and `terserOptions` in the next major release, also rename `terserMinify` to `terserMinimize`
     const {
       minify = /** @type {MinimizerImplementation<T>} */ (
-        /** @type {unknown} */ (terserMinify)
+        /** @type {unknown} */ ({
+          path: require.resolve("./utils.js"),
+          export: "terserMinify",
+        })
       ),
       minimizerOptions,
       terserOptions,
@@ -490,13 +509,9 @@ class TerserPlugin {
      */
     const matchesName = (name) => this.matchesName(compiler, name);
 
-    // Normalize the implementation list to an array so dispatch and the
-    // worker-pool capability checks below can iterate uniformly. The
-    // original shape on `this.options.minimizer.implementation` is preserved
-    // for chunk hashing.
-    const implementations = Array.isArray(this.options.minimizer.implementation)
-      ? this.options.minimizer.implementation
-      : [this.options.minimizer.implementation];
+    // One slot per configured minimizer: keep the option value for the worker
+    // (path / function) and the loaded function for filter / capabilities.
+    const minimizerSlots = this.getMinimizerSlots();
 
     /**
      * Collect the indices of minimizers whose `filter` accepts `name`.
@@ -504,21 +519,19 @@ class TerserPlugin {
      * convention used by `supportsWorkerThreads`).
      * @param {string} name asset name
      * @param {AssetInfo} info asset info
-     * @returns {number[]} indices into `implementations` that accept the asset
+     * @returns {number[]} indices into `minimizerSlots` that accept the asset
      */
     const matchingMinimizers = (name, info) => {
       const matched = [];
       const { filters } = this.options.minimizer;
 
-      for (let i = 0; i < implementations.length; i++) {
-        const impl = implementations[i];
+      for (let i = 0; i < minimizerSlots.length; i++) {
+        const { fn } = minimizerSlots[i];
         // What `minify` states about this entry answers for it; the property on
         // the function is what a minimizer says about itself, and is the
         // fallback rather than a second filter to satisfy.
         const filter =
-          filters && typeof filters[i] === "function"
-            ? filters[i]
-            : impl.filter;
+          filters && typeof filters[i] === "function" ? filters[i] : fn.filter;
 
         if (typeof filter !== "function" || filter(name, info) !== false) {
           matched.push(i);
@@ -599,14 +612,20 @@ class TerserPlugin {
     // only to the minimizers its name matched, so one that cannot run in a
     // worker — an image minimizer, whose bytes have no way across — must not
     // take the pool away from the JavaScript ones configured beside it.
-    const workerCapable = implementations.map(
-      (impl) =>
-        typeof impl.supportsWorker === "undefined" ||
-        (typeof impl.supportsWorker === "function" && impl.supportsWorker()),
+    const workerCapable = minimizerSlots.map(
+      ({ fn }) =>
+        typeof fn.supportsWorker === "undefined" ||
+        (typeof fn.supportsWorker === "function" && fn.supportsWorker()),
     );
-    const binaryCapable = implementations.map(
-      (impl) =>
-        typeof impl.supportsBinary === "function" && impl.supportsBinary(),
+    const binaryCapable = minimizerSlots.map(
+      ({ fn }) =>
+        typeof fn.supportsBinary === "function" && fn.supportsBinary(),
+    );
+    const enableWorkerThreads = minimizerSlots.every(
+      ({ fn }, i) =>
+        !workerCapable[i] ||
+        typeof fn.supportsWorkerThreads === "undefined" ||
+        fn.supportsWorkerThreads() !== false,
     );
     const needCreateWorker =
       optimizeOptions.availableNumberOfCores > 0 &&
@@ -632,12 +651,7 @@ class TerserPlugin {
             new Worker(require.resolve("./minify"), {
               numWorkers: numberOfWorkers,
               // Only what can reach the pool decides how it is run.
-              enableWorkerThreads: implementations.every(
-                (impl, i) =>
-                  !workerCapable[i] ||
-                  typeof impl.supportsWorkerThreads === "undefined" ||
-                  impl.supportsWorkerThreads() !== false,
-              ),
+              enableWorkerThreads,
             })
           );
 
@@ -666,10 +680,21 @@ class TerserPlugin {
      * @param {number[]} matched indices of the minimizers this asset is dispatched to
      * @returns {Promise<MinimizedResult>} the result
      */
-    const run = (options, matched) =>
-      getWorker && matched.every((i) => workerCapable[i])
-        ? getWorker().transform(getSerializeJavascript()(options))
-        : minify(options);
+    const run = (options, matched) => {
+      if (!(getWorker && matched.every((i) => workerCapable[i]))) {
+        return minify(options);
+      }
+
+      // Prefer `worker.minify` only when this task's implementations are all
+      // module paths — including every entry on `embedded`, not just the
+      // asset's matched subset. A mixed path + inline-function config keeps
+      // the whole asset on `transform`.
+      if (canMinifyByPath(options)) {
+        return getWorker().minify(options);
+      }
+
+      return getWorker().transform(getSerializeJavascript()(options));
+    };
 
     /** @typedef {{ extractedCommentsSource: import("webpack").sources.RawSource, commentsFilename: string }} ExtractedCommentsInfo */
     /** @type {Map<string, ExtractedCommentsInfo>} */
@@ -718,7 +743,7 @@ class TerserPlugin {
           // `module`/`ecma` without mutating the caller's object.
           const assetImplementation =
             /** @type {MinimizerImplementation<T>} */
-            (matched.map((i) => implementations[i]));
+            (matched.map((i) => minimizerSlots[i].implementation));
           const sourceOptions = this.options.minimizer.options;
           const assetMinimizerOptions =
             /** @type {MinimizerOptions<T>} */
@@ -740,7 +765,7 @@ class TerserPlugin {
               options: assetMinimizerOptions,
             },
             extractComments: this.options.extractComments,
-            embedded: this.embeddedMinimizer(matched),
+            embedded: this.embeddedFromSlots(matched, minimizerSlots),
           };
 
           if (typeof info.javascriptModule !== "undefined") {
@@ -1069,42 +1094,43 @@ class TerserPlugin {
   }
 
   /**
-   * Every configured minimizer, in order. The `minify` option takes one or an
-   * array; embedded source is dispatched across all of them either way.
+   * One slot per configured minimizer: the option value for workers (path /
+   * function) and the loaded function for helpers (`getTypes`, `filter`, …).
    * @private
-   * @returns {(BasicMinimizerImplementation<EXPECTED_ANY> & MinimizeFunctionHelpers)[]} the minimizers
+   * @returns {{ implementation: MinimizerImplementationValue<EXPECTED_ANY>, fn: BasicMinimizerImplementation<EXPECTED_ANY> & MinimizeFunctionHelpers }[]} loaded slots
    */
-  minimizers() {
+  getMinimizerSlots() {
     const { implementation } = this.options.minimizer;
+    const list = Array.isArray(implementation)
+      ? implementation
+      : [implementation];
 
-    return /** @type {(BasicMinimizerImplementation<EXPECTED_ANY> & MinimizeFunctionHelpers)[]} */ (
-      /** @type {unknown} */ (
-        Array.isArray(implementation) ? implementation : [implementation]
-      )
-    );
+    return list.map((one) => ({
+      implementation:
+        /** @type {MinimizerImplementationValue<EXPECTED_ANY>} */
+        (one),
+      fn: loadImplementation(one),
+    }));
   }
 
   /**
-   * Every configured minimizer and its options, for dispatching source one
-   * language embeds in another. The asset's own entry holds only what its
-   * filename matched, and a language's minimizer need not be among them — a
-   * `.css` asset embedding an `<svg>` reaches an SVG minifier that claims no
-   * asset at all.
+   * Build the embedded minimizer payload from already-loaded slots (path or
+   * function kept as configured; `fn` supplies claims / offers).
    * @private
    * @param {number[]} matched indices of the minimizers this input's own entry holds
+   * @param {{ implementation: unknown, fn: BasicMinimizerImplementation<EXPECTED_ANY> & MinimizeFunctionHelpers }[]} slots loaded minimizer slots
    * @returns {{ implementation: MinimizerImplementation<T>, options: MinimizerOptions<T>, claims: string[][], offers: string[][], at: number[] } | undefined} every configured minimizer, or undefined when nothing nested could be reached
    */
-  embeddedMinimizer(matched) {
-    const minimizers = this.minimizers();
-    // What each declares travels as data, not on the function: a minify function
-    // reaches a worker as its source, which carries none of its properties.
-    const claims = minimizers.map((minimizer) =>
-      typeof minimizer.getTypes === "function"
-        ? minimizer.getTypes() || []
-        : [],
+  embeddedFromSlots(matched, slots) {
+    // `claims` / `offers` are duplicated as data so the serialize worker path
+    // still knows each entry's languages (function source drops helpers). Path
+    // `implementation` values are kept as configured so the worker can `require`
+    // them.
+    const claims = slots.map(({ fn }) =>
+      typeof fn.getTypes === "function" ? fn.getTypes() || [] : [],
     );
-    const offers = minimizers.map((minimizer, i) => {
-      const { getEmbeddedTypes } = minimizer;
+    const offers = slots.map(({ fn }, i) => {
+      const { getEmbeddedTypes } = fn;
 
       return typeof getEmbeddedTypes === "function"
         ? getEmbeddedTypes(
@@ -1128,13 +1154,17 @@ class TerserPlugin {
     return {
       implementation:
         /** @type {MinimizerImplementation<T>} */
-        (/** @type {unknown} */ (minimizers)),
+        (
+          /** @type {unknown} */ (
+            slots.map(({ implementation }) => implementation)
+          )
+        ),
       options:
         /** @type {MinimizerOptions<T>} */
         (
           /** @type {unknown} */
           (
-            minimizers.map((_, i) =>
+            slots.map((_, i) =>
               getMinimizerOptionsAt(this.options.minimizer.options, i),
             )
           )
@@ -1510,14 +1540,14 @@ class TerserPlugin {
    */
   async renderEmbeddedSource(compiler, compilation, variesOn, source, info) {
     const { type, hostType, module } = info;
-    const minimizers = this.minimizers();
+    const minimizerSlots = this.getMinimizerSlots();
     const matched = [];
 
     // A minimizer that declares nothing takes no embedded source: such source
     // carries no filename to guess from, and guessing is what `getTypes`
     // replaces.
-    for (let i = 0; i < minimizers.length; i++) {
-      const { getTypes } = minimizers[i];
+    for (let i = 0; i < minimizerSlots.length; i++) {
+      const { getTypes } = minimizerSlots[i].fn;
 
       if (typeof getTypes === "function" && (getTypes() || []).includes(type)) {
         matched.push(i);
@@ -1572,7 +1602,10 @@ class TerserPlugin {
           minimizer: {
             implementation:
               /** @type {MinimizerImplementation<T>} */
-              (/** @type {unknown} */ (matched.map((i) => minimizers[i]))),
+              (
+                /** @type {unknown} */
+                (matched.map((i) => minimizerSlots[i].fn))
+              ),
             options:
               /** @type {MinimizerOptions<T>} */
               (
@@ -1584,7 +1617,7 @@ class TerserPlugin {
                 )
               ),
           },
-          embedded: this.embeddedMinimizer(matched),
+          embedded: this.embeddedFromSlots(matched, minimizerSlots),
           ecma: getEcmaVersion(
             /** @type {NonNullable<NonNullable<import("webpack").Configuration["output"]>["environment"]>} */
             (compiler.options.output.environment),
@@ -1954,18 +1987,32 @@ class TerserPlugin {
           compilation,
         );
       /**
-       * @param {BasicMinimizerImplementation<EXPECTED_ANY> & MinimizeFunctionHelpers} impl implementation
+       * @param {MinimizerImplementationValue<EXPECTED_ANY>} impl implementation
        * @returns {string} minimizer version or "0.0.0"
        */
-      const getVersion = (impl) =>
-        typeof impl.getMinimizerVersion !== "undefined"
-          ? impl.getMinimizerVersion() || "0.0.0"
+      const getVersion = (impl) => {
+        // Path refs need a load; functions already carry helpers. Preset maps
+        // and other shapes are not a single minimizer — keep the prior "0.0.0".
+        const fn =
+          typeof impl === "function"
+            ? impl
+            : getImplementationModuleRef(impl)
+              ? loadImplementation(impl)
+              : undefined;
+
+        if (!fn) {
+          return "0.0.0";
+        }
+
+        return typeof fn.getMinimizerVersion !== "undefined"
+          ? fn.getMinimizerVersion() || "0.0.0"
           : "0.0.0";
+      };
       const data = getSerializeJavascript()({
         minimizer: Array.isArray(this.options.minimizer.implementation)
           ? this.options.minimizer.implementation.map(getVersion)
           : getVersion(
-              /** @type {BasicMinimizerImplementation<EXPECTED_ANY> & MinimizeFunctionHelpers} */
+              /** @type {MinimizerImplementationValue<EXPECTED_ANY>} */
               (this.options.minimizer.implementation),
             ),
         options: this.options.minimizer.options,
@@ -2017,7 +2064,7 @@ class TerserPlugin {
           generator: Array.isArray(moduleGenerator.implementation)
             ? moduleGenerator.implementation.map(getVersion)
             : getVersion(
-                /** @type {BasicMinimizerImplementation<EXPECTED_ANY> & MinimizeFunctionHelpers} */
+                /** @type {MinimizerImplementationValue<EXPECTED_ANY>} */
                 (moduleGenerator.implementation),
               ),
           options: moduleGenerator.options,
