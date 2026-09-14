@@ -297,6 +297,8 @@ declare namespace TerserPlugin {
     InternalOptions,
     MinimizerWorker,
     Parallel,
+    GeneratorDescriptor,
+    Generate,
     BasePluginOptions,
     DefinedDefaultMinimizerAndOptions,
     InternalPluginOptions,
@@ -610,6 +612,73 @@ type MinimizerWorker<T> = JestWorker & {
   minify: (options: InternalOptions<T>) => Promise<MinimizedResult>;
 };
 type Parallel = undefined | boolean | number;
+/**
+ * How to run one generator, and — for an `asset` generator — where its result
+ * goes and what it says about itself.
+ */
+type GeneratorDescriptor = {
+  /**
+   * the generator itself
+   */
+  implementation: MinimizerImplementation<EXPECTED_ANY>;
+  /**
+   * options for it
+   */
+  options?: MinimizerOptions<EXPECTED_ANY> | undefined;
+  /**
+   * whether it rewrites a module as it builds or writes a file beside an emitted asset
+   */
+  type?: ("import" | "asset") | undefined;
+  /**
+   * name for the generated asset, as a filename template or a function of the path data
+   */
+  filename?: TemplatePath | undefined;
+  /**
+   * decides per asset whether to generate from it
+   */
+  filter?: ((name: string) => boolean) | undefined;
+  /**
+   * removes the asset generated from
+   */
+  deleteOriginalAssets?:
+    (boolean | "keep-source-map" | ((name: string) => boolean)) | undefined;
+  /**
+   * which `processAssets` stage it runs in
+   */
+  stage?: number | undefined;
+  /**
+   * assets smaller than this many bytes are left alone
+   */
+  threshold?: number | undefined;
+  /**
+   * keeps the result only at or below this share of the original's size
+   */
+  minRatio?: number | undefined;
+  /**
+   * records the result on the original as `info.related[relatedName]`
+   */
+  relatedName?: string | undefined;
+  /**
+   * what the generated asset says about itself
+   */
+  assetInfo?:
+    | (
+        | AssetInfo
+        | ((info: AssetInfo, name: string, generatedName: string) => AssetInfo)
+      )
+    | undefined;
+};
+/**
+ * Every shape `generate` takes: one generator, one written as a descriptor, or
+ * an object naming several.
+ */
+type Generate =
+  | MinimizerImplementation<EXPECTED_ANY>
+  | GeneratorDescriptor
+  | {
+      [preset: string]:
+        MinimizerImplementation<EXPECTED_ANY> | GeneratorDescriptor;
+    };
 type BasePluginOptions = {
   /**
    * test rule
@@ -640,9 +709,9 @@ type BasePluginOptions = {
    */
   label?: string | undefined;
   /**
-   * rewrites a module's own bytes as it is built, so a re-encoding can rename the asset
+   * rewrites a module's own bytes as it is built, so a re-encoding can rename the asset, or writes a file beside one already emitted
    */
-  generate?: MinimizerImplementation<EXPECTED_ANY> | undefined;
+  generate?: Generate | undefined;
   /**
    * options for `generate`
    */

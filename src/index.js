@@ -204,6 +204,29 @@ const {
  */
 
 /**
+ * How to run one generator, and — for an `asset` generator — where its result
+ * goes and what it says about itself.
+ * @typedef {object} GeneratorDescriptor
+ * @property {MinimizerImplementation<EXPECTED_ANY>} implementation the generator itself
+ * @property {MinimizerOptions<EXPECTED_ANY>=} options options for it
+ * @property {("import" | "asset")=} type whether it rewrites a module as it builds or writes a file beside an emitted asset
+ * @property {TemplatePath=} filename name for the generated asset, as a filename template or a function of the path data
+ * @property {((name: string) => boolean)=} filter decides per asset whether to generate from it
+ * @property {(boolean | "keep-source-map" | ((name: string) => boolean))=} deleteOriginalAssets removes the asset generated from
+ * @property {number=} stage which `processAssets` stage it runs in
+ * @property {number=} threshold assets smaller than this many bytes are left alone
+ * @property {number=} minRatio keeps the result only at or below this share of the original's size
+ * @property {string=} relatedName records the result on the original as `info.related[relatedName]`
+ * @property {(AssetInfo | ((info: AssetInfo, name: string, generatedName: string) => AssetInfo))=} assetInfo what the generated asset says about itself
+ */
+
+/**
+ * Every shape `generate` takes: one generator, one written as a descriptor, or
+ * an object naming several.
+ * @typedef {MinimizerImplementation<EXPECTED_ANY> | GeneratorDescriptor | { [preset: string]: MinimizerImplementation<EXPECTED_ANY> | GeneratorDescriptor }} Generate
+ */
+
+/**
  * @typedef {object} BasePluginOptions
  * @property {Rules=} test test rule
  * @property {Rules=} include include rile
@@ -212,7 +235,7 @@ const {
  * @property {Parallel=} parallel parallel option
  * @property {number=} stage which `processAssets` stage the minimizers run in, and the default for an `asset` generator that names none
  * @property {string=} label how the plugin names itself in the errors and warnings it reports
- * @property {MinimizerImplementation<EXPECTED_ANY>=} generate rewrites a module's own bytes as it is built, so a re-encoding can rename the asset
+ * @property {Generate=} generate rewrites a module's own bytes as it is built, so a re-encoding can rename the asset, or writes a file beside one already emitted
  * @property {MinimizerOptions<EXPECTED_ANY>=} generatorOptions options for `generate`
  */
 
