@@ -79,6 +79,13 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    */
   private minimizers;
   /**
+   * The options `minify` was given, as they were written. Only reachable where
+   * there is a minimizer, for the same reason `minimizers()` is.
+   * @private
+   * @returns {MinimizerOptions<T>} them
+   */
+  private declaredMinimizerOptions;
+  /**
    * Every configured minimizer and its options, for dispatching source one
    * language embeds in another. The asset's own entry holds only what its
    * filename matched, and a language's minimizer need not be among them — a
@@ -96,7 +103,7 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    * @param {string | undefined} name the preset it is written under, where it has one
    * @param {EXPECTED_ANY} entry what was written there
    * @param {EXPECTED_ANY} declared what `generatorOptions` says for it
-   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | "keep-source-map" | ((name: string) => boolean) | undefined, stage: number | undefined, threshold: number | undefined, minRatio: number | undefined, relatedName: string | undefined, assetInfo: AssetInfo | undefined }} the generator
+   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | "keep-source-map" | ((name: string) => boolean) | undefined, stage: number | undefined, threshold: number | undefined, minRatio: number | undefined, relatedName: string | undefined, assetInfo: AssetInfo | ((info: AssetInfo, name: string, generatedName: string) => AssetInfo) | undefined }} the generator
    */
   private describeGenerator;
   /**
@@ -639,18 +646,18 @@ type BasePluginOptions = {
 type DefinedDefaultMinimizerAndOptions<T> =
   T extends import("terser").MinifyOptions
     ? {
-        minify?: MinimizerImplementation<T> | undefined;
+        minify?: MinimizerImplementation<T> | false | undefined;
         minimizerOptions?: MinimizerOptions<T> | undefined;
         terserOptions?: MinimizerOptions<T> | undefined;
       }
     : {
-        minify: MinimizerImplementation<T>;
+        minify: MinimizerImplementation<T> | false;
         minimizerOptions?: MinimizerOptions<T> | undefined;
         terserOptions?: MinimizerOptions<T> | undefined;
       };
 type InternalPluginOptions<T> = BasePluginOptions & {
   stage: number | undefined;
-  minimizer: {
+  minimizer?: {
     implementation: MinimizerImplementation<T>;
     options: MinimizerOptions<T>;
     filters?: (

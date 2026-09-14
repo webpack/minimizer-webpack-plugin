@@ -217,12 +217,12 @@ const {
 
 /**
  * @template T
- * @typedef {T extends import("terser").MinifyOptions ? { minify?: MinimizerImplementation<T> | undefined, minimizerOptions?: MinimizerOptions<T> | undefined, terserOptions?: MinimizerOptions<T> | undefined } : { minify: MinimizerImplementation<T>, minimizerOptions?: MinimizerOptions<T> | undefined, terserOptions?: MinimizerOptions<T> | undefined }} DefinedDefaultMinimizerAndOptions
+ * @typedef {T extends import("terser").MinifyOptions ? { minify?: MinimizerImplementation<T> | false | undefined, minimizerOptions?: MinimizerOptions<T> | undefined, terserOptions?: MinimizerOptions<T> | undefined } : { minify: MinimizerImplementation<T> | false, minimizerOptions?: MinimizerOptions<T> | undefined, terserOptions?: MinimizerOptions<T> | undefined }} DefinedDefaultMinimizerAndOptions
  */
 
 /**
  * @template T
- * @typedef {BasePluginOptions & { stage: number | undefined, minimizer: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T>, filters?: (((name: string, info: AssetInfo) => boolean | undefined) | undefined)[] }, generator?: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T> } }} InternalPluginOptions
+ * @typedef {BasePluginOptions & { stage: number | undefined, minimizer?: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T>, filters?: (((name: string, info: AssetInfo) => boolean | undefined) | undefined)[] }, generator?: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T> } }} InternalPluginOptions
  */
 
 const VALIDATION_CONFIGURATION = {
@@ -305,9 +305,13 @@ class TerserPlugin {
       // Left undefined rather than defaulted here: the constant it defaults to
       // lives on the `compiler`, which a constructor has no access to.
       stage,
+      // `false` is a plugin that only generates: there is nothing to minify,
+      // so no `processAssets` tap and no chunk hash to salt.
       minimizer:
-        /** @type {{ implementation: MinimizerImplementation<T>, options: MinimizerOptions<T>, filters?: (((name: string, info: AssetInfo) => boolean | undefined) | undefined)[] }} */
-        (normalizeMinimizers(minify, resolvedMinimizerOptions)),
+        minify === false
+          ? undefined
+          : /** @type {{ implementation: MinimizerImplementation<T>, options: MinimizerOptions<T>, filters?: (((name: string, info: AssetInfo) => boolean | undefined) | undefined)[] }} */
+            (normalizeMinimizers(minify, resolvedMinimizerOptions)),
       // Absent unless asked for: it runs while modules build, where the plugin
       // otherwise does nothing.
       generator: generate
@@ -501,6 +505,10 @@ class TerserPlugin {
    */
   async optimize(compiler, compilation, assets, optimizeOptions) {
     const cache = compilation.getCache("TerserWebpackPlugin");
+    // Only tapped where there is one to run.
+    const configured =
+      /** @type {NonNullable<InternalPluginOptions<T>["minimizer"]>} */
+      (this.options.minimizer);
     let numberOfAssets = 0;
 
     /**
@@ -513,9 +521,9 @@ class TerserPlugin {
     // worker-pool capability checks below can iterate uniformly. The
     // original shape on `this.options.minimizer.implementation` is preserved
     // for chunk hashing.
-    const implementations = Array.isArray(this.options.minimizer.implementation)
-      ? this.options.minimizer.implementation
-      : [this.options.minimizer.implementation];
+    const implementations = Array.isArray(configured.implementation)
+      ? configured.implementation
+      : [configured.implementation];
 
     /**
      * Collect the indices of minimizers whose `filter` accepts `name`.
@@ -527,7 +535,7 @@ class TerserPlugin {
      */
     const matchingMinimizers = (name, info) => {
       const matched = [];
-      const { filters } = this.options.minimizer;
+      const { filters } = configured;
 
       for (let i = 0; i < implementations.length; i++) {
         const impl = implementations[i];
@@ -738,7 +746,7 @@ class TerserPlugin {
           const assetImplementation =
             /** @type {MinimizerImplementation<T>} */
             (matched.map((i) => implementations[i]));
-          const sourceOptions = this.options.minimizer.options;
+          const sourceOptions = configured.options;
           const assetMinimizerOptions =
             /** @type {MinimizerOptions<T>} */
             (
@@ -1094,12 +1102,29 @@ class TerserPlugin {
    * @returns {(BasicMinimizerImplementation<EXPECTED_ANY> & MinimizeFunctionHelpers)[]} the minimizers
    */
   minimizers() {
-    const { implementation } = this.options.minimizer;
+    // Only reachable where there is one: everything that calls it is tapped
+    // only when `minify` is not `false`.
+    const { implementation } =
+      /** @type {NonNullable<InternalPluginOptions<T>["minimizer"]>} */
+      (this.options.minimizer);
 
     return /** @type {(BasicMinimizerImplementation<EXPECTED_ANY> & MinimizeFunctionHelpers)[]} */ (
       /** @type {unknown} */ (
         Array.isArray(implementation) ? implementation : [implementation]
       )
+    );
+  }
+
+  /**
+   * The options `minify` was given, as they were written. Only reachable where
+   * there is a minimizer, for the same reason `minimizers()` is.
+   * @private
+   * @returns {MinimizerOptions<T>} them
+   */
+  declaredMinimizerOptions() {
+    return (
+      /** @type {NonNullable<InternalPluginOptions<T>["minimizer"]>} */
+      (this.options.minimizer).options
     );
   }
 
@@ -1127,7 +1152,7 @@ class TerserPlugin {
 
       return typeof getEmbeddedTypes === "function"
         ? getEmbeddedTypes(
-            getMinimizerOptionsAt(this.options.minimizer.options, i),
+            getMinimizerOptionsAt(this.declaredMinimizerOptions(), i),
           ) || []
         : [];
     });
@@ -1154,7 +1179,7 @@ class TerserPlugin {
           /** @type {unknown} */
           (
             minimizers.map((_, i) =>
-              getMinimizerOptionsAt(this.options.minimizer.options, i),
+              getMinimizerOptionsAt(this.declaredMinimizerOptions(), i),
             )
           )
         ),
@@ -1173,7 +1198,7 @@ class TerserPlugin {
    * @param {string | undefined} name the preset it is written under, where it has one
    * @param {EXPECTED_ANY} entry what was written there
    * @param {EXPECTED_ANY} declared what `generatorOptions` says for it
-   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | "keep-source-map" | ((name: string) => boolean) | undefined, stage: number | undefined, threshold: number | undefined, minRatio: number | undefined, relatedName: string | undefined, assetInfo: AssetInfo | undefined }} the generator
+   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | "keep-source-map" | ((name: string) => boolean) | undefined, stage: number | undefined, threshold: number | undefined, minRatio: number | undefined, relatedName: string | undefined, assetInfo: AssetInfo | ((info: AssetInfo, name: string, generatedName: string) => AssetInfo) | undefined }} the generator
    */
   describeGenerator(name, entry, declared) {
     const descriptor = isDescriptor(entry) ? entry : undefined;
@@ -1492,9 +1517,21 @@ class TerserPlugin {
     const generatedSource = new RawSource(output.code);
     // The derived name carries the original's hash, so what the original
     // promised about its own name still holds; its sourcemap does not follow.
-    const generatedInfo = { ...info, ...generator.assetInfo, generated: true };
+    const inherited = { ...info };
 
-    delete generatedInfo.related;
+    delete inherited.related;
+
+    // An object adds to what the original said about itself; a function is
+    // handed it and answers with the whole thing, which is how a result in
+    // another encoding keeps none of it.
+    const generatedInfo = {
+      .../** @type {AssetInfo} */ (
+        typeof generator.assetInfo === "function"
+          ? generator.assetInfo(inherited, name, generatedName)
+          : { ...inherited, ...generator.assetInfo }
+      ),
+      generated: true,
+    };
 
     if (compilation.getAsset(generatedName)) {
       compilation.updateAsset(generatedName, generatedSource, generatedInfo);
@@ -1689,7 +1726,7 @@ class TerserPlugin {
                 /** @type {unknown} */
                 (
                   matched.map((i) =>
-                    getMinimizerOptionsAt(this.options.minimizer.options, i),
+                    getMinimizerOptionsAt(this.declaredMinimizerOptions(), i),
                   )
                 )
               ),
@@ -1881,6 +1918,11 @@ class TerserPlugin {
     // TODO drop this check in the next major release, with the deprecated
     // `minimizerOptions` it is about.
     const { minify, minimizerOptions, terserOptions } = this.rawOptions;
+
+    if (minify === false) {
+      return;
+    }
+
     const declared =
       typeof minimizerOptions === "undefined"
         ? terserOptions
@@ -2065,51 +2107,55 @@ class TerserPlugin {
         typeof impl.getMinimizerVersion !== "undefined"
           ? impl.getMinimizerVersion() || "0.0.0"
           : "0.0.0";
-      const data = getSerializeJavascript()({
-        minimizer: Array.isArray(this.options.minimizer.implementation)
-          ? this.options.minimizer.implementation.map(getVersion)
-          : getVersion(
-              /** @type {BasicMinimizerImplementation<EXPECTED_ANY> & MinimizeFunctionHelpers} */
-              (this.options.minimizer.implementation),
-            ),
-        options: this.options.minimizer.options,
-      });
+      const { minimizer } = this.options;
 
-      hooks.chunkHash.tap(pluginName, (chunk, hash) => {
-        hash.update("TerserPlugin");
-        hash.update(data);
-      });
+      if (minimizer) {
+        const data = getSerializeJavascript()({
+          minimizer: Array.isArray(minimizer.implementation)
+            ? minimizer.implementation.map(getVersion)
+            : getVersion(
+                /** @type {BasicMinimizerImplementation<EXPECTED_ANY> & MinimizeFunctionHelpers} */
+                (minimizer.implementation),
+              ),
+          options: minimizer.options,
+        });
 
-      // Added in webpack 5.110: source one language embeds in another, which no
-      // asset carries and `processAssets` therefore never sees.
-      const embeddedHooks =
-        /** @type {EmbeddedSourceHooks} */
-        (/** @type {unknown} */ (compilation.hooks));
-
-      if (
-        embeddedHooks.renderEmbeddedSource &&
-        embeddedHooks.embeddedSourceHash
-      ) {
-        // Wrapped once so the etag it yields is computed once per build.
-        const variesOn = new compiler.webpack.sources.RawSource(data);
-
-        embeddedHooks.renderEmbeddedSource.tapPromise(
-          pluginName,
-          (source, info) =>
-            this.renderEmbeddedSource(
-              compiler,
-              compilation,
-              variesOn,
-              source,
-              info,
-            ),
-        );
-        // Module hashes are taken before code generation, so what this tap
-        // varies on cannot reach the code generation cache key on its own.
-        embeddedHooks.embeddedSourceHash.tap(pluginName, (module, hash) => {
+        hooks.chunkHash.tap(pluginName, (chunk, hash) => {
           hash.update("TerserPlugin");
           hash.update(data);
         });
+
+        // Added in webpack 5.110: source one language embeds in another, which
+        // no asset carries and `processAssets` therefore never sees.
+        const embeddedHooks =
+          /** @type {EmbeddedSourceHooks} */
+          (/** @type {unknown} */ (compilation.hooks));
+
+        if (
+          embeddedHooks.renderEmbeddedSource &&
+          embeddedHooks.embeddedSourceHash
+        ) {
+          // Wrapped once so the etag it yields is computed once per build.
+          const variesOn = new compiler.webpack.sources.RawSource(data);
+
+          embeddedHooks.renderEmbeddedSource.tapPromise(
+            pluginName,
+            (source, info) =>
+              this.renderEmbeddedSource(
+                compiler,
+                compilation,
+                variesOn,
+                source,
+                info,
+              ),
+          );
+          // Module hashes are taken before code generation, so what this tap
+          // varies on cannot reach the code generation cache key on its own.
+          embeddedHooks.embeddedSourceHash.tap(pluginName, (module, hash) => {
+            hash.update("TerserPlugin");
+            hash.update(data);
+          });
+        }
       }
 
       const moduleGenerator = this.hasModuleGenerator()
@@ -2156,13 +2202,15 @@ class TerserPlugin {
 
       const stage = this.minimizeStage(compiler);
 
-      compilation.hooks.processAssets.tapPromise(
-        { name: pluginName, stage, additionalAssets: true },
-        (assets) =>
-          this.optimize(compiler, compilation, assets, {
-            availableNumberOfCores,
-          }),
-      );
+      if (minimizer) {
+        compilation.hooks.processAssets.tapPromise(
+          { name: pluginName, stage, additionalAssets: true },
+          (assets) =>
+            this.optimize(compiler, compilation, assets, {
+              availableNumberOfCores,
+            }),
+        );
+      }
 
       // One tap per stage the generators asked for: a file written beside a
       // minified asset and one written beside a compressed asset are the same

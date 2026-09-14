@@ -191,9 +191,12 @@
       "type": "number"
     },
     "minify": {
-      "description": "Allows you to override default minify function. Written as an object it states how to run one minimizer, options included.",
+      "description": "Allows you to override default minify function. Written as an object it states how to run one minimizer, options included. `false` minifies nothing, for a plugin that only generates.",
       "link": "https://github.com/webpack/minimizer-webpack-plugin#number",
       "anyOf": [
+        {
+          "enum": [false]
+        },
         {
           "instanceof": "Function"
         },
@@ -322,9 +325,16 @@
               "minLength": 1
             },
             "assetInfo": {
-              "description": "Extra `AssetInfo` keys the generated asset carries, e.g. `{ \"compressed\": true }`. `asset` generators only.",
-              "type": "object",
-              "additionalProperties": true
+              "description": "What the generated asset says about itself. An object adds to what the original said, e.g. `{ \"compressed\": true }`; a function is handed that and answers with the whole thing. `asset` generators only.",
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                {
+                  "instanceof": "Function"
+                }
+              ]
             }
           },
           "required": ["implementation"]
@@ -402,9 +412,16 @@
                     "minLength": 1
                   },
                   "assetInfo": {
-                    "description": "Extra `AssetInfo` keys the generated asset carries, e.g. `{ \"compressed\": true }`. `asset` generators only.",
-                    "type": "object",
-                    "additionalProperties": true
+                    "description": "What the generated asset says about itself. An object adds to what the original said, e.g. `{ \"compressed\": true }`; a function is handed that and answers with the whole thing. `asset` generators only.",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      {
+                        "instanceof": "Function"
+                      }
+                    ]
                   }
                 },
                 "required": ["implementation"]

@@ -422,6 +422,58 @@ describe('"zlibCompress" generator', () => {
     });
   });
 
+  it("should generate without minifying anything when `minify` is false", async () => {
+    const seen = [];
+
+    new MinimizerPlugin({
+      minify: false,
+      generate: {
+        implementation: MinimizerPlugin.zlibCompress,
+        type: "asset",
+        filename: "[path][base].gz",
+        stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
+      },
+    }).apply(compiler);
+    compiler.hooks.compilation.tap("SeenInfo", (compilation) => {
+      compilation.hooks.afterProcessAssets.tap("SeenInfo", () => {
+        seen.push(compilation.getAsset("one.js").info);
+      });
+    });
+
+    const stats = await compile(compiler);
+
+    expect(Object.keys(stats.compilation.assets)).toEqual([
+      "one.js",
+      "one.js.gz",
+    ]);
+    expect(seen[0].minimized).toBeUndefined();
+    expect(getErrors(stats)).toEqual([]);
+    expect(getWarnings(stats)).toEqual([]);
+  });
+
+  it("should let an `assetInfo` function answer for the whole info", async () => {
+    compressionPlugin({
+      assetInfo: (info, name, generatedName) => ({
+        compressed: true,
+        from: `${name} -> ${generatedName}`,
+        // Nothing the original said is carried unless it is asked for.
+        immutable: Boolean(info.immutable),
+      }),
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(stats.compilation.getAsset("one.js.gz").info).toEqual({
+      compressed: true,
+      from: "one.js -> one.js.gz",
+      immutable: false,
+      generated: true,
+      size: expect.any(Number),
+    });
+    expect(getErrors(stats)).toEqual([]);
+    expect(getWarnings(stats)).toEqual([]);
+  });
+
   it("should report an algorithm `zlib` does not have", async () => {
     compressionPlugin({ options: { algorithm: "nope" } }).apply(compiler);
 

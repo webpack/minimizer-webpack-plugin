@@ -358,7 +358,7 @@ interface minimizer {
   options?: Record<string, any>;
 }
 
-type minify = minifyFn | (minifyFn | minimizer)[] | minimizer;
+type minify = false | minifyFn | (minifyFn | minimizer)[] | minimizer;
 ```
 
 Default: `MinimizerPlugin.terserMinify`
@@ -366,6 +366,11 @@ Default: `MinimizerPlugin.terserMinify`
 Which minimizer runs, and the options it runs with. By default the plugin uses
 [terser](https://github.com/terser/terser); overriding it is also how you test
 an unpublished version or a fork.
+
+`false` minifies nothing, for a plugin whose whole job is
+[`generate`](#generate) — compressing what is emitted, say. Without it a
+generator-only plugin would still run terser over every `.js` asset `test`
+matched.
 
 > **Warning**
 >
@@ -701,7 +706,13 @@ interface generator {
   threshold?: number;
   minRatio?: number;
   relatedName?: string;
-  assetInfo?: Record<string, any>;
+  assetInfo?:
+    | Record<string, any>
+    | ((
+        info: Record<string, any>,
+        name: string,
+        generatedName: string,
+      ) => Record<string, any>);
 }
 
 type generate =
@@ -906,8 +917,10 @@ compression:
 - **`relatedName`** — records the result on the original as
   `info.related[relatedName]`, which is how a dev server finds the compressed
   form of an asset, and how an asset that already carries one is declined.
-- **`assetInfo`** — extra [`AssetInfo`](https://webpack.js.org/api/stats/)
-  keys the generated asset carries.
+- **`assetInfo`** — what the generated asset says about itself. An object adds
+  to what the original said; a function is handed that, plus both names, and
+  answers with the whole thing — which is how a result in another encoding
+  keeps none of it. `generated: true` is set either way.
 
 `zlibCompress` ships with the plugin and is written against them. It takes
 `algorithm` — a `zlib` function's name, or one of your own taking

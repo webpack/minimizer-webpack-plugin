@@ -350,6 +350,16 @@ describe("validation", () => {
     }).not.toThrow();
 
     expect(() => {
+      createCompiler({ minify: false });
+    }).not.toThrow();
+
+    // `minimizerOptions` names options for a minimizer there is none of, which
+    // the cross-field check has nothing to say about.
+    expect(() => {
+      createCompiler({ minify: false, minimizerOptions: {} });
+    }).not.toThrow();
+
+    expect(() => {
       createCompiler({ stage: "transfer" });
     }).toThrowErrorMatchingSnapshot();
 
