@@ -218,7 +218,7 @@ const {
 
 /**
  * @template T
- * @typedef {T extends import("terser").MinifyOptions ? { minify?: MinimizerImplementation<T> | undefined, minimizerOptions?: MinimizerOptions<T> | undefined, terserOptions?: MinimizerOptions<T> | undefined } : { minify: MinimizerImplementation<T>, minimizerOptions?: MinimizerOptions<T> | undefined, terserOptions?: MinimizerOptions<T> | undefined }} DefinedDefaultMinimizerAndOptions
+ * @typedef {T extends import("terser").MinifyOptions ? { minify?: MinimizerImplementation<T> | false | undefined, minimizerOptions?: MinimizerOptions<T> | undefined, terserOptions?: MinimizerOptions<T> | undefined } : { minify: MinimizerImplementation<T> | false, minimizerOptions?: MinimizerOptions<T> | undefined, terserOptions?: MinimizerOptions<T> | undefined }} DefinedDefaultMinimizerAndOptions
  */
 
 /**
@@ -336,7 +336,7 @@ class MinimizerPlugin {
       ),
       minimizerOptions,
       terserOptions,
-      test = /\.[cm]?js(\?.*)?$/i,
+      test: declaredTest,
       extractComments = true,
       parallel = true,
       include,
@@ -344,6 +344,19 @@ class MinimizerPlugin {
       generate,
       generatorOptions,
     } = this.rawOptions;
+
+    // `false` is no minimizer rather than a missing one, and an empty list is
+    // how the rest of this file reads that: every pass over them does nothing.
+    const minimizers = minify === false ? [] : minify;
+    // The JavaScript default belongs to minifying, not to the plugin: an
+    // instance that only generates reads whatever its generator takes, and a
+    // default naming `.js` would hide every image from it.
+    const test =
+      typeof declaredTest !== "undefined"
+        ? declaredTest
+        : minify === false
+          ? undefined
+          : /\.[cm]?js(\?.*)?$/i;
 
     // `terserOptions` is a deprecated alias of `minimizerOptions`; prefer the
     // new name when both are provided.
@@ -367,7 +380,7 @@ class MinimizerPlugin {
       exclude,
       minimizer:
         /** @type {{ implementation: MinimizerImplementation<T>, options: MinimizerOptions<T>, filters?: (((name: string, info: AssetInfo) => boolean | undefined) | undefined)[] }} */
-        (normalizeMinimizers(minify, resolvedMinimizerOptions)),
+        (normalizeMinimizers(minimizers, resolvedMinimizerOptions)),
       // Absent unless asked for: it runs while modules build, where the plugin
       // otherwise does nothing.
       generator: generate
@@ -1288,7 +1301,7 @@ class MinimizerPlugin {
    * @param {string | undefined} name the preset it is written under, where it has one
    * @param {EXPECTED_ANY} entry what was written there
    * @param {EXPECTED_ANY} declared what `generatorOptions` says for it
-   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | undefined }} the generator
+   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | undefined, threshold: number | undefined, minRatio: number | undefined, relatedName: string | false | undefined }} the generator
    */
   describeGenerator(name, entry, declared) {
     const descriptor = isDescriptor(entry) ? entry : undefined;
@@ -1306,6 +1319,9 @@ class MinimizerPlugin {
       deleteOriginalAssets: descriptor
         ? descriptor.deleteOriginalAssets
         : undefined,
+      threshold: descriptor ? descriptor.threshold : undefined,
+      minRatio: descriptor ? descriptor.minRatio : undefined,
+      relatedName: descriptor ? descriptor.relatedName : undefined,
     };
   }
 
@@ -1501,6 +1517,19 @@ class MinimizerPlugin {
     // `buffer()` rather than `source()`, which answers a source holding text
     // and bytes at once with a string: every byte over 0x7f is lost in that.
     const input = source.buffer();
+    const says = /** @type {Record<string, EXPECTED_ANY>} */ (info);
+
+    // Too small to be worth a second file, and one already recorded under this
+    // generator's key has been through it.
+    if (
+      input.length < (generator.threshold || 0) ||
+      (generator.relatedName &&
+        says.related &&
+        says.related[generator.relatedName])
+    ) {
+      return;
+    }
+
     // The generator is in the item's name rather than its etag: two presets
     // reading the same asset must not answer for one another.
     const cacheItem = cache.getItemCache(
@@ -1610,8 +1639,16 @@ class MinimizerPlugin {
       return;
     }
     const generatedSource = output.source;
-    // The derived name carries the original's hash, so what the original
-    // promised about its own name still holds; its sourcemap does not follow.
+
+    // Not enough smaller to be worth serving: a second file that saves nothing
+    // still costs a request and a place in the cache.
+    if (
+      typeof generator.minRatio === "number" &&
+      generatedSource.size() / input.length > generator.minRatio
+    ) {
+      return;
+    }
+
     const generatedInfo = { ...info };
 
     // The name this generator works under, which is `generated` where it says
@@ -1622,6 +1659,18 @@ class MinimizerPlugin {
 
     delete generatedInfo.related;
 
+    // Only where the name it was given still derives from the original's, which
+    // is what carried the hash the original's immutability rests on.
+    if (
+      info.immutable &&
+      !(
+        typeof generator.filename === "string" &&
+        /(\[name]|\[base]|\[file])/.test(generator.filename)
+      )
+    ) {
+      delete generatedInfo.immutable;
+    }
+
     if (compilation.getAsset(generatedName)) {
       compilation.updateAsset(generatedName, generatedSource, generatedInfo);
 
@@ -1629,6 +1678,14 @@ class MinimizerPlugin {
     }
 
     compilation.emitAsset(generatedName, generatedSource, generatedInfo);
+
+    // Recorded on the asset it was read from, which is how a server asked for
+    // that one finds this one.
+    if (generator.relatedName) {
+      compilation.updateAsset(name, source, {
+        related: { [generator.relatedName]: generatedName },
+      });
+    }
 
     if (generator.deleteOriginalAssets && compilation.getAsset(name)) {
       compilation.deleteAsset(name);
@@ -1643,9 +1700,10 @@ class MinimizerPlugin {
    * @param {Compiler} compiler compiler
    * @param {Compilation} compilation compilation
    * @param {ReturnType<MinimizerPlugin["assetGenerators"]>} generators the generators running at this stage
+   * @param {Record<string, import("webpack").sources.Source>} assets the assets this pass was handed
    * @returns {Promise<void>}
    */
-  async generateAssets(compiler, compilation, generators) {
+  async generateAssets(compiler, compilation, generators, assets) {
     const cache = compilation.getCache("TerserWebpackPlugin|generateAssets");
     const scheduled = [];
     // Every name this plugin's generators work under, so none of them reads a
@@ -1661,7 +1719,7 @@ class MinimizerPlugin {
       }
     }
 
-    for (const name of Object.keys(compilation.assets)) {
+    for (const name of Object.keys(assets)) {
       const asset = compilation.getAsset(name);
 
       if (!asset || !this.matchesName(compiler, name)) {
@@ -2092,6 +2150,16 @@ class MinimizerPlugin {
         if (typeof one.deleteOriginalAssets !== "undefined") {
           misplaced.push("deleteOriginalAssets");
         }
+
+        for (const field of ["threshold", "minRatio", "relatedName"]) {
+          if (
+            typeof (
+              /** @type {Record<string, EXPECTED_ANY>} */ (one)[field]
+            ) !== "undefined"
+          ) {
+            misplaced.push(field);
+          }
+        }
       }
 
       if (misplaced.length > 0) {
@@ -2333,8 +2401,9 @@ class MinimizerPlugin {
 
       for (const [at, generators] of generatorsByStage) {
         compilation.hooks.processAssets.tapPromise(
-          { name: pluginName, stage: at },
-          () => this.generateAssets(compiler, compilation, generators),
+          { name: pluginName, stage: at, additionalAssets: true },
+          (assets) =>
+            this.generateAssets(compiler, compilation, generators, assets),
         );
       }
 

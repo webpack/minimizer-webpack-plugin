@@ -190,6 +190,10 @@
       "link": "https://github.com/webpack/minimizer-webpack-plugin#number",
       "anyOf": [
         {
+          "description": "Nothing minifies. For a plugin instance that only runs a `generate`.",
+          "enum": [false]
+        },
+        {
           "instanceof": "Function"
         },
         {
@@ -288,6 +292,28 @@
             "deleteOriginalAssets": {
               "description": "Removes the asset generated from. `asset` generators only.",
               "type": "boolean"
+            },
+            "threshold": {
+              "description": "Generate only from assets larger than this, in bytes. `asset` generators only.",
+              "type": "number",
+              "minimum": 0
+            },
+            "minRatio": {
+              "description": "Keep the generated asset only when it is this much smaller than the one it was read from, as `generated size / original size`. `asset` generators only.",
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "relatedName": {
+              "description": "The key the generated asset is recorded under in the original's `related` info, which is how a server finds it. `false` records nothing. `asset` generators only.",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "enum": [false]
+                }
+              ]
             }
           },
           "required": ["implementation"]
@@ -336,6 +362,28 @@
                   "deleteOriginalAssets": {
                     "description": "Removes the asset generated from. `asset` generators only.",
                     "type": "boolean"
+                  },
+                  "threshold": {
+                    "description": "Generate only from assets larger than this, in bytes. `asset` generators only.",
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "minRatio": {
+                    "description": "Keep the generated asset only when it is this much smaller than the one it was read from, as `generated size / original size`. `asset` generators only.",
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "relatedName": {
+                    "description": "The key the generated asset is recorded under in the original's `related` info, which is how a server finds it. `false` records nothing. `asset` generators only.",
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "enum": [false]
+                      }
+                    ]
                   }
                 },
                 "required": ["implementation"]
