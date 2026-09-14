@@ -347,6 +347,33 @@ describe("a minimizer that asks for its own stage", () => {
     expect(getErrors(stats)).toEqual([]);
   });
 
+  it("should take the latest stage a generator's own chain asks for", async () => {
+    const order = [];
+
+    new RecordStage(
+      order,
+      "hash",
+      Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_HASH,
+    ).apply(compiler);
+    new MinimizerPlugin({
+      parallel: false,
+      minify: (input) => ({ code: Object.values(input)[0] }),
+      generate: {
+        // One generator written as a chain: it runs at one moment, so the
+        // latest stage any link asks for is the one they can all run in.
+        implementation: [asking(order, "plain"), lateGenerator(order, "late")],
+        type: "asset",
+        filename: "[path][base].copy",
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(order).toEqual(["hash", "plain", "late"]);
+    expect(Object.keys(stats.compilation.assets)).toContain("one.js.copy");
+    expect(getErrors(stats)).toEqual([]);
+  });
+
   it("should put `compress` after the minimizers on its own", async () => {
     const order = [];
 
