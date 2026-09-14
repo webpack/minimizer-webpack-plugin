@@ -302,6 +302,22 @@ const saysAlready = (says, written, flags) => {
   return true;
 };
 
+/**
+ * The bytes a source holds. `source()` answers a source that mixes text and
+ * bytes with a string, and every byte over 0x7f is lost re-encoding that.
+ * @param {import("webpack").sources.Source} source the source to read
+ * @returns {Buffer} its bytes
+ */
+const readSourceBytes = (source) => {
+  if (typeof source.buffer === "function") {
+    return source.buffer();
+  }
+
+  const code = source.source();
+
+  return Buffer.isBuffer(code) ? code : Buffer.from(code);
+};
+
 const VALIDATION_CONFIGURATION = {
   name: "Minimizer Plugin",
   baseDataPath: "options",
@@ -1498,8 +1514,7 @@ class MinimizerPlugin {
   async generateAsset(compiler, compilation, cache, asset, generator) {
     const { RawSource } = compiler.webpack.sources;
     const { name, info, source } = asset;
-    const code = source.source();
-    const input = Buffer.isBuffer(code) ? code : Buffer.from(code);
+    const input = readSourceBytes(source);
     // The generator is in the item's name rather than its etag: two presets
     // reading the same asset must not answer for one another.
     const cacheItem = cache.getItemCache(
@@ -1511,7 +1526,7 @@ class MinimizerPlugin {
       cache.getLazyHashedEtag(source),
     );
     let output =
-      /** @type {{ code: Buffer, filename?: string, width?: number, height?: number, errors?: (Error | string)[], warnings?: (Error | string)[] } | undefined} */
+      /** @type {{ source: import("webpack").sources.Source, filename?: string, width?: number, height?: number, errors?: (Error | string)[], warnings?: (Error | string)[] } | undefined} */
       (await cacheItem.getPromise());
 
     if (!output) {
@@ -1544,13 +1559,18 @@ class MinimizerPlugin {
         return;
       }
 
+      const code =
+        typeof generated.code === "undefined"
+          ? input
+          : Buffer.isBuffer(generated.code)
+            ? generated.code
+            : Buffer.from(generated.code);
+
       output = {
-        code:
-          typeof generated.code === "undefined"
-            ? input
-            : Buffer.isBuffer(generated.code)
-              ? generated.code
-              : Buffer.from(generated.code),
+        // The source, not its bytes: webpack re-emits a file whose source it
+        // has not seen before, so building a fresh one per rebuild writes an
+        // identical file over the old one every time.
+        source: new RawSource(code),
         filename: generated.filename,
         width: generated.width,
         height: generated.height,
@@ -1568,12 +1588,18 @@ class MinimizerPlugin {
       await cacheItem.storePromise(output);
     }
 
-    for (const error of /** @type {Error[]} */ (output.errors || [])) {
-      compilation.errors.push(error);
-    }
-
     for (const warning of /** @type {Error[]} */ (output.warnings || [])) {
       compilation.warnings.push(warning);
+    }
+
+    // A generator that failed hands back whatever it had when it gave up, so
+    // writing it would put a wrong file on disk under a right-looking name.
+    if (output.errors && output.errors.length > 0) {
+      for (const error of /** @type {Error[]} */ (output.errors)) {
+        compilation.errors.push(error);
+      }
+
+      return;
     }
 
     const generatedName = generator.filename
@@ -1597,7 +1623,7 @@ class MinimizerPlugin {
 
       return;
     }
-    const generatedSource = new RawSource(output.code);
+    const generatedSource = output.source;
     // The derived name carries the original's hash, so what the original
     // promised about its own name still holds; its sourcemap does not follow.
     const generatedInfo = { ...info };

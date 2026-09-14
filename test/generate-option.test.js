@@ -983,7 +983,9 @@ describe("generate assets", () => {
     expect(getErrors(stats)[0]).toMatch(/could not read the colour profile/);
     expect(getWarnings(stats)).toHaveLength(1);
     expect(getWarnings(stats)[0]).toMatch(/fell back to the default quality/);
-    expect(assets).toContain("image.webp");
+    // Both reached the build, and the error still decides: a warning alongside
+    // one does not make the result it gave up on worth writing.
+    expect(assets).not.toContain("image.webp");
   });
 
   it("should update an asset the generated name already names", async () => {
@@ -1071,6 +1073,39 @@ describe("generate assets", () => {
     // emitted, so the module keeps its own name and the new file sits beside it.
     expect(assets).toContain("image.jpg?as=webp");
     expect(assets).toContain("image.webp?as=webp");
+  });
+
+  it("should write no file when the generator reported an error", async () => {
+    const webp = encoderNamed("WEBP", "webp");
+
+    webp.reports = { errors: ["cannot encode this"] };
+
+    const { stats, assets } = await build({
+      generate: { webp: { implementation: webp, type: "asset" } },
+    });
+
+    // The bytes it handed back are whatever it had when it gave up, so the
+    // file would be wrong: the error is the whole result.
+    expect(getErrors(stats)).toHaveLength(1);
+    expect(getErrors(stats)[0]).toMatch(/cannot encode this/);
+    expect(assets).not.toContain("image.webp");
+    expect(assets).toContain("image.jpg");
+  });
+
+  it("should still write a file when the generator only warned", async () => {
+    const webp = encoderNamed("WEBP", "webp");
+
+    webp.reports = { warnings: ["lossy at this quality"] };
+
+    const { stats, assets } = await build({
+      generate: { webp: { implementation: webp, type: "asset" } },
+    });
+
+    // A warning is something to say about a result, not a refusal to give one.
+    expect(getErrors(stats)).toEqual([]);
+    expect(getWarnings(stats)).toHaveLength(1);
+    expect(getWarnings(stats)[0]).toMatch(/lossy at this quality/);
+    expect(assets).toContain("image.webp");
   });
 });
 
@@ -1361,6 +1396,93 @@ describe("generate option in watch mode", () => {
   });
 });
 
+describe("asset generator in watch mode", () => {
+  let context;
+  let watcher;
+
+  beforeEach(() => {
+    toWebp.calls = 0;
+    context = fs.realpathSync(
+      fs.mkdtempSync(path.join(os.tmpdir(), "minimizer-asset-watch-")),
+    );
+
+    fs.writeFileSync(
+      path.join(context, "index.js"),
+      'import jpg from "./image.jpg";\n\n// eslint-disable-next-line no-console\nconsole.log(jpg);\n',
+    );
+    fs.writeFileSync(path.join(context, "image.jpg"), Buffer.from("first"));
+  });
+
+  afterEach(async () => {
+    if (watcher) {
+      await watcher.close();
+      watcher = undefined;
+    }
+  });
+
+  it("should not write the generated file again when nothing it reads changed", async () => {
+    /**
+     * @param {{ [file: string]: string | Buffer }} input input
+     * @returns {{ code: Buffer, filename: string }} the re-encoded result
+     */
+    const webp = (input) => {
+      const [[name, code]] = Object.entries(input);
+
+      webp.calls += 1;
+
+      return {
+        code: Buffer.concat([Buffer.from("WEBP:"), Buffer.from(code)]),
+        filename: replaceExtension(name, "webp"),
+      };
+    };
+
+    webp.supportsBinary = () => true;
+    webp.supportsWorker = () => false;
+    webp.calls = 0;
+    const compiler = getCompiler({
+      context,
+      entry: path.join(context, "index.js"),
+      cache: { type: "memory" },
+      module: {
+        rules: [
+          {
+            test: /\.jpe?g$/i,
+            type: "asset/resource",
+            generator: { filename: "[name][ext]" },
+          },
+        ],
+      },
+    });
+
+    new MinimizerPlugin({
+      test: /\.jpe?g$/i,
+      generate: { implementation: webp, type: "asset" },
+    }).apply(compiler);
+
+    watcher = new Watcher(compiler);
+
+    const first = await watcher.next();
+
+    expect(getErrors(first)).toEqual([]);
+    expect([...first.compilation.emittedAssets]).toContain("image.webp");
+
+    fs.writeFileSync(
+      path.join(context, "index.js"),
+      'import jpg from "./image.jpg";\n\n// eslint-disable-next-line no-console\nconsole.log(jpg, "changed");\n',
+    );
+
+    const second = await watcher.next();
+
+    expect(getErrors(second)).toEqual([]);
+    // The image did not change, so the cache answers and the generator does
+    // not run again. What it answers with has to be the source it stored, or
+    // webpack sees a new one and writes an identical file over the old.
+    expect(webp.calls).toBe(1);
+    expect(Object.keys(second.compilation.assets)).toContain("image.webp");
+    expect([...second.compilation.emittedAssets]).not.toContain("image.webp");
+  });
+});
+
 describe("generate option with the filesystem cache", () => {
   let context;
   let cacheDirectory;
@@ -1605,5 +1727,130 @@ describe("replaceExtension", () => {
     ["dir.x/readme", "png", "dir.x/readme.png"],
   ])("should rewrite %s to .%s", (name, extension, expected) => {
     expect(replaceExtension(name, extension)).toBe(expected);
+  });
+});
+
+describe("generate assets, byte for byte", () => {
+  const PREFIX = "/* prepended */";
+
+  /**
+   * Puts an asset behind a source that holds text and bytes at once, which is
+   * what any plugin prepending to a file leaves behind. Such a source answers
+   * `source()` with a string, and bytes over 0x7f do not survive that.
+   */
+  class PrependText {
+    /**
+     * @param {import("webpack").Compiler} compiler compiler
+     * @returns {void}
+     */
+    apply(compiler) {
+      const { ConcatSource, RawSource } = compiler.webpack.sources;
+
+      compiler.hooks.compilation.tap("PrependText", (compilation) => {
+        compilation.hooks.processAssets.tap(
+          {
+            name: "PrependText",
+            stage: compilation.constructor.PROCESS_ASSETS_STAGE_ADDITIONS,
+          },
+          (assets) => {
+            for (const name of Object.keys(assets)) {
+              if (!/\.png$/i.test(name)) {
+                continue;
+              }
+
+              compilation.updateAsset(
+                name,
+                (source) => new ConcatSource(new RawSource(PREFIX), source),
+              );
+            }
+          },
+        );
+      });
+    }
+  }
+
+  /**
+   * A generator that hands back exactly the bytes it was given, so anything
+   * the test sees moving is the plugin's doing rather than the generator's.
+   * @returns {EXPECTED_ANY} the generator
+   */
+  const passthrough = () => {
+    /**
+     * @param {{ [file: string]: string | Buffer }} input input
+     * @returns {{ code: Buffer }} the same bytes
+     */
+    const copy = (input) => {
+      const [[, code]] = Object.entries(input);
+
+      copy.saw = Buffer.isBuffer(code) ? code : Buffer.from(code);
+
+      return { code: copy.saw };
+    };
+
+    copy.supportsBinary = () => true;
+    copy.supportsWorker = () => false;
+    copy.saw = undefined;
+
+    return copy;
+  };
+
+  /**
+   * @param {EXPECTED_ANY} copy the generator to run
+   * @returns {Promise<EXPECTED_ANY>} what the build produced
+   */
+  const build = async (copy) => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/images.js"),
+      module: { rules: IMAGE_RULES },
+    });
+
+    new PrependText().apply(compiler);
+    new MinimizerPlugin({
+      test: /\.png$/i,
+      generate: {
+        implementation: copy,
+        type: "asset",
+        filename: "[path][name].copy[ext]",
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    return { compiler, stats };
+  };
+
+  const expected = () =>
+    Buffer.concat([
+      Buffer.from(PREFIX),
+      fs.readFileSync(path.resolve(__dirname, "./fixtures/image.png")),
+    ]);
+
+  it("should hand a generator an image's real bytes", async () => {
+    const copy = passthrough();
+    const { stats } = await build(copy);
+    const want = expected();
+
+    // Read as text, every byte over 0x7f comes back as U+FFFD and the file
+    // grows: the bytes have to reach the generator as bytes.
+    expect(copy.saw).toBeDefined();
+    expect(copy.saw).toHaveLength(want.length);
+    expect(copy.saw.equals(want)).toBe(true);
+    expect(getErrors(stats)).toEqual([]);
+  });
+
+  it("should write the generated image out unchanged", async () => {
+    const copy = passthrough();
+    const { compiler, stats } = await build(copy);
+    const written = Object.keys(stats.compilation.assets).find((name) =>
+      name.endsWith(".copy.png"),
+    );
+
+    expect(written).toBeDefined();
+    expect(
+      compiler.outputFileSystem
+        .readFileSync(path.join(stats.compilation.outputOptions.path, written))
+        .equals(expected()),
+    ).toBe(true);
+    expect(getErrors(stats)).toEqual([]);
   });
 });
