@@ -175,6 +175,7 @@ const {
  * @property {() => string[] | undefined=} getTypes the languages this minimizer minifies, e.g. `["css"]`. Source that carries no filename — what a module embeds in another language's output — is dispatched by this rather than by `test` / `filter`, and a minimizer that declares nothing is never handed any
  * @property {(minimizerOptions?: EXPECTED_OBJECT) => string[] | undefined=} getEmbeddedTypes the languages this minimizer can hand out from inside what it minifies, through the `renderEmbeddedSource` option. Empty (or absent) means it nests nothing a caller can reach, and the option is not passed
  * @property {(compilation: typeof import("webpack").Compilation) => number | undefined=} getStage which `processAssets` stage this minimizer has to run in, named off the `Compilation` it is handed — compressing reads the bytes a user downloads, so it asks for `PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER`. Each runs where it asks, chaining through the asset a later pass reads back, and one asking for nothing runs where minifying belongs — after the bundle is rendered and before its hashes are taken
+ * @property {(info: AssetInfo) => AssetInfo | undefined=} getAssetInfo what the asset it wrote says about itself, merged into that asset's info. `compress` marks it `compressed`, another encoding of the bytes being no smaller a version of them, and one saying nothing wrote a minified asset and is recorded `minimized`. It is also what is not run again over an asset already carrying it, which is how a minified asset a child compilation handed up is left alone
  */
 
 /**
@@ -253,6 +254,36 @@ const declaredStage = (compiler, implementation) => {
   }
 
   return latest;
+};
+
+/**
+ * What an implementation says about the asset it wrote, which is the union
+ * where several ran as one chain.
+ * @param {EXPECTED_ANY} implementation one implementation, or an array of them
+ * @param {AssetInfo} info what the asset it read says about itself
+ * @returns {AssetInfo | undefined} what to record, or undefined where none says
+ */
+const declaredAssetInfo = (implementation, info) => {
+  const each = Array.isArray(implementation)
+    ? implementation
+    : [implementation];
+  /** @type {AssetInfo} */
+  const declared = {};
+  let said = false;
+
+  for (const one of each) {
+    const says =
+      one && typeof one.getAssetInfo === "function"
+        ? one.getAssetInfo(info)
+        : undefined;
+
+    if (says) {
+      Object.assign(declared, says);
+      said = true;
+    }
+  }
+
+  return said ? declared : undefined;
 };
 
 const VALIDATION_CONFIGURATION = {
@@ -509,7 +540,7 @@ class TerserPlugin {
    * @param {Compiler} compiler compiler
    * @param {Compilation} compilation compilation
    * @param {Record<string, import("webpack").sources.Source>} assets assets
-   * @param {{ availableNumberOfCores: number, only?: number[], cacheSuffix?: string, minimized?: Set<string> }} optimizeOptions how many may run at once, which minimizers this pass runs, what keeps its cache apart from another pass over the same asset, and which assets an earlier pass of this plugin already minimized
+   * @param {{ availableNumberOfCores: number, only?: number[], cacheSuffix?: string, written: Map<string, Set<string>> }} optimizeOptions how many may run at once, which minimizers this pass runs, what keeps its cache apart from another pass over the same asset, and what an earlier pass of this plugin already wrote onto each asset
    * @returns {Promise<void>}
    */
   async optimize(compiler, compilation, assets, optimizeOptions) {
@@ -531,6 +562,55 @@ class TerserPlugin {
       : [this.options.minimizer.implementation];
 
     /**
+     * What a minimizer says the asset it wrote is, which is a minified one
+     * where it says nothing — every minimizer but `compress` today.
+     * @param {number} at index into `implementations`
+     * @param {AssetInfo} info what the asset it read says about itself
+     * @returns {AssetInfo} what to record on the asset it wrote
+     */
+    const writesInfo = (at, info) =>
+      declaredAssetInfo(implementations[at], info) || { minimized: true };
+
+    /**
+     * Whether the asset already says everything a minimizer would, counting
+     * only what this plugin did not write onto it itself.
+     * @param {string} name asset name
+     * @param {AssetInfo} info what the asset says about itself
+     * @param {AssetInfo} declared what the minimizer would say
+     * @returns {boolean} true when it has been through this already
+     */
+    const saysAlready = (name, info, declared) => {
+      const written = optimizeOptions.written.get(name);
+      const says = /** @type {Record<string, EXPECTED_ANY>} */ (info);
+      const keys = Object.keys(declared);
+
+      return (
+        keys.length > 0 &&
+        keys.every((key) => says[key] && !(written && written.has(key)))
+      );
+    };
+
+    /**
+     * Remember what this plugin wrote onto an asset, which is what a later
+     * pass of it reads back rather than declining.
+     * @param {string} name asset name
+     * @param {AssetInfo} declared what was written
+     * @returns {void}
+     */
+    const recordWritten = (name, declared) => {
+      let keys = optimizeOptions.written.get(name);
+
+      if (!keys) {
+        keys = new Set();
+        optimizeOptions.written.set(name, keys);
+      }
+
+      for (const key of Object.keys(declared)) {
+        keys.add(key);
+      }
+    };
+
+    /**
      * Collect the indices of minimizers whose `filter` accepts `name`.
      * Filters returning `undefined` are treated as accept (matches the
      * convention used by `supportsWorkerThreads`).
@@ -550,6 +630,14 @@ class TerserPlugin {
         }
 
         const impl = implementations[i];
+
+        // Skip double minimize assets from child compilation: one already
+        // saying what this minimizer writes has been through it. An earlier
+        // pass of this plugin is not that — those chain through the asset.
+        if (saysAlready(name, info, writesInfo(i, info))) {
+          continue;
+        }
+
         // What `minify` states about this entry answers for it; the property on
         // the function is what a minimizer says about itself, and is the
         // fallback rather than a second filter to satisfy.
@@ -573,17 +661,8 @@ class TerserPlugin {
         .filter((name) => {
           const { info } = /** @type {Asset} */ (compilation.getAsset(name));
 
-          if (
-            // Skip double minimize assets from child compilation. An asset an
-            // earlier pass of this plugin minimized is not that: the passes
-            // chain through it, so a later one reads what the last wrote.
-            (info.minimized &&
-              !(
-                optimizeOptions.minimized && optimizeOptions.minimized.has(name)
-              )) ||
-            // Skip minimizing for extracted comments assets
-            info.extractedComments
-          ) {
+          // Skip minimizing for extracted comments assets
+          if (info.extractedComments) {
             return false;
           }
 
@@ -1001,7 +1080,15 @@ class TerserPlugin {
         }
 
         /** @type {AssetInfo} */
-        const newInfo = { minimized: true };
+        const newInfo = {};
+
+        // What each minimizer this asset went through says it made of it: a
+        // minified asset, or another encoding of the same bytes.
+        for (const at of matched) {
+          Object.assign(newInfo, writesInfo(at, info));
+        }
+
+        recordWritten(name, newInfo);
 
         if (output.extractedCommentsSource) {
           newInfo.related = {
@@ -1010,10 +1097,6 @@ class TerserPlugin {
         }
 
         compilation.updateAsset(name, output.source, newInfo);
-
-        if (optimizeOptions.minimized) {
-          optimizeOptions.minimized.add(name);
-        }
       });
     }
 
@@ -1487,7 +1570,11 @@ class TerserPlugin {
     const generatedSource = new RawSource(output.code);
     // The derived name carries the original's hash, so what the original
     // promised about its own name still holds; its sourcemap does not follow.
-    const generatedInfo = { ...info, generated: true };
+    const generatedInfo = {
+      ...info,
+      ...declaredAssetInfo(generator.implementation, info),
+      generated: true,
+    };
 
     delete generatedInfo.related;
 
@@ -2141,11 +2228,11 @@ class TerserPlugin {
       const fallback = this.defaultStage(compiler);
 
       const minimizersByStage = this.minimizersByStage(compiler);
-      // What this plugin has already minimized in this compilation, so a later
-      // pass reads it back rather than taking `info.minimized` for a child
+      // What this plugin wrote onto each asset in this compilation, so a later
+      // pass reads the asset back rather than taking the flag for a child
       // compilation's work.
-      /** @type {Set<string>} */
-      const minimized = new Set();
+      /** @type {Map<string, Set<string>>} */
+      const written = new Map();
 
       for (const [at, only] of minimizersByStage) {
         compilation.hooks.processAssets.tapPromise(
@@ -2154,7 +2241,7 @@ class TerserPlugin {
             this.optimize(compiler, compilation, assets, {
               availableNumberOfCores,
               only,
-              minimized,
+              written,
               // Only where a second pass exists to be confused with: one pass
               // keeps the cache keys every earlier release wrote.
               cacheSuffix: minimizersByStage.size > 1 ? `|${at}` : "",
@@ -2197,6 +2284,20 @@ class TerserPlugin {
                 ? /** @type {(text: string) => string} */ (green)(
                     /** @type {(flag: string) => string} */ (formatFlag)(
                       "minimized",
+                    ),
+                  )
+                : "",
+          );
+
+        stats.hooks.print
+          .for("asset.info.compressed")
+          .tap(
+            "minimizer-webpack-plugin",
+            (compressed, { green, formatFlag }) =>
+              compressed
+                ? /** @type {(text: string) => string} */ (green)(
+                    /** @type {(flag: string) => string} */ (formatFlag)(
+                      "compressed",
                     ),
                   )
                 : "",

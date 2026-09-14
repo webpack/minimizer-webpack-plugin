@@ -573,10 +573,20 @@ minify.supportsBinary = () => true;
 
 // Declare this when the minimizer has to run somewhere other than where
 // minification does — it is handed the `Compilation` class so it can name a
-// stage rather than a number. A `stage` in the options answers over it, and
-// among several the latest asked for wins, since they run as one chain.
+// stage rather than a number. Each minimizer runs where it asks, chaining
+// through the asset a later one reads back; one asking for nothing runs where
+// minifying belongs.
 minify.getStage = (compilation) =>
   compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER;
+
+// Declare this when what the minimizer wrote is not a minified asset. It is
+// handed what the asset it read says about itself and returns what the asset
+// it wrote says, which is recorded in the asset's info; a minimizer declaring
+// nothing wrote a minified asset, so `{ minimized: true }` is what is
+// recorded. It is also what is not run twice: an asset that already says
+// everything a minimizer writes is declined, which is how one minified by a
+// child compilation is left alone.
+minify.getAssetInfo = () => ({ compressed: true });
 
 module.exports = {
   optimization: {
@@ -873,7 +883,10 @@ say: the implementation declares it through a `getStage` of its own, the way it
 declares everything else about itself — see [`minify`](#minify). Compressing has
 to read the bytes a user downloads, so `MinimizerPlugin.compress` asks for
 `PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER` and runs after every minimizer has had
-its say; one that asks for nothing runs where minifying does.
+its say; one that asks for nothing runs where minifying does. What the file it
+writes **says about itself** is the implementation's too, through the same kind
+of helper: `compress` marks it `compressed` rather than `minimized`, since
+another encoding of the bytes is no smaller a version of them.
 
 `MinimizerPlugin.compress` ships with the plugin and is written against that.
 `algorithm` says which compression to run — a `zlib` function's name, or one of

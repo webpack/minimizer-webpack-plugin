@@ -433,7 +433,10 @@ describe('"compress" as a minimizer', () => {
     expect(
       zlib.gunzipSync(readBytes(compiler, stats, "one.js")).toString(),
     ).toContain("webpack");
-    expect(stats.compilation.getAsset("one.js").info.minimized).toBe(true);
+    // What it wrote is another encoding of the bytes, not a smaller version
+    // of them, so it says so rather than claiming the asset is minified.
+    expect(stats.compilation.getAsset("one.js").info.compressed).toBe(true);
+    expect(stats.compilation.getAsset("one.js").info.minimized).toBeUndefined();
     expect(getErrors(stats)).toEqual([]);
     expect(getWarnings(stats)).toEqual([]);
   });
@@ -645,5 +648,210 @@ describe('"compress" generator', () => {
       expect(getErrors(stats)).toEqual([]);
       expect(getWarnings(stats)).toEqual([]);
     });
+  });
+});
+
+describe("what a function says it wrote", () => {
+  let compiler;
+
+  beforeEach(() => {
+    compiler = getCompiler({
+      entry: { one: path.resolve(__dirname, "./fixtures/entry.js") },
+    });
+  });
+
+  /**
+   * A minimizer that rewrites nothing, so only what it says about the asset
+   * it wrote is under test.
+   * @param {import("webpack").AssetInfo=} says what it declares, if anything
+   * @param {number=} stage the stage it asks for, if any
+   * @returns {EXPECTED_ANY} the minimizer
+   */
+  const saying = (says, stage) => {
+    const run = (input) => ({ code: Object.values(input)[0] });
+
+    if (says) {
+      run.getAssetInfo = () => says;
+    }
+
+    if (typeof stage === "number") {
+      run.getStage = () => stage;
+    }
+
+    return run;
+  };
+
+  it("should mark what a minimizer saying nothing wrote as minimized", async () => {
+    new MinimizerPlugin({ test: /\.js$/i, minify: saying() }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(stats.compilation.getAsset("one.js").info.minimized).toBe(true);
+    expect(getErrors(stats)).toEqual([]);
+  });
+
+  it("should write what a minimizer says instead of minimized", async () => {
+    new MinimizerPlugin({
+      test: /\.js$/i,
+      minify: saying({ compressed: true }),
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+    const { info } = stats.compilation.getAsset("one.js");
+
+    expect(info.compressed).toBe(true);
+    expect(info.minimized).toBeUndefined();
+    expect(getErrors(stats)).toEqual([]);
+  });
+
+  it("should write what every minimizer of a chain says", async () => {
+    new MinimizerPlugin({
+      test: /\.js$/i,
+      minify: [saying(), saying({ compressed: true })],
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+    const { info } = stats.compilation.getAsset("one.js");
+
+    // One of them minified it and the other re-encoded it, and the asset
+    // carries both rather than whichever spoke last.
+    expect(info.minimized).toBe(true);
+    expect(info.compressed).toBe(true);
+    expect(getErrors(stats)).toEqual([]);
+  });
+
+  it("should hand a minimizer what the asset it reads says about itself", async () => {
+    const seen = [];
+    const run = (input) => ({ code: Object.values(input)[0] });
+
+    run.getAssetInfo = (info) => {
+      seen.push(info);
+
+      return { compressed: true };
+    };
+
+    new MinimizerPlugin({ test: /\.js$/i, minify: run }).apply(compiler);
+
+    await compile(compiler);
+
+    // Named by a `[contenthash]`-free config, so the one thing every asset
+    // here says is the one worth asserting on.
+    expect(seen.length).toBeGreaterThan(0);
+    expect(seen.every((info) => info && typeof info === "object")).toBe(true);
+    expect(seen.some((info) => info.compressed)).toBe(false);
+  });
+
+  it("should leave alone an asset that already says what a minimizer writes", async () => {
+    const ran = [];
+    const run = (input) => {
+      ran.push("ran");
+
+      return { code: Object.values(input)[0] };
+    };
+
+    class AlreadyMinimized {
+      apply(inner) {
+        inner.hooks.compilation.tap("AlreadyMinimized", (compilation) => {
+          compilation.hooks.processAssets.tap(
+            {
+              name: "AlreadyMinimized",
+              stage: Compilation.PROCESS_ASSETS_STAGE_ADDITIONS,
+            },
+            (assets) => {
+              for (const name of Object.keys(assets)) {
+                compilation.updateAsset(name, (source) => source, {
+                  minimized: true,
+                });
+              }
+            },
+          );
+        });
+      }
+    }
+
+    new AlreadyMinimized().apply(compiler);
+    new MinimizerPlugin({ test: /\.js$/i, minify: run, parallel: false }).apply(
+      compiler,
+    );
+
+    const stats = await compile(compiler);
+
+    // What a child compilation hands up is already minified, and saying so is
+    // how it is declined.
+    expect(ran).toEqual([]);
+    expect(getErrors(stats)).toEqual([]);
+  });
+
+  it("should not decline an asset over what an earlier pass of itself wrote", async () => {
+    const ran = [];
+    /**
+     * @param {string} label what to record
+     * @param {number=} stage the stage it asks for
+     * @returns {EXPECTED_ANY} the minimizer
+     */
+    const recording = (label, stage) => {
+      const run = (input) => {
+        ran.push(label);
+
+        return { code: Object.values(input)[0] };
+      };
+
+      if (typeof stage === "number") {
+        run.getStage = () => stage;
+      }
+
+      return run;
+    };
+
+    new MinimizerPlugin({
+      test: /\.js$/i,
+      parallel: false,
+      minify: [
+        recording("first"),
+        recording("second", Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER),
+      ],
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    // Both say `minimized`, and the second runs a whole pass later: the flag
+    // the first wrote is this plugin's own and does not decline it.
+    expect(ran).toEqual(["first", "second"]);
+    expect(stats.compilation.getAsset("one.js").info.minimized).toBe(true);
+    expect(getErrors(stats)).toEqual([]);
+  });
+
+  it("should mark a file `compress` generated as compressed", async () => {
+    new MinimizerPlugin({
+      test: /\.js$/i,
+      parallel: false,
+      minify: (input) => ({ code: Object.values(input)[0] }),
+      generate: {
+        implementation: MinimizerPlugin.compress,
+        options: { algorithm: "gzip" },
+        type: "asset",
+        filename: "[path][base].gz",
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+    const { info } = stats.compilation.getAsset("one.js.gz");
+
+    expect(info.compressed).toBe(true);
+    expect(info.generated).toBe(true);
+    expect(getErrors(stats)).toEqual([]);
+  });
+
+  it("should print the flag a function wrote in stats", async () => {
+    new MinimizerPlugin({
+      test: /\.js$/i,
+      minify: saying({ compressed: true }),
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+    const printed = stats.toString({ relatedAssets: true });
+
+    expect(printed).toContain("[compressed]");
+    expect(printed).not.toContain("[minimized]");
   });
 });
