@@ -125,6 +125,13 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    */
   private hasModuleGenerator;
   /**
+   * Every name the functions this plugin runs mark an asset with, which is
+   * what stats have to know how to print.
+   * @private
+   * @returns {Set<string>} the names
+   */
+  private assetFlags;
+  /**
    * The generators that run over emitted assets rather than over a module as
    * it builds.
    * @private
@@ -562,9 +569,9 @@ type MinimizeFunctionHelpers = {
       ) => number | undefined)
     | undefined;
   /**
-   * what the asset it wrote says about itself, merged into that asset's info. `compress` marks it `compressed`, another encoding of the bytes being no smaller a version of them, and one saying nothing wrote a minified asset and is recorded `minimized`. It is also what is not run again over an asset already carrying it, which is how a minified asset a child compilation handed up is left alone
+   * the name this function's work goes under in the asset's info, which is what the asset it wrote is marked with and what stats print. `compress` says `compressed`, another encoding of the bytes being no smaller a version of them; a minimizer saying nothing minified the asset, so `minimized`, and a generator saying nothing wrote a new file, so `generated`. It is also what is not run twice: an asset already marked with every name a function writes is declined, which is how a minified asset a child compilation handed up is left alone
    */
-  getAssetInfo?: ((info: AssetInfo) => AssetInfo | undefined) | undefined;
+  getAssetFlag?: (() => string | undefined) | undefined;
 };
 type MinimizerImplementation<T> = T extends EXPECTED_ANY[]
   ? {

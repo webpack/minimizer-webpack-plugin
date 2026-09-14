@@ -3778,11 +3778,11 @@ compress.getStage = (compilation) =>
   compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER;
 
 /**
- * Another encoding of the bytes is not a smaller version of them, so what it
- * wrote is compressed rather than minimized.
- * @returns {import("webpack").AssetInfo} what the compressed asset says
+ * Another encoding of the bytes is not a smaller version of them, so its work
+ * goes under `compressed` rather than `minimized` or `generated`.
+ * @returns {string} the name it marks an asset with
  */
-compress.getAssetInfo = () => ({ compressed: true });
+compress.getAssetFlag = () => "compressed";
 
 /**
  * @returns {boolean} true, compressed output is binary

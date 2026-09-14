@@ -661,9 +661,9 @@ describe("what a function says it wrote", () => {
   });
 
   /**
-   * A minimizer that rewrites nothing, so only what it says about the asset
-   * it wrote is under test.
-   * @param {import("webpack").AssetInfo=} says what it declares, if anything
+   * A minimizer that rewrites nothing, so only the name it works under is
+   * under test.
+   * @param {string=} says the name it declares, if any
    * @param {number=} stage the stage it asks for, if any
    * @returns {EXPECTED_ANY} the minimizer
    */
@@ -671,7 +671,7 @@ describe("what a function says it wrote", () => {
     const run = (input) => ({ code: Object.values(input)[0] });
 
     if (says) {
-      run.getAssetInfo = () => says;
+      run.getAssetFlag = () => says;
     }
 
     if (typeof stage === "number") {
@@ -693,7 +693,7 @@ describe("what a function says it wrote", () => {
   it("should write what a minimizer says instead of minimized", async () => {
     new MinimizerPlugin({
       test: /\.js$/i,
-      minify: saying({ compressed: true }),
+      minify: saying("compressed"),
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -707,7 +707,7 @@ describe("what a function says it wrote", () => {
   it("should write what every minimizer of a chain says", async () => {
     new MinimizerPlugin({
       test: /\.js$/i,
-      minify: [saying(), saying({ compressed: true })],
+      minify: [saying(), saying("compressed")],
     }).apply(compiler);
 
     const stats = await compile(compiler);
@@ -720,25 +720,23 @@ describe("what a function says it wrote", () => {
     expect(getErrors(stats)).toEqual([]);
   });
 
-  it("should hand a minimizer what the asset it reads says about itself", async () => {
-    const seen = [];
+  it("should take a name a minimizer builds rather than one written out", async () => {
     const run = (input) => ({ code: Object.values(input)[0] });
+    const encoding = "br";
 
-    run.getAssetInfo = (info) => {
-      seen.push(info);
-
-      return { compressed: true };
-    };
+    run.getAssetFlag = () => `${encoding}Encoded`;
 
     new MinimizerPlugin({ test: /\.js$/i, minify: run }).apply(compiler);
 
-    await compile(compiler);
+    const stats = await compile(compiler);
+    const { info } = stats.compilation.getAsset("one.js");
 
-    // Named by a `[contenthash]`-free config, so the one thing every asset
-    // here says is the one worth asserting on.
-    expect(seen.length).toBeGreaterThan(0);
-    expect(seen.every((info) => info && typeof info === "object")).toBe(true);
-    expect(seen.some((info) => info.compressed)).toBe(false);
+    // Nothing here knows the name in advance, so it is the function's answer
+    // that reaches the asset rather than a spelling this plugin recognizes.
+    expect(info.brEncoded).toBe(true);
+    expect(info.minimized).toBeUndefined();
+    expect(stats.toString()).toContain("[brEncoded]");
+    expect(getErrors(stats)).toEqual([]);
   });
 
   it("should leave alone an asset that already says what a minimizer writes", async () => {
@@ -837,15 +835,73 @@ describe("what a function says it wrote", () => {
     const stats = await compile(compiler);
     const { info } = stats.compilation.getAsset("one.js.gz");
 
+    // The name it works under replaces the generator's own rather than
+    // joining it: the file is compressed, and saying so is what marks it.
     expect(info.compressed).toBe(true);
-    expect(info.generated).toBe(true);
+    expect(info.generated).toBeUndefined();
+    expect(getErrors(stats)).toEqual([]);
+  });
+
+  it("should mark what a generator saying nothing wrote as generated", async () => {
+    new MinimizerPlugin({
+      test: /\.js$/i,
+      parallel: false,
+      minify: (input) => ({ code: Object.values(input)[0] }),
+      generate: {
+        implementation: (input) => ({ code: Object.values(input)[0] }),
+        type: "asset",
+        filename: "[path][base].copy",
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(stats.compilation.getAsset("one.js.copy").info.generated).toBe(true);
+    expect(getErrors(stats)).toEqual([]);
+  });
+
+  it("should not let one generator read what another one wrote", async () => {
+    new MinimizerPlugin({
+      test: /\.js$/i,
+      parallel: false,
+      minify: (input) => ({ code: Object.values(input)[0] }),
+      generate: {
+        copy: {
+          // Named so it matches `test` too, which is what puts it in front of
+          // the generator below rather than leaving it out by its extension.
+          implementation: (input) => ({ code: Object.values(input)[0] }),
+          type: "asset",
+          filename: "[path][base].copy.js",
+        },
+        gzip: {
+          implementation: MinimizerPlugin.compress,
+          options: { algorithm: "gzip" },
+          type: "asset",
+          filename: "[path][base].gz",
+        },
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+    const printed = stats.toString({ relatedAssets: true });
+
+    // The copy is marked with the name its generator works under, and
+    // compressing declines anything already carrying one of those names, so
+    // there is no `one.js.copy.js.gz`.
+    expect(Object.keys(stats.compilation.assets).sort()).toEqual([
+      "one.js",
+      "one.js.copy.js",
+      "one.js.gz",
+    ]);
+    expect(printed).toContain("[generated]");
+    expect(printed).toContain("[compressed]");
     expect(getErrors(stats)).toEqual([]);
   });
 
   it("should print the flag a function wrote in stats", async () => {
     new MinimizerPlugin({
       test: /\.js$/i,
-      minify: saying({ compressed: true }),
+      minify: saying("compressed"),
     }).apply(compiler);
 
     const stats = await compile(compiler);

@@ -579,14 +579,13 @@ minify.supportsBinary = () => true;
 minify.getStage = (compilation) =>
   compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER;
 
-// Declare this when what the minimizer wrote is not a minified asset. It is
-// handed what the asset it read says about itself and returns what the asset
-// it wrote says, which is recorded in the asset's info; a minimizer declaring
-// nothing wrote a minified asset, so `{ minimized: true }` is what is
-// recorded. It is also what is not run twice: an asset that already says
-// everything a minimizer writes is declined, which is how one minified by a
-// child compilation is left alone.
-minify.getAssetInfo = () => ({ compressed: true });
+// The name this function's work goes under: the asset it writes is marked
+// with it in the asset info, and stats print it. A minimizer declaring
+// nothing minified the asset, so `minimized`; a generator declaring nothing
+// wrote a new file, so `generated`. It is also what is not run twice — an
+// asset already marked with every name a function writes is declined, which
+// is how one minified by a child compilation is left alone.
+minify.getAssetFlag = () => "compressed";
 
 module.exports = {
   optimization: {
@@ -883,10 +882,12 @@ say: the implementation declares it through a `getStage` of its own, the way it
 declares everything else about itself — see [`minify`](#minify). Compressing has
 to read the bytes a user downloads, so `MinimizerPlugin.compress` asks for
 `PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER` and runs after every minimizer has had
-its say; one that asks for nothing runs where minifying does. What the file it
-writes **says about itself** is the implementation's too, through the same kind
-of helper: `compress` marks it `compressed` rather than `minimized`, since
-another encoding of the bytes is no smaller a version of them.
+its say; one that asks for nothing runs where minifying does. The **name its
+work goes under** is the implementation's too, through the same kind of helper:
+a generator declaring nothing wrote a new file, so `generated`, while `compress`
+says `compressed`, another encoding of the bytes being no smaller a version of
+them. Whatever the name, stats print it and the generator declines a file
+already carrying it, so nothing reads its own output back.
 
 `MinimizerPlugin.compress` ships with the plugin and is written against that.
 `algorithm` says which compression to run — a `zlib` function's name, or one of
