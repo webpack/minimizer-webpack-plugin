@@ -344,6 +344,38 @@ describe("validation", () => {
     }).not.toThrow();
   });
 
+  it("should validate `stage`", () => {
+    expect(() => {
+      createCompiler({ stage: 3000 });
+    }).not.toThrow();
+
+    expect(() => {
+      createCompiler({ stage: "transfer" });
+    }).toThrowErrorMatchingSnapshot();
+
+    expect(() => {
+      createCompiler({
+        generate: {
+          implementation: () => ({ code: "" }),
+          type: "asset",
+          stage: 3000,
+        },
+      });
+    }).not.toThrow();
+
+    // It says when a file is written beside another, which an `import`
+    // generator does not do.
+    expect(() => {
+      createCompiler({
+        generate: {
+          implementation: () => ({ code: "" }),
+          type: "import",
+          stage: 3000,
+        },
+      });
+    }).toThrowErrorMatchingSnapshot();
+  });
+
   it("should validate a minimizer added through `optimization.minimizer`", () => {
     expect(() => {
       getCompiler({

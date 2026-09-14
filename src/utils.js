@@ -3678,12 +3678,118 @@ function memoize(fn) {
   };
 }
 
+/**
+ * The compression settings each `zlib` algorithm is run with when the caller
+ * names none. Every one of them is "as small as this algorithm goes".
+ * @param {typeof import("zlib")} zlib the `zlib` module
+ * @param {string} algorithm the algorithm's name
+ * @returns {CustomOptions} its defaults
+ */
+function defaultCompressionOptions(zlib, algorithm) {
+  switch (algorithm) {
+    case "gzip":
+    case "deflate":
+    case "deflateRaw":
+      return { level: zlib.constants.Z_BEST_COMPRESSION };
+    case "brotliCompress":
+      return {
+        params: {
+          [zlib.constants.BROTLI_PARAM_QUALITY]:
+            zlib.constants.BROTLI_MAX_QUALITY,
+        },
+      };
+    default:
+      return {};
+  }
+}
+
+/**
+ * Compress an asset's bytes, so what a server sends under `Content-Encoding`
+ * is written beside the asset it came from. `algorithm` names which one — a
+ * function of `zlib`, or one of your own taking `(input, options, callback)` —
+ * and `compressionOptions` is what that algorithm is run with.
+ * @param {Input} input input
+ * @param {RawSourceMap=} sourceMap source map (ignored, compressed bytes carry none)
+ * @param {CustomOptions=} minimizerOptions options
+ * @returns {Promise<MinimizedResult>} minimized result
+ */
+async function compress(input, sourceMap, minimizerOptions) {
+  const [[name, code]] = Object.entries(input);
+  const { algorithm = "gzip", compressionOptions } = minimizerOptions || {};
+  let run = algorithm;
+  let options = compressionOptions || {};
+
+  if (typeof run === "string") {
+    const zlib = require("zlib");
+
+    run = zlib[/** @type {keyof typeof zlib} */ (algorithm)];
+
+    if (typeof run !== "function") {
+      return {
+        code,
+        errors: [
+          new Error(
+            `Error with '${name}': algorithm "${algorithm}" is not found in "zlib".`,
+          ),
+        ],
+      };
+    }
+
+    options = { ...defaultCompressionOptions(zlib, algorithm), ...options };
+  }
+
+  const buffer = Buffer.isBuffer(code) ? code : Buffer.from(code);
+
+  return new Promise((resolve) => {
+    /** @type {EXPECTED_ANY} */
+    (run)(
+      buffer,
+      options,
+      (
+        /** @type {Error | null} */ error,
+        /** @type {EXPECTED_ANY} */ result,
+      ) => {
+        if (error) {
+          resolve({ code, errors: [error] });
+
+          return;
+        }
+
+        resolve({
+          code: Buffer.isBuffer(result) ? result : Buffer.from(result),
+        });
+      },
+    );
+  });
+}
+
+/**
+ * @returns {string | undefined} the version the compressed bytes depend on
+ */
+compress.getMinimizerVersion = () => process.versions.node;
+
+/**
+ * @returns {boolean} true, compressed output is binary
+ */
+compress.supportsBinary = () => true;
+
+/**
+ * @returns {boolean} false, the bytes have no way across to a worker
+ */
+compress.supportsWorker = () => false;
+
+/**
+ * @returns {boolean} false
+ */
+compress.supportsWorkerThreads = () => false;
+
 module.exports = {
   CLASSIC_SCRIPT,
   EVENT_HANDLER,
   MODULE_SCRIPT,
   asFunction,
   cleanCssMinify,
+  compress,
   cssnanoMinify,
   cssoMinify,
   esbuildMinify,

@@ -96,7 +96,7 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    * @param {string | undefined} name the preset it is written under, where it has one
    * @param {EXPECTED_ANY} entry what was written there
    * @param {EXPECTED_ANY} declared what `generatorOptions` says for it
-   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | undefined }} the generator
+   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | undefined, stage: number | undefined }} the generator
    */
   private describeGenerator;
   /**
@@ -159,9 +159,18 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    * @private
    * @param {Compiler} compiler compiler
    * @param {Compilation} compilation compilation
+   * @param {ReturnType<TerserPlugin["assetGenerators"]>} generators the generators running at this stage
    * @returns {Promise<void>}
    */
   private generateAssets;
+  /**
+   * The `processAssets` stage the minimizers run in, and the default for an
+   * `asset` generator that names none.
+   * @private
+   * @param {Compiler} compiler compiler
+   * @returns {number} the stage
+   */
+  private minimizeStage;
   /**
    * Minify one source a module embeds in another language's output — CSS or
    * HTML reaching the bundle inside a JavaScript string literal, an
@@ -243,6 +252,7 @@ declare namespace TerserPlugin {
     sharpMinify,
     sharpGenerate,
     svgoMinify,
+    compress,
     Schema,
     Compiler,
     Compilation,
@@ -305,6 +315,7 @@ import { napiRsImageMinify } from "./utils";
 import { sharpMinify } from "./utils";
 import { sharpGenerate } from "./utils";
 import { svgoMinify } from "./utils";
+import { compress } from "./utils";
 type Schema = import("schema-utils/declarations/validate").Schema;
 type Compiler = import("webpack").Compiler;
 type Compilation = import("webpack").Compilation;
@@ -612,6 +623,10 @@ type BasePluginOptions = {
    */
   parallel?: Parallel | undefined;
   /**
+   * which `processAssets` stage the minimizers run in, and the default for an `asset` generator that names none
+   */
+  stage?: number | undefined;
+  /**
    * rewrites a module's own bytes as it is built, so a re-encoding can rename the asset
    */
   generate?: MinimizerImplementation<EXPECTED_ANY> | undefined;
@@ -633,6 +648,7 @@ type DefinedDefaultMinimizerAndOptions<T> =
         terserOptions?: MinimizerOptions<T> | undefined;
       };
 type InternalPluginOptions<T> = BasePluginOptions & {
+  stage: number | undefined;
   minimizer: {
     implementation: MinimizerImplementation<T>;
     options: MinimizerOptions<T>;

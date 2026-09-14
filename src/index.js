@@ -5,6 +5,7 @@ const path = require("path");
 const { minify } = require("./minify");
 const {
   cleanCssMinify,
+  compress,
   cssnanoMinify,
   cssoMinify,
   esbuildMinify,
@@ -209,6 +210,7 @@ const {
  * @property {Rules=} exclude exclude rule
  * @property {ExtractCommentsOptions=} extractComments extract comments options
  * @property {Parallel=} parallel parallel option
+ * @property {number=} stage which `processAssets` stage the minimizers run in, and the default for an `asset` generator that names none
  * @property {MinimizerImplementation<EXPECTED_ANY>=} generate rewrites a module's own bytes as it is built, so a re-encoding can rename the asset
  * @property {MinimizerOptions<EXPECTED_ANY>=} generatorOptions options for `generate`
  */
@@ -220,7 +222,7 @@ const {
 
 /**
  * @template T
- * @typedef {BasePluginOptions & { minimizer: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T>, filters?: (((name: string, info: AssetInfo) => boolean | undefined) | undefined)[] }, generator?: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T> } }} InternalPluginOptions
+ * @typedef {BasePluginOptions & { stage: number | undefined, minimizer: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T>, filters?: (((name: string, info: AssetInfo) => boolean | undefined) | undefined)[] }, generator?: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T> } }} InternalPluginOptions
  */
 
 const VALIDATION_CONFIGURATION = {
@@ -262,6 +264,7 @@ class TerserPlugin {
       parallel = true,
       include,
       exclude,
+      stage,
       generate,
       generatorOptions,
     } = this.rawOptions;
@@ -286,6 +289,9 @@ class TerserPlugin {
       parallel,
       include,
       exclude,
+      // Left undefined rather than defaulted here: the constant it defaults to
+      // lives on the `compiler`, which a constructor has no access to.
+      stage,
       minimizer:
         /** @type {{ implementation: MinimizerImplementation<T>, options: MinimizerOptions<T>, filters?: (((name: string, info: AssetInfo) => boolean | undefined) | undefined)[] }} */
         (normalizeMinimizers(minify, resolvedMinimizerOptions)),
@@ -1154,7 +1160,7 @@ class TerserPlugin {
    * @param {string | undefined} name the preset it is written under, where it has one
    * @param {EXPECTED_ANY} entry what was written there
    * @param {EXPECTED_ANY} declared what `generatorOptions` says for it
-   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | undefined }} the generator
+   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | undefined, stage: number | undefined }} the generator
    */
   describeGenerator(name, entry, declared) {
     const descriptor = isDescriptor(entry) ? entry : undefined;
@@ -1172,6 +1178,7 @@ class TerserPlugin {
       deleteOriginalAssets: descriptor
         ? descriptor.deleteOriginalAssets
         : undefined,
+      stage: descriptor ? descriptor.stage : undefined,
     };
   }
 
@@ -1311,6 +1318,7 @@ class TerserPlugin {
         one.filename,
         String(one.filter),
         one.deleteOriginalAssets,
+        one.stage,
         one.options,
       ]);
 
@@ -1461,15 +1469,10 @@ class TerserPlugin {
    * @private
    * @param {Compiler} compiler compiler
    * @param {Compilation} compilation compilation
+   * @param {ReturnType<TerserPlugin["assetGenerators"]>} generators the generators running at this stage
    * @returns {Promise<void>}
    */
-  async generateAssets(compiler, compilation) {
-    const generators = this.assetGenerators();
-
-    if (generators.length === 0) {
-      return;
-    }
-
+  async generateAssets(compiler, compilation, generators) {
     const cache = compilation.getCache("TerserWebpackPlugin|generateAssets");
     const scheduled = [];
 
@@ -1492,6 +1495,19 @@ class TerserPlugin {
     }
 
     await Promise.all(scheduled);
+  }
+
+  /**
+   * The `processAssets` stage the minimizers run in, and the default for an
+   * `asset` generator that names none.
+   * @private
+   * @param {Compiler} compiler compiler
+   * @returns {number} the stage
+   */
+  minimizeStage(compiler) {
+    return typeof this.options.stage === "number"
+      ? this.options.stage
+      : compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE;
   }
 
   /**
@@ -1838,8 +1854,8 @@ class TerserPlugin {
       }
     }
 
-    // `filename`, `filter` and `deleteOriginalAssets` describe a file written
-    // beside another, which only an `asset` generator does.
+    // These describe a file written beside another, and when it is written,
+    // which only an `asset` generator does.
     for (const one of this.generators()) {
       const misplaced = [];
 
@@ -1854,6 +1870,10 @@ class TerserPlugin {
 
         if (typeof one.deleteOriginalAssets !== "undefined") {
           misplaced.push("deleteOriginalAssets");
+        }
+
+        if (typeof one.stage !== "undefined") {
+          misplaced.push("stage");
         }
       }
 
@@ -2050,27 +2070,40 @@ class TerserPlugin {
         }
       }
 
+      const stage = this.minimizeStage(compiler);
+
       compilation.hooks.processAssets.tapPromise(
-        {
-          name: pluginName,
-          stage:
-            compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE,
-          additionalAssets: true,
-        },
+        { name: pluginName, stage, additionalAssets: true },
         (assets) =>
           this.optimize(compiler, compilation, assets, {
             availableNumberOfCores,
           }),
       );
 
-      compilation.hooks.processAssets.tapPromise(
-        {
-          name: pluginName,
-          stage:
-            compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE,
-        },
-        () => this.generateAssets(compiler, compilation),
-      );
+      // One tap per stage the generators asked for: a file written beside a
+      // minified asset and one written beside a compressed asset are the same
+      // work at two different moments of `processAssets`.
+      /** @type {Map<number, ReturnType<TerserPlugin["assetGenerators"]>>} */
+      const generatorsByStage = new Map();
+
+      for (const generator of this.assetGenerators()) {
+        const at =
+          typeof generator.stage === "number" ? generator.stage : stage;
+        const already = generatorsByStage.get(at);
+
+        if (already) {
+          already.push(generator);
+        } else {
+          generatorsByStage.set(at, [generator]);
+        }
+      }
+
+      for (const [at, generators] of generatorsByStage) {
+        compilation.hooks.processAssets.tapPromise(
+          { name: pluginName, stage: at },
+          () => this.generateAssets(compiler, compilation, generators),
+        );
+      }
 
       compilation.hooks.statsPrinter.tap(pluginName, (stats) => {
         stats.hooks.print
@@ -2113,5 +2146,6 @@ TerserPlugin.napiRsImageMinify = napiRsImageMinify;
 TerserPlugin.sharpMinify = sharpMinify;
 TerserPlugin.sharpGenerate = sharpGenerate;
 TerserPlugin.svgoMinify = svgoMinify;
+TerserPlugin.compress = compress;
 
 module.exports = TerserPlugin;

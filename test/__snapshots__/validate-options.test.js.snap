@@ -1,9 +1,18 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
+exports[`validation should validate \`stage\` 1`] = `
+"Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
+ - options.stage should be a number.
+   -> Which \`processAssets\` stage the minimizers run in, as one of webpack's \`Compilation.PROCESS_ASSETS_STAGE_*\` constants. Defaults to \`PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE\`, and is also the default for every \`asset\` generator that names no stage of its own.
+   -> Read more at https://github.com/webpack/minimizer-webpack-plugin#stage"
+`;
+
+exports[`validation should validate \`stage\` 2`] = `"\`stage\` in \`generate\` belongs to a generator with \`type: "asset"\`, which writes a file beside the one it read. An \`import\` generator renames the module it re-encodes and reads neither."`;
+
 exports[`validation should validate a minimizer added through \`optimization.minimizer\` 1`] = `
 "Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
  - options has an unknown property 'unknown'. These properties are valid:
-   object { test?, include?, exclude?, minimizerOptions?, terserOptions?, extractComments?, parallel?, minify?, generate?, generatorOptions? }"
+   object { test?, include?, exclude?, minimizerOptions?, terserOptions?, extractComments?, parallel?, stage?, minify?, generate?, generatorOptions? }"
 `;
 
 exports[`validation validate 1`] = `
@@ -221,7 +230,7 @@ exports[`validation validate 16`] = `
 exports[`validation validate 17`] = `
 "Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
  - options has an unknown property 'unknown'. These properties are valid:
-   object { test?, include?, exclude?, minimizerOptions?, terserOptions?, extractComments?, parallel?, minify?, generate?, generatorOptions? }"
+   object { test?, include?, exclude?, minimizerOptions?, terserOptions?, extractComments?, parallel?, stage?, minify?, generate?, generatorOptions? }"
 `;
 
 exports[`validation validate 18`] = `
