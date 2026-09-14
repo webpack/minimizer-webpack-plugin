@@ -3769,6 +3769,15 @@ async function compress(input, sourceMap, minimizerOptions) {
 compress.getMinimizerVersion = () => process.versions.node;
 
 /**
+ * Compressed bytes are what a user downloads, so this reads what every
+ * minimizer before it produced.
+ * @param {typeof import("webpack").Compilation} compilation the `Compilation` class
+ * @returns {number} the `processAssets` stage it runs in
+ */
+compress.getStage = (compilation) =>
+  compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER;
+
+/**
  * @returns {boolean} true, compressed output is binary
  */
 compress.supportsBinary = () => true;

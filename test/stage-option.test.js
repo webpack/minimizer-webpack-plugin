@@ -191,6 +191,184 @@ describe('"stage" option', () => {
   });
 });
 
+describe("a minimizer that asks for its own stage", () => {
+  let compiler;
+
+  beforeEach(() => {
+    compiler = getCompiler({
+      entry: { one: path.resolve(__dirname, "./fixtures/entry.js") },
+    });
+  });
+
+  /**
+   * @param {string[]} order where to record
+   * @param {string} label what to record
+   * @param {number=} stage the stage it asks for, if any
+   * @returns {EXPECTED_ANY} the minimizer
+   */
+  const asking = (order, label, stage) => {
+    /**
+     * @param {Record<string, string | Buffer>} input input
+     * @returns {{ code: string | Buffer }} the result
+     */
+    const run = (input) => {
+      order.push(label);
+
+      return { code: Object.values(input)[0] };
+    };
+
+    if (typeof stage === "number") {
+      run.getStage = () => stage;
+    }
+
+    return run;
+  };
+
+  it("should run where `getStage` asks, with no option given", async () => {
+    const order = [];
+
+    new RecordStage(
+      order,
+      "size",
+      Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE,
+    ).apply(compiler);
+    new RecordStage(
+      order,
+      "hash",
+      Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_HASH,
+    ).apply(compiler);
+    new MinimizerPlugin({
+      parallel: false,
+      minify: asking(
+        order,
+        "minify",
+        Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
+      ),
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(order).toEqual(["size", "hash", "minify"]);
+    expect(getErrors(stats)).toEqual([]);
+  });
+
+  it("should let a `stage` in the options answer over it", async () => {
+    const order = [];
+
+    new RecordStage(
+      order,
+      "transfer",
+      Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
+    ).apply(compiler);
+    new MinimizerPlugin({
+      parallel: false,
+      // The option is the last word, even where the minimizer asks otherwise.
+      stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE,
+      minify: asking(
+        order,
+        "minify",
+        Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
+      ),
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(order).toEqual(["minify", "transfer"]);
+    expect(getErrors(stats)).toEqual([]);
+  });
+
+  it("should run a chain at the latest stage any of it asks for", async () => {
+    const order = [];
+
+    new RecordStage(
+      order,
+      "hash",
+      Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_HASH,
+    ).apply(compiler);
+    new MinimizerPlugin({
+      parallel: false,
+      // They run as one chain, each reading what the last produced, so the
+      // latest stage asked for is the one the chain can run in.
+      minify: [
+        asking(order, "first"),
+        asking(
+          order,
+          "second",
+          Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
+        ),
+      ],
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(order).toEqual(["hash", "first", "second"]);
+    expect(getErrors(stats)).toEqual([]);
+  });
+
+  it("should run a generator where its implementation asks", async () => {
+    const order = [];
+
+    new RecordStage(
+      order,
+      "hash",
+      Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_HASH,
+    ).apply(compiler);
+    new MinimizerPlugin({
+      parallel: false,
+      minify: (input) => ({ code: Object.values(input)[0] }),
+      generate: {
+        implementation: asking(
+          order,
+          "generate",
+          Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
+        ),
+        type: "asset",
+        filename: "[path][base].copy",
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(order).toEqual(["hash", "generate"]);
+    expect(Object.keys(stats.compilation.assets)).toContain("one.js.copy");
+    expect(getErrors(stats)).toEqual([]);
+  });
+
+  it("should put `compress` after the minimizers on its own", async () => {
+    const order = [];
+
+    new RecordStage(
+      order,
+      "hash",
+      Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_HASH,
+    ).apply(compiler);
+    new MinimizerPlugin({
+      test: /\.js$/i,
+      parallel: false,
+      minify: (input) => {
+        order.push("minify");
+
+        return { code: Object.values(input)[0] };
+      },
+      generate: {
+        implementation: MinimizerPlugin.compress,
+        type: "asset",
+        filename: "[path][base].gz",
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    // Minified, then hashed, then compressed — none of it stated in the config.
+    expect(order).toEqual(["minify", "hash"]);
+    expect(Object.keys(stats.compilation.assets)).toEqual([
+      "one.js",
+      "one.js.gz",
+    ]);
+    expect(getErrors(stats)).toEqual([]);
+  });
+});
+
 describe('"compress" as a minimizer', () => {
   let compiler;
 
@@ -204,8 +382,7 @@ describe('"compress" as a minimizer', () => {
     new MinimizerPlugin({
       test: /\.js$/i,
       // Where the server says what the encoding is, the asset keeps its name
-      // and there is nothing beside it.
-      stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
+      // and there is nothing beside it. No `stage`: `compress` asks for its own.
       minify: MinimizerPlugin.compress,
       minimizerOptions: { algorithm: "gzip" },
     }).apply(compiler);
@@ -224,7 +401,6 @@ describe('"compress" as a minimizer', () => {
   it("should take its options from its own entry in a `minify` array", async () => {
     new MinimizerPlugin({
       test: /\.js$/i,
-      stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
       minify: [
         {
           implementation: (input) => ({
@@ -289,7 +465,7 @@ describe('"compress" generator', () => {
         implementation: MinimizerPlugin.compress,
         type: "asset",
         filename: "[path][base].gz",
-        stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
+        // No `stage` here: `compress` asks for its own.
         ...descriptor,
       },
     });
@@ -342,7 +518,6 @@ describe('"compress" generator', () => {
           options: { algorithm: "gzip", compressionOptions: { level } },
           type: "asset",
           filename: "[path][base].gz",
-          stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
         },
       }).apply(own);
 

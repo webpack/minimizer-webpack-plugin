@@ -96,6 +96,13 @@ export namespace compress {
    */
   function getMinimizerVersion(): string | undefined;
   /**
+   * Compressed bytes are what a user downloads, so this reads what every
+   * minimizer before it produced.
+   * @param {typeof import("webpack").Compilation} compilation the `Compilation` class
+   * @returns {number} the `processAssets` stage it runs in
+   */
+  function getStage(compilation: typeof import("webpack").Compilation): number;
+  /**
    * @returns {boolean} true, compressed output is binary
    */
   function supportsBinary(): boolean;

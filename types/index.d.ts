@@ -544,6 +544,14 @@ type MinimizeFunctionHelpers = {
    */
   getEmbeddedTypes?:
     ((minimizerOptions?: EXPECTED_OBJECT) => string[] | undefined) | undefined;
+  /**
+   * which `processAssets` stage this minimizer has to run in, named off the `Compilation` it is handed — compressing reads the bytes a user downloads, so it asks for `PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER`. A `stage` written in the options answers over it; among several, the latest asked for wins, since they run as one chain
+   */
+  getStage?:
+    | ((
+        compilation: typeof import("webpack").Compilation,
+      ) => number | undefined)
+    | undefined;
 };
 type MinimizerImplementation<T> = T extends EXPECTED_ANY[]
   ? {

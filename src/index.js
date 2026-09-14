@@ -174,6 +174,7 @@ const {
  * @property {(name: string, info?: AssetInfo) => boolean | undefined=} filter return true when the minimizer supports the asset, otherwise false. When an array of minimizers is configured, each asset is dispatched only to the minimizers whose `filter` accepts it. Assets rejected by every minimizer in the array are skipped entirely.
  * @property {() => string[] | undefined=} getTypes the languages this minimizer minifies, e.g. `["css"]`. Source that carries no filename — what a module embeds in another language's output — is dispatched by this rather than by `test` / `filter`, and a minimizer that declares nothing is never handed any
  * @property {(minimizerOptions?: EXPECTED_OBJECT) => string[] | undefined=} getEmbeddedTypes the languages this minimizer can hand out from inside what it minifies, through the `renderEmbeddedSource` option. Empty (or absent) means it nests nothing a caller can reach, and the option is not passed
+ * @property {(compilation: typeof import("webpack").Compilation) => number | undefined=} getStage which `processAssets` stage this minimizer has to run in, named off the `Compilation` it is handed — compressing reads the bytes a user downloads, so it asks for `PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER`. A `stage` written in the options answers over it; among several, the latest asked for wins, since they run as one chain
  */
 
 /**
@@ -224,6 +225,36 @@ const {
  * @template T
  * @typedef {BasePluginOptions & { stage: number | undefined, minimizer: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T>, filters?: (((name: string, info: AssetInfo) => boolean | undefined) | undefined)[] }, generator?: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T> } }} InternalPluginOptions
  */
+
+/**
+ * The `processAssets` stage a minimizer or generator asks for, which is the
+ * latest of them where several run as one chain.
+ * @param {Compiler} compiler compiler
+ * @param {EXPECTED_ANY} implementation one implementation, or an array of them
+ * @returns {number | undefined} the stage, or undefined where none asks
+ */
+const declaredStage = (compiler, implementation) => {
+  const each = Array.isArray(implementation)
+    ? implementation
+    : [implementation];
+  let latest;
+
+  for (const one of each) {
+    const asked =
+      one && typeof one.getStage === "function"
+        ? one.getStage(compiler.webpack.Compilation)
+        : undefined;
+
+    if (
+      typeof asked === "number" &&
+      (typeof latest !== "number" || asked > latest)
+    ) {
+      latest = asked;
+    }
+  }
+
+  return latest;
+};
 
 const VALIDATION_CONFIGURATION = {
   name: "Terser Plugin",
@@ -1505,8 +1536,17 @@ class TerserPlugin {
    * @returns {number} the stage
    */
   minimizeStage(compiler) {
-    return typeof this.options.stage === "number"
-      ? this.options.stage
+    if (typeof this.options.stage === "number") {
+      return this.options.stage;
+    }
+
+    const asked = declaredStage(
+      compiler,
+      this.options.minimizer.implementation,
+    );
+
+    return typeof asked === "number"
+      ? asked
       : compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE;
   }
 
@@ -2087,8 +2127,13 @@ class TerserPlugin {
       const generatorsByStage = new Map();
 
       for (const generator of this.assetGenerators()) {
+        const asked = declaredStage(compiler, generator.implementation);
         const at =
-          typeof generator.stage === "number" ? generator.stage : stage;
+          typeof generator.stage === "number"
+            ? generator.stage
+            : typeof asked === "number"
+              ? asked
+              : stage;
         const already = generatorsByStage.get(at);
 
         if (already) {

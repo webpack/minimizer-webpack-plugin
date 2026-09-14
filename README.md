@@ -286,11 +286,28 @@ Type:
 type stage = number;
 ```
 
-Default: `compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE`
+Default: what the configured minimizers ask for, else `compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE`
 
 Which [`processAssets`](https://webpack.js.org/api/compilation-hooks/#processassets) stage the minimizers run in, as one of webpack's `Compilation.PROCESS_ASSETS_STAGE_*` constants. It is also the default for every [`asset` generator](#generate) that names no `stage` of its own.
 
-The default is where minification belongs: after the bundle is rendered and before its hashes are taken. Move it when the work has to see what a later stage produced — compressing an asset, for instance, has to read the bytes a user downloads, which is `PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER`.
+**You rarely need to set it.** A minimizer says where it has to run through a
+`getStage` of its own, the way it says what it is through `getMinimizerVersion`
+or `getTypes` — `MinimizerPlugin.compress` asks for
+`PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER` because compressed bytes are what a
+user downloads, so nothing in your config has to repeat that. Where several run
+as one chain, the latest stage any of them asks for is the one the chain runs
+in.
+
+This option is the last word over all of that — reach for it to override a
+minimizer, or to move one that asks for nothing. Minification's own default is
+where it belongs: after the bundle is rendered and before its hashes are taken.
+
+```js
+// A minimizer of your own says so like this, and is handed the `Compilation`
+// class so it can name a stage rather than a number.
+myMinify.getStage = (compilation) =>
+  compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER;
+```
 
 ```js
 const { Compilation } = require("webpack");
@@ -600,6 +617,13 @@ minify.getTypes = () => ["javascript"];
 // its `code` may be one. Only applied when every minimizer an asset is
 // dispatched to declares it, since one that does not could not read the bytes.
 minify.supportsBinary = () => true;
+
+// Declare this when the minimizer has to run somewhere other than where
+// minification does — it is handed the `Compilation` class so it can name a
+// stage rather than a number. A `stage` in the options answers over it, and
+// among several the latest asked for wins, since they run as one chain.
+minify.getStage = (compilation) =>
+  compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER;
 
 module.exports = {
   optimization: {
@@ -954,7 +978,6 @@ through `Content-Encoding` while the URL stays as it was:
 
 ```js
 const MinimizerPlugin = require("minimizer-webpack-plugin");
-const { Compilation } = require("webpack");
 
 module.exports = {
   optimization: {
@@ -962,7 +985,6 @@ module.exports = {
     minimizer: [
       new MinimizerPlugin({
         test: /\.js$/i,
-        stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
         minify: MinimizerPlugin.compress,
         minimizerOptions: { algorithm: "gzip" },
       }),
@@ -973,12 +995,12 @@ module.exports = {
 
 An array runs its minimizers in order, each one reading what the last produced,
 so minifying and then compressing in place is one entry after another — and each
-states its own `options`:
+states its own `options`. The chain runs at the latest stage any of its members
+asks for, which here is the one `compress` asks for:
 
 ```js
 new MinimizerPlugin({
   test: /\.js$/i,
-  stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
   minify: [
     { implementation: MinimizerPlugin.terserMinify },
     {
