@@ -344,6 +344,82 @@ describe("validation", () => {
     }).not.toThrow();
   });
 
+  it("should validate `stage` and the keys an `asset` generator takes", () => {
+    expect(() => {
+      createCompiler({ stage: 3000 });
+    }).not.toThrow();
+
+    expect(() => {
+      createCompiler({ minify: false });
+    }).not.toThrow();
+
+    // `minimizerOptions` names options for a minimizer there is none of, which
+    // the cross-field check has nothing to say about.
+    expect(() => {
+      createCompiler({ minify: false, minimizerOptions: {} });
+    }).not.toThrow();
+
+    expect(() => {
+      createCompiler({ stage: "transfer" });
+    }).toThrowErrorMatchingSnapshot();
+
+    expect(() => {
+      createCompiler({
+        generate: {
+          implementation: () => ({ code: "" }),
+          type: "asset",
+          filename: "[path][base].gz",
+          stage: 3000,
+          threshold: 1024,
+          minRatio: 0.8,
+          relatedName: "gzipped",
+          assetInfo: { compressed: true },
+          deleteOriginalAssets: "keep-source-map",
+        },
+      });
+    }).not.toThrow();
+
+    expect(() => {
+      createCompiler({
+        generate: {
+          implementation: () => ({ code: "" }),
+          type: "asset",
+          deleteOriginalAssets: (name) => name.endsWith(".js"),
+        },
+      });
+    }).not.toThrow();
+
+    expect(() => {
+      createCompiler({
+        generate: {
+          implementation: () => ({ code: "" }),
+          type: "asset",
+          minRatio: "0.8",
+        },
+      });
+    }).toThrowErrorMatchingSnapshot();
+
+    // Every one of them writes a file beside another, which an `import`
+    // generator does not do.
+    for (const misplaced of [
+      { stage: 3000 },
+      { threshold: 1024 },
+      { minRatio: 0.8 },
+      { relatedName: "gzipped" },
+      { assetInfo: { compressed: true } },
+    ]) {
+      expect(() => {
+        createCompiler({
+          generate: {
+            implementation: () => ({ code: "" }),
+            type: "import",
+            ...misplaced,
+          },
+        });
+      }).toThrowErrorMatchingSnapshot();
+    }
+  });
+
   it("should validate a minimizer added through `optimization.minimizer`", () => {
     expect(() => {
       getCompiler({

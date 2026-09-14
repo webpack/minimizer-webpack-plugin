@@ -56,6 +56,15 @@ Image minimizers:
 These only minify — they never change an image's format or name; see
 [Images](#images).
 
+Transport encodings:
+
+- `zlib` and anything shaped like it — `MinimizerPlugin.compress`. Compresses an
+  asset so a server can serve it under `Content-Encoding`, writing the result
+  beside the asset it read. Takes `algorithm` — a `zlib` function's name
+  (`gzip`, `brotliCompress`, `deflate`, `zstdCompress`, …) or one of your own —
+  and `compressionOptions` for it. Needs no extra dependency, and is an
+  [`asset` generator](#generate) rather than a minimizer.
+
 All of the non-default minimizers are declared as **optional** peer
 dependencies — install only the ones you actually use. One plugin instance
 covers several languages at once: give [`minify`](#minify) an array and each
@@ -120,6 +129,7 @@ Using supported `devtool` values enable source map generation.
 - **[`include`](#include)**
 - **[`exclude`](#exclude)**
 - **[`parallel`](#parallel)**
+- **[`stage`](#stage)**
 - **[`minify`](#minify)**
 - **[`minimizerOptions`](#minimizeroptions)** (deprecated)
 - **[`generate`](#generate)**
@@ -266,6 +276,35 @@ module.exports = {
 };
 ```
 
+### `stage`
+
+Type:
+
+```ts
+type stage = number;
+```
+
+Default: `compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE`
+
+Which [`processAssets`](https://webpack.js.org/api/compilation-hooks/#processassets) stage the minimizers run in, as one of webpack's `Compilation.PROCESS_ASSETS_STAGE_*` constants. It is also the default for every [`asset` generator](#generate) that names no `stage` of its own.
+
+The default is where minification belongs: after the bundle is rendered and before its hashes are taken. Move it when the work has to see what a later stage produced — compressing an asset, for instance, has to read the bytes a user downloads, which is `PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER`.
+
+```js
+const { Compilation } = require("webpack");
+
+module.exports = {
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new MinimizerPlugin({
+        stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
+      }),
+    ],
+  },
+};
+```
+
 ### `minify`
 
 Type:
@@ -328,7 +367,7 @@ interface minimizer {
   options?: Record<string, any>;
 }
 
-type minify = minifyFn | (minifyFn | minimizer)[] | minimizer;
+type minify = false | minifyFn | (minifyFn | minimizer)[] | minimizer;
 ```
 
 Default: `MinimizerPlugin.terserMinify`
@@ -336,6 +375,12 @@ Default: `MinimizerPlugin.terserMinify`
 Which minimizer runs, and the options it runs with. By default the plugin uses
 [terser](https://github.com/terser/terser); overriding it is also how you test
 an unpublished version or a fork.
+
+`false` minifies nothing, for a plugin whose whole job is
+[`generate`](#generate) — compressing what is emitted, say. It also drops
+[`test`](#test)'s default: that default is terser's, because JavaScript is what
+terser minifies, and a plugin minifying nothing has no reason to prefer one
+language over another. Set `test` yourself to narrow what its generators read.
 
 > **Warning**
 >
@@ -665,7 +710,19 @@ interface generator {
   type?: "import" | "asset";
   filename?: string;
   filter?: (name: string) => boolean;
-  deleteOriginalAssets?: boolean;
+  deleteOriginalAssets?:
+    boolean | "keep-source-map" | ((name: string) => boolean);
+  stage?: number;
+  threshold?: number;
+  minRatio?: number;
+  relatedName?: string;
+  assetInfo?:
+    | Record<string, any>
+    | ((
+        info: Record<string, any>,
+        name: string,
+        generatedName: string,
+      ) => Record<string, any>);
 }
 
 type generate =
@@ -781,14 +838,14 @@ new MinimizerPlugin({
 `type` decides which of the two things a generator does, and they are not
 interchangeable — they read different input, at different points in the build:
 
-|                                | `"import"` (the default)                   | `"asset"`                                               |
-| :----------------------------- | :----------------------------------------- | :------------------------------------------------------ |
-| Reads                          | a module, **as it builds**                 | an asset, **once it is emitted**                        |
-| Produces                       | that module's own bytes, renamed with them | a **new file beside** the one it read                   |
-| Picked by                      | `?as=<name>` on the import                 | `test` / `include` / `exclude`, then `filter`           |
-| Reaches a file nothing imports | no                                         | yes — copied assets included                            |
-| Fields it reads                | `implementation`, `options`                | those plus `filename`, `filter`, `deleteOriginalAssets` |
-| webpack                        | **5.111** or newer                         | any supported version                                   |
+|                                | `"import"` (the default)                   | `"asset"`                                                                                                             |
+| :----------------------------- | :----------------------------------------- | :-------------------------------------------------------------------------------------------------------------------- |
+| Reads                          | a module, **as it builds**                 | an asset, **once it is emitted**                                                                                      |
+| Produces                       | that module's own bytes, renamed with them | a **new file beside** the one it read                                                                                 |
+| Picked by                      | `?as=<name>` on the import                 | `test` / `include` / `exclude`, then `filter`                                                                         |
+| Reaches a file nothing imports | no                                         | yes — copied assets included                                                                                          |
+| Fields it reads                | `implementation`, `options`                | those plus `filename`, `filter`, `deleteOriginalAssets`, `stage`, `threshold`, `minRatio`, `relatedName`, `assetInfo` |
+| webpack                        | **5.111** or newer                         | any supported version                                                                                                 |
 
 **`"import"`** is the only point at which a rename can reach the bundle: the
 asset is named while its module is built, so every reference follows it. The
@@ -846,9 +903,88 @@ photo.jpg     still there, unless `deleteOriginalAssets`
 photo.webp    generated beside it
 ```
 
-`filename`, `filter` and `deleteOriginalAssets` describe a file being written
-beside another, so they belong to `"asset"` and setting one on an `"import"`
-generator is an error rather than a field that quietly does nothing.
+`filename`, `filter`, `deleteOriginalAssets`, `stage`, `threshold`, `minRatio`,
+`relatedName` and `assetInfo` describe a file being written beside another, so
+they belong to `"asset"` and setting one on an `"import"` generator is an error
+rather than a field that quietly does nothing.
+
+`deleteOriginalAssets` also takes `"keep-source-map"`, which detaches the
+original's source map before deleting it so that map survives, and a function
+asked per asset.
+
+An `"asset"` generator that re-encodes an asset for transport rather than for
+another format takes four more fields, and they are what let one describe
+compression:
+
+- **`stage`** — which [`processAssets`](#stage) stage it runs in. Defaults to
+  the plugin's own `stage`. Compression has to read the bytes a user
+  downloads, so it runs at `PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER`, after
+  every minimizer.
+- **`threshold`** — assets smaller than this many bytes are left alone.
+- **`minRatio`** — the result is kept only when
+  `generated size / original size` is at or below it, so a re-encoding that
+  bought nothing does not become a second file.
+- **`relatedName`** — records the result on the original as
+  `info.related[relatedName]`, which is how a dev server finds the compressed
+  form of an asset, and how an asset that already carries one is declined.
+- **`assetInfo`** — what the generated asset says about itself. An object adds
+  to what the original said; a function is handed that, plus both names, and
+  answers with the whole thing — which is how a result in another encoding
+  keeps none of it. `generated: true` is set either way.
+
+`MinimizerPlugin.compress` ships with the plugin and is written against them.
+`algorithm` says which compression to run — a `zlib` function's name, or one of
+your own taking `(input, options, callback)` — and `compressionOptions` is what
+that algorithm is run with, the way `terserMinify` takes terser's own options:
+
+```js
+const MinimizerPlugin = require("minimizer-webpack-plugin");
+const { Compilation } = require("webpack");
+
+module.exports = {
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new MinimizerPlugin({
+        test: /\.(js|css|html|svg)$/i,
+        generate: {
+          gzip: {
+            implementation: MinimizerPlugin.compress,
+            options: { algorithm: "gzip" },
+            type: "asset",
+            stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
+            filename: "[path][base].gz",
+            relatedName: "gzipped",
+            assetInfo: { compressed: true },
+            threshold: 0,
+            minRatio: 0.8,
+          },
+          brotli: {
+            implementation: MinimizerPlugin.compress,
+            options: { algorithm: "brotliCompress" },
+            type: "asset",
+            stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
+            filename: "[path][base].br",
+            relatedName: "brotliCompressed",
+            assetInfo: { compressed: true },
+            minRatio: 0.8,
+          },
+        },
+      }),
+    ],
+  },
+};
+```
+
+Minification and compression are then one plugin over one pass of filtering and
+one cache, and the ordering they need — compress what minification produced — is
+what `stage` states rather than what applying two plugins in the right order
+happens to give.
+
+A generator reporting an **error** writes no file: what it answers with in that
+case is normally the bytes it was given, and naming those after an encoding
+they do not have is worse than the missing file. A **warning** is not an error
+— the result is written as usual.
 
 `ecma` is filled in from
 [`output.environment`](https://webpack.js.org/configuration/output/#outputenvironment)
@@ -859,7 +995,12 @@ see [`minify`](#minify).
 [webpack filename template](https://webpack.js.org/configuration/output/#outputfilename)
 resolved against the asset read, so `[path]`, `[name]`, `[base]`, `[ext]` and
 `[query]` are available; content hashes are not, because the name derives from
-one the original already carries.
+one the original already carries. A function of the path data works too.
+
+Naming the file it read is how a generator writes **over** an asset rather than
+beside it — re-encoding for transport where the server, not the URL, says what
+the encoding is. There is then no original left: `deleteOriginalAssets` and
+`relatedName` have nothing to act on and are ignored.
 
 In watch mode the rename is carried on the module rather than reapplied each
 build, so a rebuild that does not touch the image keeps pointing at the
@@ -1480,7 +1621,7 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      // Keeps the default Terser plugin for JS files
+      // Keeps webpack's default minimizer for JS files
       "...",
       new MinimizerPlugin({
         test: /\.html(\?.*)?$/i,
@@ -1637,7 +1778,7 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      // Keeps the default Terser plugin for JS files
+      // Keeps webpack's default minimizer for JS files
       "...",
       new MinimizerPlugin({
         test: /\.css(\?.*)?$/i,
@@ -2114,7 +2255,7 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      // Keeps the default Terser plugin for JS files
+      // Keeps webpack's default minimizer for JS files
       "...",
       new MinimizerPlugin({
         test: /\.(png|jpe?g|webp|avif|tiff?|gif)$/i,

@@ -1,8 +1,8 @@
-export = TerserPlugin;
+export = MinimizerPlugin;
 /**
  * @template [T=import("terser").MinifyOptions]
  */
-declare class TerserPlugin<T = import("terser").MinifyOptions> {
+declare class MinimizerPlugin<T = import("terser").MinifyOptions> {
   /**
    * @private
    * @param {unknown} input Input to check
@@ -79,6 +79,13 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    */
   private minimizers;
   /**
+   * The options `minify` was given, as they were written. Only reachable where
+   * there is a minimizer, for the same reason `minimizers()` is.
+   * @private
+   * @returns {MinimizerOptions<T>} them
+   */
+  private declaredMinimizerOptions;
+  /**
    * Every configured minimizer and its options, for dispatching source one
    * language embeds in another. The asset's own entry holds only what its
    * filename matched, and a language's minimizer need not be among them — a
@@ -96,13 +103,13 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    * @param {string | undefined} name the preset it is written under, where it has one
    * @param {EXPECTED_ANY} entry what was written there
    * @param {EXPECTED_ANY} declared what `generatorOptions` says for it
-   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | undefined }} the generator
+   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: TemplatePath | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | "keep-source-map" | ((name: string) => boolean) | undefined, stage: number | undefined, threshold: number | undefined, minRatio: number | undefined, relatedName: string | undefined, assetInfo: AssetInfo | ((info: AssetInfo, name: string, generatedName: string) => AssetInfo) | undefined }} the generator
    */
   private describeGenerator;
   /**
    * Every generator `generate` holds, whichever shape it was written in.
    * @private
-   * @returns {ReturnType<TerserPlugin["describeGenerator"]>[]} them, in the order they were written
+   * @returns {ReturnType<MinimizerPlugin["describeGenerator"]>[]} them, in the order they were written
    */
   private generators;
   /**
@@ -128,7 +135,7 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    * The generators that run over emitted assets rather than over a module as
    * it builds.
    * @private
-   * @returns {ReturnType<TerserPlugin["describeGenerator"]>[]} them, in the order they were written
+   * @returns {ReturnType<MinimizerPlugin["describeGenerator"]>[]} them, in the order they were written
    */
   private assetGenerators;
   /**
@@ -148,7 +155,7 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    * @param {Compilation} compilation compilation
    * @param {ReturnType<Compilation["getCache"]>} cache the generation cache
    * @param {Asset} asset the asset to generate from
-   * @param {ReturnType<TerserPlugin["assetGenerators"]>[0]} generator the generator to run
+   * @param {ReturnType<MinimizerPlugin["assetGenerators"]>[0]} generator the generator to run
    * @returns {Promise<void>}
    */
   private generateAsset;
@@ -159,9 +166,20 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    * @private
    * @param {Compiler} compiler compiler
    * @param {Compilation} compilation compilation
+   * @param {Record<string, import("webpack").sources.Source>} assets the assets to read
+   * @param {ReturnType<MinimizerPlugin["assetGenerators"]>} generators the generators running at this stage
+   * @param {number} availableNumberOfCores how many generations may be in flight at once
    * @returns {Promise<void>}
    */
   private generateAssets;
+  /**
+   * The `processAssets` stage the minimizers run in, and the default for an
+   * `asset` generator that names none.
+   * @private
+   * @param {Compiler} compiler compiler
+   * @returns {number} the stage
+   */
+  private minimizeStage;
   /**
    * Minify one source a module embeds in another language's output — CSS or
    * HTML reaching the bundle inside a JavaScript string literal, an
@@ -219,7 +237,7 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    */
   apply(compiler: Compiler): void;
 }
-declare namespace TerserPlugin {
+declare namespace MinimizerPlugin {
   export {
     terserMinify,
     uglifyJsMinify,
@@ -243,6 +261,7 @@ declare namespace TerserPlugin {
     sharpMinify,
     sharpGenerate,
     svgoMinify,
+    compress,
     Schema,
     Compiler,
     Compilation,
@@ -278,6 +297,8 @@ declare namespace TerserPlugin {
     InternalOptions,
     MinimizerWorker,
     Parallel,
+    GeneratorDescriptor,
+    Generate,
     BasePluginOptions,
     DefinedDefaultMinimizerAndOptions,
     InternalPluginOptions,
@@ -305,6 +326,7 @@ import { napiRsImageMinify } from "./utils";
 import { sharpMinify } from "./utils";
 import { sharpGenerate } from "./utils";
 import { svgoMinify } from "./utils";
+import { compress } from "./utils";
 type Schema = import("schema-utils/declarations/validate").Schema;
 type Compiler = import("webpack").Compiler;
 type Compilation = import("webpack").Compilation;
@@ -590,6 +612,73 @@ type MinimizerWorker<T> = JestWorker & {
   minify: (options: InternalOptions<T>) => Promise<MinimizedResult>;
 };
 type Parallel = undefined | boolean | number;
+/**
+ * How to run one generator, and — for an `asset` generator — where its result
+ * goes and what it says about itself.
+ */
+type GeneratorDescriptor = {
+  /**
+   * the generator itself
+   */
+  implementation: MinimizerImplementation<EXPECTED_ANY>;
+  /**
+   * options for it
+   */
+  options?: MinimizerOptions<EXPECTED_ANY> | undefined;
+  /**
+   * whether it rewrites a module as it builds or writes a file beside an emitted asset
+   */
+  type?: ("import" | "asset") | undefined;
+  /**
+   * name for the generated asset, as a filename template or a function of the path data
+   */
+  filename?: TemplatePath | undefined;
+  /**
+   * decides per asset whether to generate from it
+   */
+  filter?: ((name: string) => boolean) | undefined;
+  /**
+   * removes the asset generated from
+   */
+  deleteOriginalAssets?:
+    (boolean | "keep-source-map" | ((name: string) => boolean)) | undefined;
+  /**
+   * which `processAssets` stage it runs in
+   */
+  stage?: number | undefined;
+  /**
+   * assets smaller than this many bytes are left alone
+   */
+  threshold?: number | undefined;
+  /**
+   * keeps the result only at or below this share of the original's size
+   */
+  minRatio?: number | undefined;
+  /**
+   * records the result on the original as `info.related[relatedName]`
+   */
+  relatedName?: string | undefined;
+  /**
+   * what the generated asset says about itself
+   */
+  assetInfo?:
+    | (
+        | AssetInfo
+        | ((info: AssetInfo, name: string, generatedName: string) => AssetInfo)
+      )
+    | undefined;
+};
+/**
+ * Every shape `generate` takes: one generator, one written as a descriptor, or
+ * an object naming several.
+ */
+type Generate =
+  | MinimizerImplementation<EXPECTED_ANY>
+  | GeneratorDescriptor
+  | {
+      [preset: string]:
+        MinimizerImplementation<EXPECTED_ANY> | GeneratorDescriptor;
+    };
 type BasePluginOptions = {
   /**
    * test rule
@@ -612,9 +701,13 @@ type BasePluginOptions = {
    */
   parallel?: Parallel | undefined;
   /**
-   * rewrites a module's own bytes as it is built, so a re-encoding can rename the asset
+   * which `processAssets` stage the minimizers run in, and the default for an `asset` generator that names none
    */
-  generate?: MinimizerImplementation<EXPECTED_ANY> | undefined;
+  stage?: number | undefined;
+  /**
+   * rewrites a module's own bytes as it is built, so a re-encoding can rename the asset, or writes a file beside one already emitted
+   */
+  generate?: Generate | undefined;
   /**
    * options for `generate`
    */
@@ -623,17 +716,18 @@ type BasePluginOptions = {
 type DefinedDefaultMinimizerAndOptions<T> =
   T extends import("terser").MinifyOptions
     ? {
-        minify?: MinimizerImplementation<T> | undefined;
+        minify?: MinimizerImplementation<T> | false | undefined;
         minimizerOptions?: MinimizerOptions<T> | undefined;
         terserOptions?: MinimizerOptions<T> | undefined;
       }
     : {
-        minify: MinimizerImplementation<T>;
+        minify: MinimizerImplementation<T> | false;
         minimizerOptions?: MinimizerOptions<T> | undefined;
         terserOptions?: MinimizerOptions<T> | undefined;
       };
 type InternalPluginOptions<T> = BasePluginOptions & {
-  minimizer: {
+  stage: number | undefined;
+  minimizer?: {
     implementation: MinimizerImplementation<T>;
     options: MinimizerOptions<T>;
     filters?: (

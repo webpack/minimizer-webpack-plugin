@@ -185,10 +185,18 @@
         }
       ]
     },
+    "stage": {
+      "description": "Which `processAssets` stage the minimizers run in, as one of webpack's `Compilation.PROCESS_ASSETS_STAGE_*` constants. Defaults to `PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE`, and is also the default for every `asset` generator that names no stage of its own.",
+      "link": "https://github.com/webpack/minimizer-webpack-plugin#stage",
+      "type": "number"
+    },
     "minify": {
-      "description": "Allows you to override default minify function. Written as an object it states how to run one minimizer, options included.",
+      "description": "Allows you to override default minify function. Written as an object it states how to run one minimizer, options included. `false` minifies nothing, for a plugin that only generates.",
       "link": "https://github.com/webpack/minimizer-webpack-plugin#number",
       "anyOf": [
+        {
+          "enum": [false]
+        },
         {
           "instanceof": "Function"
         },
@@ -277,17 +285,63 @@
               "enum": ["import", "asset"]
             },
             "filename": {
-              "description": "Name for the generated asset, as a webpack filename template. `asset` generators only; by default the generator's own name for it is used.",
-              "type": "string",
-              "minLength": 1
+              "description": "Name for the generated asset, as a webpack filename template or a function of the path data. `asset` generators only; by default the generator's own name for it is used.",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "instanceof": "Function"
+                }
+              ]
             },
             "filter": {
               "description": "Decides per asset whether to generate from it, on top of `test`/`include`/`exclude`.",
               "instanceof": "Function"
             },
             "deleteOriginalAssets": {
-              "description": "Removes the asset generated from. `asset` generators only.",
-              "type": "boolean"
+              "description": "Removes the asset generated from. `asset` generators only. `\"keep-source-map\"` detaches its source map first so that one survives, and a function is asked per asset.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "enum": ["keep-source-map"]
+                },
+                {
+                  "instanceof": "Function"
+                }
+              ]
+            },
+            "stage": {
+              "description": "Which `processAssets` stage this generator runs in. `asset` generators only; defaults to the plugin's own `stage`.",
+              "type": "number"
+            },
+            "threshold": {
+              "description": "Assets smaller than this many bytes are left alone. `asset` generators only.",
+              "type": "number"
+            },
+            "minRatio": {
+              "description": "Keeps the generated asset only when `generated size / original size` is at or below this ratio. `asset` generators only.",
+              "type": "number"
+            },
+            "relatedName": {
+              "description": "Records the generated asset on the original under `info.related[relatedName]`, and declines an asset that already carries one. `asset` generators only.",
+              "type": "string",
+              "minLength": 1
+            },
+            "assetInfo": {
+              "description": "What the generated asset says about itself. An object adds to what the original said, e.g. `{ \"compressed\": true }`; a function is handed that and answers with the whole thing. `asset` generators only.",
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                {
+                  "instanceof": "Function"
+                }
+              ]
             }
           },
           "required": ["implementation"]
@@ -325,17 +379,63 @@
                     "enum": ["import", "asset"]
                   },
                   "filename": {
-                    "description": "Name for the generated asset, as a webpack filename template. `asset` generators only; by default the generator's own name for it is used.",
-                    "type": "string",
-                    "minLength": 1
+                    "description": "Name for the generated asset, as a webpack filename template or a function of the path data. `asset` generators only; by default the generator's own name for it is used.",
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "instanceof": "Function"
+                      }
+                    ]
                   },
                   "filter": {
                     "description": "Decides per asset whether to generate from it, on top of `test`/`include`/`exclude`.",
                     "instanceof": "Function"
                   },
                   "deleteOriginalAssets": {
-                    "description": "Removes the asset generated from. `asset` generators only.",
-                    "type": "boolean"
+                    "description": "Removes the asset generated from. `asset` generators only. `\"keep-source-map\"` detaches its source map first so that one survives, and a function is asked per asset.",
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "enum": ["keep-source-map"]
+                      },
+                      {
+                        "instanceof": "Function"
+                      }
+                    ]
+                  },
+                  "stage": {
+                    "description": "Which `processAssets` stage this generator runs in. `asset` generators only; defaults to the plugin's own `stage`.",
+                    "type": "number"
+                  },
+                  "threshold": {
+                    "description": "Assets smaller than this many bytes are left alone. `asset` generators only.",
+                    "type": "number"
+                  },
+                  "minRatio": {
+                    "description": "Keeps the generated asset only when `generated size / original size` is at or below this ratio. `asset` generators only.",
+                    "type": "number"
+                  },
+                  "relatedName": {
+                    "description": "Records the generated asset on the original under `info.related[relatedName]`, and declines an asset that already carries one. `asset` generators only.",
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "assetInfo": {
+                    "description": "What the generated asset says about itself. An object adds to what the original said, e.g. `{ \"compressed\": true }`; a function is handed that and answers with the whole thing. `asset` generators only.",
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      {
+                        "instanceof": "Function"
+                      }
+                    ]
                   }
                 },
                 "required": ["implementation"]
