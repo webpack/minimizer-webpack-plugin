@@ -302,22 +302,6 @@ const saysAlready = (says, written, flags) => {
   return true;
 };
 
-/**
- * The bytes a source holds. `source()` answers a source that mixes text and
- * bytes with a string, and every byte over 0x7f is lost re-encoding that.
- * @param {import("webpack").sources.Source} source the source to read
- * @returns {Buffer} its bytes
- */
-const readSourceBytes = (source) => {
-  if (typeof source.buffer === "function") {
-    return source.buffer();
-  }
-
-  const code = source.source();
-
-  return Buffer.isBuffer(code) ? code : Buffer.from(code);
-};
-
 const VALIDATION_CONFIGURATION = {
   name: "Minimizer Plugin",
   baseDataPath: "options",
@@ -1514,7 +1498,9 @@ class MinimizerPlugin {
   async generateAsset(compiler, compilation, cache, asset, generator) {
     const { RawSource } = compiler.webpack.sources;
     const { name, info, source } = asset;
-    const input = readSourceBytes(source);
+    // `buffer()` rather than `source()`, which answers a source holding text
+    // and bytes at once with a string: every byte over 0x7f is lost in that.
+    const input = source.buffer();
     // The generator is in the item's name rather than its etag: two presets
     // reading the same asset must not answer for one another.
     const cacheItem = cache.getItemCache(
