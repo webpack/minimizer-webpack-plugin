@@ -190,12 +190,6 @@
       "link": "https://github.com/webpack/minimizer-webpack-plugin#stage",
       "type": "number"
     },
-    "label": {
-      "description": "How the plugin names itself in the errors and warnings it reports.",
-      "link": "https://github.com/webpack/minimizer-webpack-plugin#label",
-      "type": "string",
-      "minLength": 1
-    },
     "minify": {
       "description": "Allows you to override default minify function. Written as an object it states how to run one minimizer, options included. `false` minifies nothing, for a plugin that only generates.",
       "link": "https://github.com/webpack/minimizer-webpack-plugin#number",

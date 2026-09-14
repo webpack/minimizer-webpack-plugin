@@ -121,7 +121,6 @@ Using supported `devtool` values enable source map generation.
 - **[`exclude`](#exclude)**
 - **[`parallel`](#parallel)**
 - **[`stage`](#stage)**
-- **[`label`](#label)**
 - **[`minify`](#minify)**
 - **[`minimizerOptions`](#minimizeroptions)** (deprecated)
 - **[`generate`](#generate)**
@@ -296,22 +295,6 @@ module.exports = {
   },
 };
 ```
-
-### `label`
-
-Type:
-
-```ts
-type label = string;
-```
-
-Default: `"Terser plugin"`
-
-How the plugin names itself in the errors and warnings it reports, which read
-`<asset> from <label>`. Worth setting where this plugin is the engine under
-something with a name of its own — a compression plugin built on
-[`generate`](#generate) reports `main.js from Compression plugin`, not
-`from Terser plugin`.
 
 ### `minify`
 
@@ -1628,7 +1611,7 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      // Keeps the default Terser plugin for JS files
+      // Keeps webpack's default minimizer for JS files
       "...",
       new MinimizerPlugin({
         test: /\.html(\?.*)?$/i,
@@ -1785,7 +1768,7 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      // Keeps the default Terser plugin for JS files
+      // Keeps webpack's default minimizer for JS files
       "...",
       new MinimizerPlugin({
         test: /\.css(\?.*)?$/i,
@@ -2262,7 +2245,7 @@ module.exports = {
   optimization: {
     minimize: true,
     minimizer: [
-      // Keeps the default Terser plugin for JS files
+      // Keeps webpack's default minimizer for JS files
       "...",
       new MinimizerPlugin({
         test: /\.(png|jpe?g|webp|avif|tiff?|gif)$/i,

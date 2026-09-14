@@ -1,14 +1,30 @@
-export = TerserPlugin;
+export = MinimizerPlugin;
 /**
  * @template [T=import("terser").MinifyOptions]
  */
-declare class TerserPlugin<T = import("terser").MinifyOptions> {
+declare class MinimizerPlugin<T = import("terser").MinifyOptions> {
   /**
    * @private
    * @param {unknown} input Input to check
    * @returns {boolean} Whether input is a source map
    */
   private static isSourceMap;
+  /**
+   * @private
+   * @param {unknown} warning warning
+   * @param {string} file file
+   * @returns {Error} built warning
+   */
+  private static buildWarning;
+  /**
+   * @private
+   * @param {Error | ErrorObject | string} error error
+   * @param {string} file file
+   * @param {TraceMap=} sourceMap source map
+   * @param {Compilation["requestShortener"]=} requestShortener request shortener
+   * @returns {Error} built error
+   */
+  private static buildError;
   /**
    * @private
    * @param {Parallel} parallel value of the `parallel` option
@@ -32,22 +48,6 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    * @type {InternalPluginOptions<T>}
    */
   private options;
-  /**
-   * @private
-   * @param {unknown} warning warning
-   * @param {string} file file
-   * @returns {Error} built warning
-   */
-  private buildWarning;
-  /**
-   * @private
-   * @param {Error | ErrorObject | string} error error
-   * @param {string} file file
-   * @param {TraceMap=} sourceMap source map
-   * @param {Compilation["requestShortener"]=} requestShortener request shortener
-   * @returns {Error} built error
-   */
-  private buildError;
   /**
    * Whether `test`, `include` and `exclude` accept a name.
    *
@@ -109,7 +109,7 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
   /**
    * Every generator `generate` holds, whichever shape it was written in.
    * @private
-   * @returns {ReturnType<TerserPlugin["describeGenerator"]>[]} them, in the order they were written
+   * @returns {ReturnType<MinimizerPlugin["describeGenerator"]>[]} them, in the order they were written
    */
   private generators;
   /**
@@ -135,7 +135,7 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    * The generators that run over emitted assets rather than over a module as
    * it builds.
    * @private
-   * @returns {ReturnType<TerserPlugin["describeGenerator"]>[]} them, in the order they were written
+   * @returns {ReturnType<MinimizerPlugin["describeGenerator"]>[]} them, in the order they were written
    */
   private assetGenerators;
   /**
@@ -155,7 +155,7 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    * @param {Compilation} compilation compilation
    * @param {ReturnType<Compilation["getCache"]>} cache the generation cache
    * @param {Asset} asset the asset to generate from
-   * @param {ReturnType<TerserPlugin["assetGenerators"]>[0]} generator the generator to run
+   * @param {ReturnType<MinimizerPlugin["assetGenerators"]>[0]} generator the generator to run
    * @returns {Promise<void>}
    */
   private generateAsset;
@@ -167,7 +167,7 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    * @param {Compiler} compiler compiler
    * @param {Compilation} compilation compilation
    * @param {Record<string, import("webpack").sources.Source>} assets the assets to read
-   * @param {ReturnType<TerserPlugin["assetGenerators"]>} generators the generators running at this stage
+   * @param {ReturnType<MinimizerPlugin["assetGenerators"]>} generators the generators running at this stage
    * @param {number} availableNumberOfCores how many generations may be in flight at once
    * @returns {Promise<void>}
    */
@@ -237,7 +237,7 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    */
   apply(compiler: Compiler): void;
 }
-declare namespace TerserPlugin {
+declare namespace MinimizerPlugin {
   export {
     terserMinify,
     uglifyJsMinify,
@@ -705,10 +705,6 @@ type BasePluginOptions = {
    */
   stage?: number | undefined;
   /**
-   * how the plugin names itself in the errors and warnings it reports
-   */
-  label?: string | undefined;
-  /**
    * rewrites a module's own bytes as it is built, so a re-encoding can rename the asset, or writes a file beside one already emitted
    */
   generate?: Generate | undefined;
@@ -731,7 +727,6 @@ type DefinedDefaultMinimizerAndOptions<T> =
       };
 type InternalPluginOptions<T> = BasePluginOptions & {
   stage: number | undefined;
-  label: string;
   minimizer?: {
     implementation: MinimizerImplementation<T>;
     options: MinimizerOptions<T>;

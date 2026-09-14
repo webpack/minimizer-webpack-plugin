@@ -1,22 +1,22 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`MinimizerPlugin buildError method 1`] = `
-[Error: test.js from Terser plugin
+[Error: test.js from minimizer-webpack-plugin
 Message]
 `;
 
 exports[`MinimizerPlugin buildError method 2`] = `
-[Error: test.js from Terser plugin
+[Error: test.js from minimizer-webpack-plugin
 Message [test.js:1,undefined]]
 `;
 
 exports[`MinimizerPlugin buildError method 3`] = `
-[Error: test.js from Terser plugin
+[Error: test.js from minimizer-webpack-plugin
 Message [test.js:1,undefined]]
 `;
 
 exports[`MinimizerPlugin buildError method 4`] = `
-[Error: test.js from Terser plugin
+[Error: test.js from minimizer-webpack-plugin
 Message
 Stack]
 `;
@@ -31,7 +31,7 @@ exports[`MinimizerPlugin should emit an error on a broken code in not parallel m
 
 exports[`MinimizerPlugin should emit an error on a broken code in not parallel mode: errors 1`] = `
 [
-  "Error: broken.js from Terser plugin
+  "Error: broken.js from minimizer-webpack-plugin
 Unterminated template [broken.js:1,undefined]",
 ]
 `;
@@ -48,7 +48,7 @@ exports[`MinimizerPlugin should emit an error on a broken code in parallel mode:
 
 exports[`MinimizerPlugin should emit an error on a broken code in parallel mode: errors 1`] = `
 [
-  "Error: broken.js from Terser plugin
+  "Error: broken.js from minimizer-webpack-plugin
 Unterminated template [broken.js:1,undefined]",
 ]
 `;
@@ -192,7 +192,7 @@ exports[`MinimizerPlugin should work and generate real content hash: warnings 1`
 
 exports[`MinimizerPlugin should work and respect "terser" errors (the "parallel" option is "false"): errors 1`] = `
 [
-  "Error: main.js from Terser plugin
+  "Error: main.js from minimizer-webpack-plugin
 Unexpected token name «Object», expected punc «,» [main.js:1,undefined]",
 ]
 `;
@@ -201,7 +201,7 @@ exports[`MinimizerPlugin should work and respect "terser" errors (the "parallel"
 
 exports[`MinimizerPlugin should work and respect "terser" errors (the "parallel" option is "true"): errors 1`] = `
 [
-  "Error: main.js from Terser plugin
+  "Error: main.js from minimizer-webpack-plugin
 Unexpected token name «Object», expected punc «,» [main.js:1,undefined]",
 ]
 `;
@@ -1481,18 +1481,18 @@ exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type
 
 exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option when the \`minify\` options is custom option and keep errors: errors 1`] = `
 [
-  "Error: main.js from Terser plugin
+  "Error: main.js from minimizer-webpack-plugin
 Error 1",
-  "Error: main.js from Terser plugin
+  "Error: main.js from minimizer-webpack-plugin
 Error 2",
 ]
 `;
 
 exports[`MinimizerPlugin should work with "filesystem" value for the "cache.type" option when the \`minify\` options is custom option and keep errors: errors 2`] = `
 [
-  "Error: main.js from Terser plugin
+  "Error: main.js from minimizer-webpack-plugin
 Error 1",
-  "Error: main.js from Terser plugin
+  "Error: main.js from minimizer-webpack-plugin
 Error 2",
 ]
 `;

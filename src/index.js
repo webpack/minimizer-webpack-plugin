@@ -234,7 +234,6 @@ const {
  * @property {ExtractCommentsOptions=} extractComments extract comments options
  * @property {Parallel=} parallel parallel option
  * @property {number=} stage which `processAssets` stage the minimizers run in, and the default for an `asset` generator that names none
- * @property {string=} label how the plugin names itself in the errors and warnings it reports
  * @property {Generate=} generate rewrites a module's own bytes as it is built, so a re-encoding can rename the asset, or writes a file beside one already emitted
  * @property {MinimizerOptions<EXPECTED_ANY>=} generatorOptions options for `generate`
  */
@@ -246,11 +245,16 @@ const {
 
 /**
  * @template T
- * @typedef {BasePluginOptions & { stage: number | undefined, label: string, minimizer?: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T>, filters?: (((name: string, info: AssetInfo) => boolean | undefined) | undefined)[] }, generator?: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T> } }} InternalPluginOptions
+ * @typedef {BasePluginOptions & { stage: number | undefined, minimizer?: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T>, filters?: (((name: string, info: AssetInfo) => boolean | undefined) | undefined)[] }, generator?: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T> } }} InternalPluginOptions
  */
 
+// Identity rather than display: renaming these would invalidate every user's
+// pack and move every output hash, so they keep the name the plugin shipped as.
+const CACHE_NAMESPACE = "TerserWebpackPlugin";
+const HASH_SALT = "TerserPlugin";
+
 const VALIDATION_CONFIGURATION = {
-  name: "Terser Plugin",
+  name: "Minimizer Plugin",
   baseDataPath: "options",
 };
 
@@ -292,7 +296,7 @@ const getSerializeJavascript = memoize(() => require("./serialize-javascript"));
 /**
  * @template [T=import("terser").MinifyOptions]
  */
-class TerserPlugin {
+class MinimizerPlugin {
   /**
    * @param {BasePluginOptions & DefinedDefaultMinimizerAndOptions<T>=} options options
    */
@@ -321,7 +325,6 @@ class TerserPlugin {
       include,
       exclude,
       stage,
-      label = "Terser plugin",
       generate,
       generatorOptions,
     } = this.rawOptions;
@@ -355,7 +358,6 @@ class TerserPlugin {
       // Left undefined rather than defaulted here: the constant it defaults to
       // lives on the `compiler`, which a constructor has no access to.
       stage,
-      label,
       // `false` is a plugin that only generates: there is nothing to minify,
       // so no `processAssets` tap and no chunk hash to salt.
       minimizer:
@@ -404,7 +406,7 @@ class TerserPlugin {
    * @param {string} file file
    * @returns {Error} built warning
    */
-  buildWarning(warning, file) {
+  static buildWarning(warning, file) {
     /**
      * @type {Error & { hideStack: true, file: string }}
      */
@@ -426,14 +428,14 @@ class TerserPlugin {
    * @param {Compilation["requestShortener"]=} requestShortener request shortener
    * @returns {Error} built error
    */
-  buildError(error, file, sourceMap, requestShortener) {
+  static buildError(error, file, sourceMap, requestShortener) {
     /**
      * @type {Error & { file?: string }}
      */
     let builtError;
 
     if (typeof error === "string") {
-      builtError = new Error(`${file} from ${this.options.label}\n${error}`);
+      builtError = new Error(`${file} from minimizer-webpack-plugin\n${error}`);
       builtError.file = file;
 
       return builtError;
@@ -451,7 +453,7 @@ class TerserPlugin {
 
       if (original && original.source && requestShortener) {
         builtError = new Error(
-          `${file} from ${this.options.label}\n${
+          `${file} from minimizer-webpack-plugin\n${
             error.message
           } [${requestShortener.shorten(original.source)}:${original.line},${
             original.column
@@ -467,7 +469,7 @@ class TerserPlugin {
       }
 
       builtError = new Error(
-        `${file} from ${this.options.label}\n${error.message} [${file}:${line},${
+        `${file} from minimizer-webpack-plugin\n${error.message} [${file}:${line},${
           column
         }]${
           error.stack ? `\n${error.stack.split("\n").slice(1).join("\n")}` : ""
@@ -480,7 +482,7 @@ class TerserPlugin {
 
     if (error.stack) {
       builtError = new Error(
-        `${file} from ${this.options.label}\n${
+        `${file} from minimizer-webpack-plugin\n${
           typeof error.message !== "undefined" ? error.message : ""
         }\n${error.stack}`,
       );
@@ -490,7 +492,7 @@ class TerserPlugin {
     }
 
     builtError = new Error(
-      `${file} from ${this.options.label}\n${error.message}`,
+      `${file} from minimizer-webpack-plugin\n${error.message}`,
     );
     builtError.file = file;
 
@@ -557,7 +559,7 @@ class TerserPlugin {
    * @returns {Promise<void>}
    */
   async optimize(compiler, compilation, assets, optimizeOptions) {
-    const cache = compilation.getCache("TerserWebpackPlugin");
+    const cache = compilation.getCache(CACHE_NAMESPACE);
     // Only tapped where there is one to run.
     const configured =
       /** @type {NonNullable<InternalPluginOptions<T>["minimizer"]>} */
@@ -772,7 +774,7 @@ class TerserPlugin {
           input = sourceFromInputSource;
 
           if (map) {
-            if (!TerserPlugin.isSourceMap(map)) {
+            if (!MinimizerPlugin.isSourceMap(map)) {
               compilation.warnings.push(
                 new Error(`${name} contains invalid source map`),
               );
@@ -837,10 +839,10 @@ class TerserPlugin {
             output = await run(options, matched);
           } catch (error) {
             const hasSourceMap =
-              inputSourceMap && TerserPlugin.isSourceMap(inputSourceMap);
+              inputSourceMap && MinimizerPlugin.isSourceMap(inputSourceMap);
 
             compilation.errors.push(
-              this.buildError(
+              MinimizerPlugin.buildError(
                 /** @type {Error | ErrorObject | string} */
                 (error),
                 name,
@@ -861,7 +863,7 @@ class TerserPlugin {
           if (typeof output.code === "undefined") {
             compilation.errors.push(
               new Error(
-                `${name} from ${this.options.label}\nMinimizer doesn't return result`,
+                `${name} from minimizer-webpack-plugin\nMinimizer doesn't return result`,
               ),
             );
           }
@@ -872,13 +874,13 @@ class TerserPlugin {
                * @param {Error | string} item a warning
                * @returns {Error} built warning with extra info
                */
-              (item) => this.buildWarning(item, name),
+              (item) => MinimizerPlugin.buildWarning(item, name),
             );
           }
 
           if (output.errors && output.errors.length > 0) {
             const hasSourceMap =
-              inputSourceMap && TerserPlugin.isSourceMap(inputSourceMap);
+              inputSourceMap && MinimizerPlugin.isSourceMap(inputSourceMap);
 
             output.errors = output.errors.map(
               /**
@@ -886,7 +888,7 @@ class TerserPlugin {
                * @returns {Error} built error with extra info
                */
               (item) =>
-                this.buildError(
+                MinimizerPlugin.buildError(
                   item,
                   name,
                   hasSourceMap
@@ -1280,7 +1282,7 @@ class TerserPlugin {
   /**
    * Every generator `generate` holds, whichever shape it was written in.
    * @private
-   * @returns {ReturnType<TerserPlugin["describeGenerator"]>[]} them, in the order they were written
+   * @returns {ReturnType<MinimizerPlugin["describeGenerator"]>[]} them, in the order they were written
    */
   generators() {
     const { generator } = this.options;
@@ -1337,7 +1339,7 @@ class TerserPlugin {
 
       if (!generator) {
         compilation.errors.push(
-          this.buildError(
+          MinimizerPlugin.buildError(
             new Error(
               `Error with '${resource}': no '${asked}' preset in \`generate\`, which defines ${named.map((one) => `'${one.name}'`).join(", ")}.`,
             ),
@@ -1375,7 +1377,7 @@ class TerserPlugin {
    * The generators that run over emitted assets rather than over a module as
    * it builds.
    * @private
-   * @returns {ReturnType<TerserPlugin["describeGenerator"]>[]} them, in the order they were written
+   * @returns {ReturnType<MinimizerPlugin["describeGenerator"]>[]} them, in the order they were written
    */
   assetGenerators() {
     return this.generators().filter((one) => one.type === "asset");
@@ -1421,7 +1423,7 @@ class TerserPlugin {
         one.options,
       ]);
 
-    cache.version = `${cache.version || ""}|TerserPlugin-generate-${crypto
+    cache.version = `${cache.version || ""}|${HASH_SALT}-generate-${crypto
       .createHash("sha256")
       .update(getSerializeJavascript()(identity))
       .digest("hex")
@@ -1436,7 +1438,7 @@ class TerserPlugin {
    * @param {Compilation} compilation compilation
    * @param {ReturnType<Compilation["getCache"]>} cache the generation cache
    * @param {Asset} asset the asset to generate from
-   * @param {ReturnType<TerserPlugin["assetGenerators"]>[0]} generator the generator to run
+   * @param {ReturnType<MinimizerPlugin["assetGenerators"]>[0]} generator the generator to run
    * @returns {Promise<void>}
    */
   async generateAsset(compiler, compilation, cache, asset, generator) {
@@ -1497,7 +1499,7 @@ class TerserPlugin {
         });
       } catch (error) {
         compilation.errors.push(
-          this.buildError(
+          MinimizerPlugin.buildError(
             /** @type {Error | ErrorObject | string} */ (error),
             name,
           ),
@@ -1518,13 +1520,13 @@ class TerserPlugin {
         width: generated.width,
         height: generated.height,
         errors: (generated.errors || []).map((item) =>
-          this.buildError(
+          MinimizerPlugin.buildError(
             /** @type {Error | ErrorObject | string} */ (item),
             name,
           ),
         ),
         warnings: (generated.warnings || []).map((item) =>
-          this.buildWarning(item, name),
+          MinimizerPlugin.buildWarning(item, name),
         ),
       };
 
@@ -1557,7 +1559,7 @@ class TerserPlugin {
     // a file named `[width]` is worse than a build that says why.
     if (/\[(width|height)\]/i.test(generatedName)) {
       compilation.errors.push(
-        this.buildError(
+        MinimizerPlugin.buildError(
           new Error(
             `Error with '${name}': '${generator.filename}' asks for a size this generator does not report.`,
           ),
@@ -1649,7 +1651,7 @@ class TerserPlugin {
    * @param {Compiler} compiler compiler
    * @param {Compilation} compilation compilation
    * @param {Record<string, import("webpack").sources.Source>} assets the assets to read
-   * @param {ReturnType<TerserPlugin["assetGenerators"]>} generators the generators running at this stage
+   * @param {ReturnType<MinimizerPlugin["assetGenerators"]>} generators the generators running at this stage
    * @param {number} availableNumberOfCores how many generations may be in flight at once
    * @returns {Promise<void>}
    */
@@ -1660,7 +1662,7 @@ class TerserPlugin {
     generators,
     availableNumberOfCores,
   ) {
-    const cache = compilation.getCache("TerserWebpackPlugin|generateAssets");
+    const cache = compilation.getCache(`${CACHE_NAMESPACE}|generateAssets`);
     const scheduled = [];
 
     for (const name of Object.keys(assets)) {
@@ -1745,7 +1747,7 @@ class TerserPlugin {
 
     const name = module.nameForCondition() || module.identifier();
 
-    const cache = compilation.getCache("TerserWebpackPlugin|embeddedSource");
+    const cache = compilation.getCache(`${CACHE_NAMESPACE}|embeddedSource`);
     // The minimizers and their options are in the etag, not just the source:
     // this cache outlives the build, so an entry stored under one set of
     // options must not answer for another.
@@ -1766,7 +1768,7 @@ class TerserPlugin {
         ? sourceFromInputSource.toString()
         : sourceFromInputSource;
       const inputSourceMap =
-        map && TerserPlugin.isSourceMap(map)
+        map && MinimizerPlugin.isSourceMap(map)
           ? /** @type {RawSourceMap} */ (map)
           : undefined;
 
@@ -1807,7 +1809,7 @@ class TerserPlugin {
         });
       } catch (error) {
         compilation.errors.push(
-          this.buildError(
+          MinimizerPlugin.buildError(
             /** @type {Error | ErrorObject | string} */ (error),
             name,
           ),
@@ -1837,13 +1839,13 @@ class TerserPlugin {
       output = {
         source: minified,
         errors: (result.errors || []).map((item) =>
-          this.buildError(
+          MinimizerPlugin.buildError(
             /** @type {Error | ErrorObject | string} */ (item),
             name,
           ),
         ),
         warnings: (result.warnings || []).map((item) =>
-          this.buildWarning(item, name),
+          MinimizerPlugin.buildWarning(item, name),
         ),
       };
 
@@ -1891,7 +1893,7 @@ class TerserPlugin {
     const [code] = result;
     const { RawSource } = compiler.webpack.sources;
     const input = Buffer.isBuffer(code) ? code : Buffer.from(code);
-    const cache = compilation.getCache("TerserWebpackPlugin|generate");
+    const cache = compilation.getCache(`${CACHE_NAMESPACE}|generate`);
     // The generator and its options are in the etag as well as the bytes: this
     // cache outlives the build, so an entry stored under one set of options
     // must not answer for another.
@@ -1926,7 +1928,7 @@ class TerserPlugin {
         });
       } catch (error) {
         compilation.errors.push(
-          this.buildError(
+          MinimizerPlugin.buildError(
             /** @type {Error | ErrorObject | string} */ (error),
             resource,
           ),
@@ -1944,13 +1946,13 @@ class TerserPlugin {
               : Buffer.from(minified.code),
         filename: minified.filename,
         errors: (minified.errors || []).map((item) =>
-          this.buildError(
+          MinimizerPlugin.buildError(
             /** @type {Error | ErrorObject | string} */ (item),
             resource,
           ),
         ),
         warnings: (minified.warnings || []).map((item) =>
-          this.buildWarning(item, resource),
+          MinimizerPlugin.buildWarning(item, resource),
         ),
       };
 
@@ -2158,7 +2160,7 @@ class TerserPlugin {
     // has no such hook at all; `initialize` runs after either placement.
     compiler.hooks.initialize.tap(pluginName, validateOptions);
 
-    const availableNumberOfCores = TerserPlugin.getAvailableNumberOfCores(
+    const availableNumberOfCores = MinimizerPlugin.getAvailableNumberOfCores(
       this.options.parallel,
     );
 
@@ -2189,7 +2191,7 @@ class TerserPlugin {
         });
 
         hooks.chunkHash.tap(pluginName, (chunk, hash) => {
-          hash.update("TerserPlugin");
+          hash.update(HASH_SALT);
           hash.update(data);
         });
 
@@ -2220,7 +2222,7 @@ class TerserPlugin {
           // Module hashes are taken before code generation, so what this tap
           // varies on cannot reach the code generation cache key on its own.
           embeddedHooks.embeddedSourceHash.tap(pluginName, (module, hash) => {
-            hash.update("TerserPlugin");
+            hash.update(HASH_SALT);
             hash.update(data);
           });
         }
@@ -2256,7 +2258,7 @@ class TerserPlugin {
           // Before webpack 5.110 the hook is a `SyncWaterfallHook`, which
           // rejects a promise tap. Nothing here can run without awaiting.
           compilation.errors.push(
-            this.buildError(
+            MinimizerPlugin.buildError(
               new Error(
                 `The \`generate\` option needs a webpack whose \`NormalModule\` \`processResult\` hook can await (>= 5.111); this one cannot: ${
                   /** @type {Error} */ (error).message
@@ -2283,7 +2285,7 @@ class TerserPlugin {
       // One tap per stage the generators asked for: a file written beside a
       // minified asset and one written beside a compressed asset are the same
       // work at two different moments of `processAssets`.
-      /** @type {Map<number, ReturnType<TerserPlugin["assetGenerators"]>>} */
+      /** @type {Map<number, ReturnType<MinimizerPlugin["assetGenerators"]>>} */
       const generatorsByStage = new Map();
 
       for (const generator of this.assetGenerators()) {
@@ -2331,28 +2333,28 @@ class TerserPlugin {
   }
 }
 
-TerserPlugin.terserMinify = terserMinify;
-TerserPlugin.uglifyJsMinify = uglifyJsMinify;
-TerserPlugin.swcMinify = swcMinify;
-TerserPlugin.esbuildMinify = esbuildMinify;
-TerserPlugin.jsonMinify = jsonMinify;
-TerserPlugin.htmlMinifierTerser = htmlMinifierTerser;
-TerserPlugin.swcMinifyHtml = swcMinifyHtml;
-TerserPlugin.swcMinifyHtmlFragment = swcMinifyHtmlFragment;
-TerserPlugin.minifyHtmlNode = minifyHtmlNode;
-TerserPlugin.cssnanoMinify = cssnanoMinify;
-TerserPlugin.cssoMinify = cssoMinify;
-TerserPlugin.cleanCssMinify = cleanCssMinify;
-TerserPlugin.esbuildMinifyCss = esbuildMinifyCss;
-TerserPlugin.lightningCssMinify = lightningCssMinify;
-TerserPlugin.swcMinifyCss = swcMinifyCss;
-TerserPlugin.imageminGenerate = imageminGenerate;
-TerserPlugin.imageminMinify = imageminMinify;
-TerserPlugin.imageminNormalizeConfig = imageminNormalizeConfig;
-TerserPlugin.napiRsImageMinify = napiRsImageMinify;
-TerserPlugin.sharpMinify = sharpMinify;
-TerserPlugin.sharpGenerate = sharpGenerate;
-TerserPlugin.svgoMinify = svgoMinify;
-TerserPlugin.zlibCompress = zlibCompress;
+MinimizerPlugin.terserMinify = terserMinify;
+MinimizerPlugin.uglifyJsMinify = uglifyJsMinify;
+MinimizerPlugin.swcMinify = swcMinify;
+MinimizerPlugin.esbuildMinify = esbuildMinify;
+MinimizerPlugin.jsonMinify = jsonMinify;
+MinimizerPlugin.htmlMinifierTerser = htmlMinifierTerser;
+MinimizerPlugin.swcMinifyHtml = swcMinifyHtml;
+MinimizerPlugin.swcMinifyHtmlFragment = swcMinifyHtmlFragment;
+MinimizerPlugin.minifyHtmlNode = minifyHtmlNode;
+MinimizerPlugin.cssnanoMinify = cssnanoMinify;
+MinimizerPlugin.cssoMinify = cssoMinify;
+MinimizerPlugin.cleanCssMinify = cleanCssMinify;
+MinimizerPlugin.esbuildMinifyCss = esbuildMinifyCss;
+MinimizerPlugin.lightningCssMinify = lightningCssMinify;
+MinimizerPlugin.swcMinifyCss = swcMinifyCss;
+MinimizerPlugin.imageminGenerate = imageminGenerate;
+MinimizerPlugin.imageminMinify = imageminMinify;
+MinimizerPlugin.imageminNormalizeConfig = imageminNormalizeConfig;
+MinimizerPlugin.napiRsImageMinify = napiRsImageMinify;
+MinimizerPlugin.sharpMinify = sharpMinify;
+MinimizerPlugin.sharpGenerate = sharpGenerate;
+MinimizerPlugin.svgoMinify = svgoMinify;
+MinimizerPlugin.zlibCompress = zlibCompress;
 
-module.exports = TerserPlugin;
+module.exports = MinimizerPlugin;

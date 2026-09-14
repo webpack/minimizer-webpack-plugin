@@ -705,26 +705,6 @@ describe('"zlibCompress" generator', () => {
     expect(getErrors(stats)[0]).toMatch(
       /algorithm "nope" is not found in "zlib"/,
     );
-    expect(getErrors(stats)[0]).toMatch(/from Terser plugin/);
-  });
-
-  it("should report under the label it was given", async () => {
-    new MinimizerPlugin({
-      test: /\.js$/i,
-      parallel: false,
-      minify: false,
-      label: "Compression plugin",
-      generate: {
-        implementation: MinimizerPlugin.zlibCompress,
-        options: { algorithm: "nope" },
-        type: "asset",
-        filename: "[path][base].gz",
-        stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
-      },
-    }).apply(compiler);
-
-    const stats = await compile(compiler);
-
-    expect(getErrors(stats)[0]).toMatch(/from Compression plugin/);
+    expect(getErrors(stats)[0]).toMatch(/from minimizer-webpack-plugin/);
   });
 });
