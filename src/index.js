@@ -174,7 +174,7 @@ const {
  * @property {(name: string, info?: AssetInfo) => boolean | undefined=} filter return true when the minimizer supports the asset, otherwise false. When an array of minimizers is configured, each asset is dispatched only to the minimizers whose `filter` accepts it. Assets rejected by every minimizer in the array are skipped entirely.
  * @property {() => string[] | undefined=} getTypes the languages this minimizer minifies, e.g. `["css"]`. Source that carries no filename — what a module embeds in another language's output — is dispatched by this rather than by `test` / `filter`, and a minimizer that declares nothing is never handed any
  * @property {(minimizerOptions?: EXPECTED_OBJECT) => string[] | undefined=} getEmbeddedTypes the languages this minimizer can hand out from inside what it minifies, through the `renderEmbeddedSource` option. Empty (or absent) means it nests nothing a caller can reach, and the option is not passed
- * @property {(compilation: typeof import("webpack").Compilation) => number | undefined=} getStage which `processAssets` stage this minimizer has to run in, named off the `Compilation` it is handed — compressing reads the bytes a user downloads, so it asks for `PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER`. A `stage` written in the options answers over it and puts every minimizer in one pass; otherwise each runs where it asks, chaining through the asset a later pass reads back
+ * @property {(compilation: typeof import("webpack").Compilation) => number | undefined=} getStage which `processAssets` stage this minimizer has to run in, named off the `Compilation` it is handed — compressing reads the bytes a user downloads, so it asks for `PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER`. Each runs where it asks, chaining through the asset a later pass reads back, and one asking for nothing runs where minifying belongs — after the bundle is rendered and before its hashes are taken
  */
 
 /**
@@ -211,7 +211,6 @@ const {
  * @property {Rules=} exclude exclude rule
  * @property {ExtractCommentsOptions=} extractComments extract comments options
  * @property {Parallel=} parallel parallel option
- * @property {number=} stage which `processAssets` stage the minimizers run in, and the default for an `asset` generator that names none
  * @property {MinimizerImplementation<EXPECTED_ANY>=} generate rewrites a module's own bytes as it is built, so a re-encoding can rename the asset
  * @property {MinimizerOptions<EXPECTED_ANY>=} generatorOptions options for `generate`
  */
@@ -223,7 +222,7 @@ const {
 
 /**
  * @template T
- * @typedef {BasePluginOptions & { stage: number | undefined, minimizer: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T>, filters?: (((name: string, info: AssetInfo) => boolean | undefined) | undefined)[] }, generator?: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T> } }} InternalPluginOptions
+ * @typedef {BasePluginOptions & { minimizer: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T>, filters?: (((name: string, info: AssetInfo) => boolean | undefined) | undefined)[] }, generator?: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T> } }} InternalPluginOptions
  */
 
 /**
@@ -295,7 +294,6 @@ class TerserPlugin {
       parallel = true,
       include,
       exclude,
-      stage,
       generate,
       generatorOptions,
     } = this.rawOptions;
@@ -320,9 +318,6 @@ class TerserPlugin {
       parallel,
       include,
       exclude,
-      // Left undefined rather than defaulted here: the constant it defaults to
-      // lives on the `compiler`, which a constructor has no access to.
-      stage,
       minimizer:
         /** @type {{ implementation: MinimizerImplementation<T>, options: MinimizerOptions<T>, filters?: (((name: string, info: AssetInfo) => boolean | undefined) | undefined)[] }} */
         (normalizeMinimizers(minify, resolvedMinimizerOptions)),
@@ -1209,7 +1204,7 @@ class TerserPlugin {
    * @param {string | undefined} name the preset it is written under, where it has one
    * @param {EXPECTED_ANY} entry what was written there
    * @param {EXPECTED_ANY} declared what `generatorOptions` says for it
-   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | undefined, stage: number | undefined }} the generator
+   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | undefined }} the generator
    */
   describeGenerator(name, entry, declared) {
     const descriptor = isDescriptor(entry) ? entry : undefined;
@@ -1227,7 +1222,6 @@ class TerserPlugin {
       deleteOriginalAssets: descriptor
         ? descriptor.deleteOriginalAssets
         : undefined,
-      stage: descriptor ? descriptor.stage : undefined,
     };
   }
 
@@ -1367,7 +1361,6 @@ class TerserPlugin {
         one.filename,
         String(one.filter),
         one.deleteOriginalAssets,
-        one.stage,
         one.options,
       ]);
 
@@ -1547,23 +1540,20 @@ class TerserPlugin {
   }
 
   /**
-   * The `processAssets` stage the minimizers run in, and the default for an
-   * `asset` generator that names none.
+   * Where work runs when nothing asks for anywhere else: after the bundle is
+   * rendered and before its hashes are taken, which is where minifying belongs.
    * @private
    * @param {Compiler} compiler compiler
    * @returns {number} the stage
    */
-  minimizeStage(compiler) {
-    return typeof this.options.stage === "number"
-      ? this.options.stage
-      : compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE;
+  defaultStage(compiler) {
+    return compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE;
   }
 
   /**
    * Which minimizers run at which `processAssets` stage, as indices into the
-   * configured ones. A `stage` in the options puts them all in one pass;
-   * otherwise each runs where it asks to, and they still chain — through the
-   * asset, which the later pass reads back.
+   * configured ones. Each runs where its own `getStage` asks to, and they
+   * still chain — through the asset, which the later pass reads back.
    * @private
    * @param {Compiler} compiler compiler
    * @returns {Map<number, number[]>} the indices, by stage
@@ -1573,16 +1563,13 @@ class TerserPlugin {
     const each = Array.isArray(implementation)
       ? implementation
       : [implementation];
-    const stated = this.minimizeStage(compiler);
+    const fallback = this.defaultStage(compiler);
     /** @type {Map<number, number[]>} */
     const byStage = new Map();
 
     for (let i = 0; i < each.length; i++) {
-      const asked =
-        typeof this.options.stage === "number"
-          ? undefined
-          : declaredStage(compiler, each[i]);
-      const at = typeof asked === "number" ? asked : stated;
+      const asked = declaredStage(compiler, each[i]);
+      const at = typeof asked === "number" ? asked : fallback;
       const already = byStage.get(at);
 
       if (already) {
@@ -1939,8 +1926,8 @@ class TerserPlugin {
       }
     }
 
-    // These describe a file written beside another, and when it is written,
-    // which only an `asset` generator does.
+    // `filename`, `filter` and `deleteOriginalAssets` describe a file written
+    // beside another, which only an `asset` generator does.
     for (const one of this.generators()) {
       const misplaced = [];
 
@@ -1955,10 +1942,6 @@ class TerserPlugin {
 
         if (typeof one.deleteOriginalAssets !== "undefined") {
           misplaced.push("deleteOriginalAssets");
-        }
-
-        if (typeof one.stage !== "undefined") {
-          misplaced.push("stage");
         }
       }
 
@@ -2155,7 +2138,7 @@ class TerserPlugin {
         }
       }
 
-      const stage = this.minimizeStage(compiler);
+      const fallback = this.defaultStage(compiler);
 
       const minimizersByStage = this.minimizersByStage(compiler);
       // What this plugin has already minimized in this compilation, so a later
@@ -2187,12 +2170,7 @@ class TerserPlugin {
 
       for (const generator of this.assetGenerators()) {
         const asked = declaredStage(compiler, generator.implementation);
-        const at =
-          typeof generator.stage === "number"
-            ? generator.stage
-            : typeof asked === "number"
-              ? asked
-              : stage;
+        const at = typeof asked === "number" ? asked : fallback;
         const already = generatorsByStage.get(at);
 
         if (already) {

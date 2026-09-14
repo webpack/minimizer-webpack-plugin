@@ -185,11 +185,6 @@
         }
       ]
     },
-    "stage": {
-      "description": "Which `processAssets` stage the minimizers run in, as one of webpack's `Compilation.PROCESS_ASSETS_STAGE_*` constants. Defaults to `PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE`, and is also the default for every `asset` generator that names no stage of its own.",
-      "link": "https://github.com/webpack/minimizer-webpack-plugin#stage",
-      "type": "number"
-    },
     "minify": {
       "description": "Allows you to override default minify function. Written as an object it states how to run one minimizer, options included.",
       "link": "https://github.com/webpack/minimizer-webpack-plugin#number",
@@ -293,10 +288,6 @@
             "deleteOriginalAssets": {
               "description": "Removes the asset generated from. `asset` generators only.",
               "type": "boolean"
-            },
-            "stage": {
-              "description": "Which `processAssets` stage this generator runs in. `asset` generators only; defaults to the plugin's own `stage`.",
-              "type": "number"
             }
           },
           "required": ["implementation"]
@@ -345,10 +336,6 @@
                   "deleteOriginalAssets": {
                     "description": "Removes the asset generated from. `asset` generators only.",
                     "type": "boolean"
-                  },
-                  "stage": {
-                    "description": "Which `processAssets` stage this generator runs in. `asset` generators only; defaults to the plugin's own `stage`.",
-                    "type": "number"
                   }
                 },
                 "required": ["implementation"]

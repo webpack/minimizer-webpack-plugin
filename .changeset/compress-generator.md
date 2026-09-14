@@ -2,4 +2,4 @@
 "minimizer-webpack-plugin": minor
 ---
 
-add a `stage` option choosing the `processAssets` stage the minimizers run in, let a minimizer or generator ask for its own through a `getStage` on the function — the way it declares everything else about itself, with each of an array running where it asks so minification still lands before the hash is taken — give an `asset` generator a `stage` of its own, and ship `MinimizerPlugin.compress` — which takes the `algorithm` to run and the `compressionOptions` to run it with, and goes to `minify` to compress an asset in place or to `generate` to write the compressed file beside it
+let a minimizer or generator say which `processAssets` stage it runs in, through a `getStage` on the function — the way it declares everything else about itself — and ship `MinimizerPlugin.compress`, which takes the `algorithm` to run and the `compressionOptions` to run it with, and goes to `minify` to compress an asset in place or to `generate` to write the compressed file beside it

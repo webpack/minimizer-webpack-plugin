@@ -64,8 +64,8 @@ Transport encodings:
   or one of your own — and `compressionOptions` for it, and needs no extra
   dependency. Give it to [`minify`](#minify) to compress an asset **in place**,
   or to [`generate`](#generate) as an `asset` generator to write the compressed
-  file **beside** the original; either way [`stage`](#stage) is what puts it
-  after the minimizers.
+  file **beside** the original; either way it puts itself after the minimizers,
+  through a `getStage` of its own.
 
 All of the non-default minimizers are declared as **optional** peer
 dependencies — install only the ones you actually use. One plugin instance
@@ -131,7 +131,6 @@ Using supported `devtool` values enable source map generation.
 - **[`include`](#include)**
 - **[`exclude`](#exclude)**
 - **[`parallel`](#parallel)**
-- **[`stage`](#stage)**
 - **[`minify`](#minify)**
 - **[`minimizerOptions`](#minimizeroptions)** (deprecated)
 - **[`generate`](#generate)**
@@ -272,58 +271,6 @@ module.exports = {
     minimizer: [
       new MinimizerPlugin({
         parallel: 4,
-      }),
-    ],
-  },
-};
-```
-
-### `stage`
-
-Type:
-
-```ts
-type stage = number;
-```
-
-Default: what the configured minimizers ask for, else `compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE`
-
-Which [`processAssets`](https://webpack.js.org/api/compilation-hooks/#processassets) stage the minimizers run in, as one of webpack's `Compilation.PROCESS_ASSETS_STAGE_*` constants. It is also the default for every [`asset` generator](#generate) that names no `stage` of its own.
-
-**You rarely need to set it.** A minimizer says where it has to run through a
-`getStage` of its own, the way it says what it is through `getMinimizerVersion`
-or `getTypes` — `MinimizerPlugin.compress` asks for
-`PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER` because compressed bytes are what a
-user downloads, so nothing in your config has to repeat that.
-
-Where an array mixes them, **each runs at the stage it asks for** rather than
-all of them at one. They still chain, through the asset itself: minification
-rewrites it at its stage and compression reads that back at its own. Dragging
-the whole array to the latest stage would carry minification past
-`PROCESS_ASSETS_STAGE_OPTIMIZE_HASH`, and `[contenthash]` would then name bytes
-nobody is served.
-
-Setting this option is the last word over all of that, and puts every minimizer
-in one pass at the stage you named — reach for it to override a minimizer, or to
-move one that asks for nothing. Minification's own default is where it belongs:
-after the bundle is rendered and before its hashes are taken.
-
-```js
-// A minimizer of your own says so like this, and is handed the `Compilation`
-// class so it can name a stage rather than a number.
-myMinify.getStage = (compilation) =>
-  compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER;
-```
-
-```js
-const { Compilation } = require("webpack");
-
-module.exports = {
-  optimization: {
-    minimize: true,
-    minimizer: [
-      new MinimizerPlugin({
-        stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
       }),
     ],
   },
@@ -737,7 +684,6 @@ interface generator {
   filename?: string;
   filter?: (name: string) => boolean;
   deleteOriginalAssets?: boolean;
-  stage?: number;
 }
 
 type generate =
@@ -853,14 +799,14 @@ new MinimizerPlugin({
 `type` decides which of the two things a generator does, and they are not
 interchangeable — they read different input, at different points in the build:
 
-|                                | `"import"` (the default)                   | `"asset"`                                                        |
-| :----------------------------- | :----------------------------------------- | :--------------------------------------------------------------- |
-| Reads                          | a module, **as it builds**                 | an asset, **once it is emitted**                                 |
-| Produces                       | that module's own bytes, renamed with them | a **new file beside** the one it read                            |
-| Picked by                      | `?as=<name>` on the import                 | `test` / `include` / `exclude`, then `filter`                    |
-| Reaches a file nothing imports | no                                         | yes — copied assets included                                     |
-| Fields it reads                | `implementation`, `options`                | those plus `filename`, `filter`, `deleteOriginalAssets`, `stage` |
-| webpack                        | **5.111** or newer                         | any supported version                                            |
+|                                | `"import"` (the default)                   | `"asset"`                                               |
+| :----------------------------- | :----------------------------------------- | :------------------------------------------------------ |
+| Reads                          | a module, **as it builds**                 | an asset, **once it is emitted**                        |
+| Produces                       | that module's own bytes, renamed with them | a **new file beside** the one it read                   |
+| Picked by                      | `?as=<name>` on the import                 | `test` / `include` / `exclude`, then `filter`           |
+| Reaches a file nothing imports | no                                         | yes — copied assets included                            |
+| Fields it reads                | `implementation`, `options`                | those plus `filename`, `filter`, `deleteOriginalAssets` |
+| webpack                        | **5.111** or newer                         | any supported version                                   |
 
 **`"import"`** is the only point at which a rename can reach the bundle: the
 asset is named while its module is built, so every reference follows it. The
@@ -918,16 +864,16 @@ photo.jpg     still there, unless `deleteOriginalAssets`
 photo.webp    generated beside it
 ```
 
-`filename`, `filter`, `deleteOriginalAssets` and `stage` describe a file being
-written beside another, and when, so they belong to `"asset"` and setting one on
-an `"import"` generator is an error rather than a field that quietly does
-nothing.
+`filename`, `filter` and `deleteOriginalAssets` describe a file being written
+beside another, so they belong to `"asset"` and setting one on an `"import"`
+generator is an error rather than a field that quietly does nothing.
 
-**`stage`** is the one of them that says _when_: it defaults to the plugin's own
-[`stage`](#stage), and naming one is how a generator runs somewhere other than
-beside the minimizers. Compressing has to read the bytes a user downloads, so it
-belongs at `PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER`, after every minimizer has
-had its say.
+**When** a generator runs is not among them, because it is not the config's to
+say: the implementation declares it through a `getStage` of its own, the way it
+declares everything else about itself — see [`minify`](#minify). Compressing has
+to read the bytes a user downloads, so `MinimizerPlugin.compress` asks for
+`PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER` and runs after every minimizer has had
+its say; one that asks for nothing runs where minifying does.
 
 `MinimizerPlugin.compress` ships with the plugin and is written against that.
 `algorithm` says which compression to run — a `zlib` function's name, or one of
@@ -938,7 +884,6 @@ one it read, so both survive and the URL says which is which:
 
 ```js
 const MinimizerPlugin = require("minimizer-webpack-plugin");
-const { Compilation } = require("webpack");
 
 module.exports = {
   optimization: {
@@ -951,7 +896,6 @@ module.exports = {
             implementation: MinimizerPlugin.compress,
             options: { algorithm: "gzip" },
             type: "asset",
-            stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
             filename: "[path][base].gz",
           },
           brotli: {
@@ -961,7 +905,6 @@ module.exports = {
               compressionOptions: { params: {} },
             },
             type: "asset",
-            stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
             filename: "[path][base].br",
           },
         },

@@ -33,6 +33,29 @@ const describeIf = (condition) => (condition ? describe : describe.skip);
  * Records the order in which `processAssets` taps run, so a stage a plugin was
  * asked to run in can be observed as a position rather than as a number.
  */
+/**
+ * A generator that records when it ran and asks to run where compression does.
+ * @param {string[]} order where to record
+ * @param {string} label what to record
+ * @returns {EXPECTED_ANY} the generator
+ */
+const lateGenerator = (order, label) => {
+  /**
+   * @param {Record<string, string | Buffer>} input input
+   * @returns {{ code: string | Buffer }} the result
+   */
+  const run = (input) => {
+    order.push(label);
+
+    return { code: Object.values(input)[0] };
+  };
+
+  run.getStage = (compilation) =>
+    compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER;
+
+  return run;
+};
+
 class RecordStage {
   constructor(order, label, stage) {
     this.order = order;
@@ -52,7 +75,7 @@ class RecordStage {
   }
 }
 
-describe('"stage" option', () => {
+describe("where work runs", () => {
   let compiler;
 
   beforeEach(() => {
@@ -91,31 +114,6 @@ describe('"stage" option', () => {
     expect(getWarnings(stats)).toEqual([]);
   });
 
-  it("should run the minimizers at the stage it names", async () => {
-    const order = [];
-
-    new RecordStage(
-      order,
-      "before",
-      Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE,
-    ).apply(compiler);
-    new MinimizerPlugin({
-      parallel: false,
-      stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
-      minify: (input) => {
-        order.push("minify");
-
-        return { code: Object.values(input)[0] };
-      },
-    }).apply(compiler);
-
-    const stats = await compile(compiler);
-
-    expect(order).toEqual(["before", "minify"]);
-    expect(getErrors(stats)).toEqual([]);
-    expect(getWarnings(stats)).toEqual([]);
-  });
-
   it("should run an asset generator at its own stage, after the minimizers", async () => {
     const order = [];
 
@@ -127,14 +125,9 @@ describe('"stage" option', () => {
         return { code: Object.values(input)[0] };
       },
       generate: {
-        implementation: (input) => {
-          order.push("generate");
-
-          return { code: Object.values(input)[0] };
-        },
+        implementation: lateGenerator(order, "generate"),
         type: "asset",
         filename: "[path][base].copy",
-        stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
       },
     }).apply(compiler);
 
@@ -146,7 +139,7 @@ describe('"stage" option', () => {
     expect(getWarnings(stats)).toEqual([]);
   });
 
-  it("should run two generators each at the stage it named", async () => {
+  it("should run two generators each where its own implementation asks", async () => {
     const order = [];
 
     /**
@@ -164,16 +157,14 @@ describe('"stage" option', () => {
       minify: (input) => ({ code: Object.values(input)[0] }),
       generate: {
         late: {
-          implementation: record("late"),
+          implementation: lateGenerator(order, "late"),
           type: "asset",
           filename: "[path][base].late",
-          stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
         },
         early: {
           implementation: record("early"),
           type: "asset",
           filename: "[path][base].early",
-          stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE,
         },
       },
     }).apply(compiler);
@@ -249,31 +240,6 @@ describe("a minimizer that asks for its own stage", () => {
     const stats = await compile(compiler);
 
     expect(order).toEqual(["size", "hash", "minify"]);
-    expect(getErrors(stats)).toEqual([]);
-  });
-
-  it("should let a `stage` in the options answer over it", async () => {
-    const order = [];
-
-    new RecordStage(
-      order,
-      "transfer",
-      Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
-    ).apply(compiler);
-    new MinimizerPlugin({
-      parallel: false,
-      // The option is the last word, even where the minimizer asks otherwise.
-      stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE,
-      minify: asking(
-        order,
-        "minify",
-        Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
-      ),
-    }).apply(compiler);
-
-    const stats = await compile(compiler);
-
-    expect(order).toEqual(["minify", "transfer"]);
     expect(getErrors(stats)).toEqual([]);
   });
 

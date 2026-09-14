@@ -96,7 +96,7 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    * @param {string | undefined} name the preset it is written under, where it has one
    * @param {EXPECTED_ANY} entry what was written there
    * @param {EXPECTED_ANY} declared what `generatorOptions` says for it
-   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | undefined, stage: number | undefined }} the generator
+   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | undefined }} the generator
    */
   private describeGenerator;
   /**
@@ -164,18 +164,17 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    */
   private generateAssets;
   /**
-   * The `processAssets` stage the minimizers run in, and the default for an
-   * `asset` generator that names none.
+   * Where work runs when nothing asks for anywhere else: after the bundle is
+   * rendered and before its hashes are taken, which is where minifying belongs.
    * @private
    * @param {Compiler} compiler compiler
    * @returns {number} the stage
    */
-  private minimizeStage;
+  private defaultStage;
   /**
    * Which minimizers run at which `processAssets` stage, as indices into the
-   * configured ones. A `stage` in the options puts them all in one pass;
-   * otherwise each runs where it asks to, and they still chain — through the
-   * asset, which the later pass reads back.
+   * configured ones. Each runs where its own `getStage` asks to, and they
+   * still chain — through the asset, which the later pass reads back.
    * @private
    * @param {Compiler} compiler compiler
    * @returns {Map<number, number[]>} the indices, by stage
@@ -555,7 +554,7 @@ type MinimizeFunctionHelpers = {
   getEmbeddedTypes?:
     ((minimizerOptions?: EXPECTED_OBJECT) => string[] | undefined) | undefined;
   /**
-   * which `processAssets` stage this minimizer has to run in, named off the `Compilation` it is handed — compressing reads the bytes a user downloads, so it asks for `PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER`. A `stage` written in the options answers over it and puts every minimizer in one pass; otherwise each runs where it asks, chaining through the asset a later pass reads back
+   * which `processAssets` stage this minimizer has to run in, named off the `Compilation` it is handed — compressing reads the bytes a user downloads, so it asks for `PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER`. Each runs where it asks, chaining through the asset a later pass reads back, and one asking for nothing runs where minifying belongs — after the bundle is rendered and before its hashes are taken
    */
   getStage?:
     | ((
@@ -641,10 +640,6 @@ type BasePluginOptions = {
    */
   parallel?: Parallel | undefined;
   /**
-   * which `processAssets` stage the minimizers run in, and the default for an `asset` generator that names none
-   */
-  stage?: number | undefined;
-  /**
    * rewrites a module's own bytes as it is built, so a re-encoding can rename the asset
    */
   generate?: MinimizerImplementation<EXPECTED_ANY> | undefined;
@@ -666,7 +661,6 @@ type DefinedDefaultMinimizerAndOptions<T> =
         terserOptions?: MinimizerOptions<T> | undefined;
       };
 type InternalPluginOptions<T> = BasePluginOptions & {
-  stage: number | undefined;
   minimizer: {
     implementation: MinimizerImplementation<T>;
     options: MinimizerOptions<T>;
