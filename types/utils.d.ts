@@ -902,3 +902,35 @@ export namespace uglifyJsMinify {
    */
   function filter(name: string): boolean;
 }
+/**
+ * Compress an asset's bytes, so what a server sends under `Content-Encoding`
+ * is written beside the asset it came from. `algorithm` names a function of
+ * `zlib` or is one of your own, taking `(input, options, callback)`.
+ * @param {Input} input input
+ * @param {RawSourceMap=} sourceMap source map (ignored, compressed bytes carry none)
+ * @param {CustomOptions=} minimizerOptions options
+ * @returns {Promise<MinimizedResult>} minimized result
+ */
+export function zlibCompress(
+  input: Input,
+  sourceMap?: RawSourceMap | undefined,
+  minimizerOptions?: CustomOptions | undefined,
+): Promise<MinimizedResult>;
+export namespace zlibCompress {
+  /**
+   * @returns {string | undefined} the version the compressed bytes depend on
+   */
+  function getMinimizerVersion(): string | undefined;
+  /**
+   * @returns {boolean} true, compressed output is binary
+   */
+  function supportsBinary(): boolean;
+  /**
+   * @returns {boolean} false, the bytes have no way across to a worker
+   */
+  function supportsWorker(): boolean;
+  /**
+   * @returns {boolean} false
+   */
+  function supportsWorkerThreads(): boolean;
+}

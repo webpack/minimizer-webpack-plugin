@@ -35,6 +35,7 @@ const {
   terserMinify,
   throttleAll,
   uglifyJsMinify,
+  zlibCompress,
 } = require("./utils");
 
 /** @typedef {import("schema-utils/declarations/validate").Schema} Schema */
@@ -209,6 +210,7 @@ const {
  * @property {Rules=} exclude exclude rule
  * @property {ExtractCommentsOptions=} extractComments extract comments options
  * @property {Parallel=} parallel parallel option
+ * @property {number=} stage which `processAssets` stage the minimizers run in, and the default for an `asset` generator that names none
  * @property {MinimizerImplementation<EXPECTED_ANY>=} generate rewrites a module's own bytes as it is built, so a re-encoding can rename the asset
  * @property {MinimizerOptions<EXPECTED_ANY>=} generatorOptions options for `generate`
  */
@@ -220,13 +222,26 @@ const {
 
 /**
  * @template T
- * @typedef {BasePluginOptions & { minimizer: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T>, filters?: (((name: string, info: AssetInfo) => boolean | undefined) | undefined)[] }, generator?: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T> } }} InternalPluginOptions
+ * @typedef {BasePluginOptions & { stage: number | undefined, minimizer: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T>, filters?: (((name: string, info: AssetInfo) => boolean | undefined) | undefined)[] }, generator?: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T> } }} InternalPluginOptions
  */
 
 const VALIDATION_CONFIGURATION = {
   name: "Terser Plugin",
   baseDataPath: "options",
 };
+
+// Every descriptor key that only makes sense for a generator writing a file
+// beside the one it read.
+const ASSET_GENERATOR_FIELDS = /** @type {const} */ ([
+  "filename",
+  "filter",
+  "deleteOriginalAssets",
+  "stage",
+  "threshold",
+  "minRatio",
+  "relatedName",
+  "assetInfo",
+]);
 
 const getTraceMapping = memoize(() => require("@jridgewell/trace-mapping"));
 const getSerializeJavascript = memoize(() => require("./serialize-javascript"));
@@ -262,6 +277,7 @@ class TerserPlugin {
       parallel = true,
       include,
       exclude,
+      stage,
       generate,
       generatorOptions,
     } = this.rawOptions;
@@ -286,6 +302,9 @@ class TerserPlugin {
       parallel,
       include,
       exclude,
+      // Left undefined rather than defaulted here: the constant it defaults to
+      // lives on the `compiler`, which a constructor has no access to.
+      stage,
       minimizer:
         /** @type {{ implementation: MinimizerImplementation<T>, options: MinimizerOptions<T>, filters?: (((name: string, info: AssetInfo) => boolean | undefined) | undefined)[] }} */
         (normalizeMinimizers(minify, resolvedMinimizerOptions)),
@@ -1154,7 +1173,7 @@ class TerserPlugin {
    * @param {string | undefined} name the preset it is written under, where it has one
    * @param {EXPECTED_ANY} entry what was written there
    * @param {EXPECTED_ANY} declared what `generatorOptions` says for it
-   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | undefined }} the generator
+   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | "keep-source-map" | ((name: string) => boolean) | undefined, stage: number | undefined, threshold: number | undefined, minRatio: number | undefined, relatedName: string | undefined, assetInfo: AssetInfo | undefined }} the generator
    */
   describeGenerator(name, entry, declared) {
     const descriptor = isDescriptor(entry) ? entry : undefined;
@@ -1172,6 +1191,11 @@ class TerserPlugin {
       deleteOriginalAssets: descriptor
         ? descriptor.deleteOriginalAssets
         : undefined,
+      stage: descriptor ? descriptor.stage : undefined,
+      threshold: descriptor ? descriptor.threshold : undefined,
+      minRatio: descriptor ? descriptor.minRatio : undefined,
+      relatedName: descriptor ? descriptor.relatedName : undefined,
+      assetInfo: descriptor ? descriptor.assetInfo : undefined,
     };
   }
 
@@ -1311,6 +1335,11 @@ class TerserPlugin {
         one.filename,
         String(one.filter),
         one.deleteOriginalAssets,
+        one.stage,
+        one.threshold,
+        one.minRatio,
+        one.relatedName,
+        one.assetInfo,
         one.options,
       ]);
 
@@ -1335,8 +1364,24 @@ class TerserPlugin {
   async generateAsset(compiler, compilation, cache, asset, generator) {
     const { RawSource } = compiler.webpack.sources;
     const { name, info, source } = asset;
+    const { relatedName } = generator;
+
+    // An asset already carrying this generator's result is one it has run on,
+    // whether in an earlier `additionalAssets` pass or a previous watch build.
+    if (relatedName && info.related && info.related[relatedName]) {
+      return;
+    }
+
     const code = source.source();
     const input = Buffer.isBuffer(code) ? code : Buffer.from(code);
+
+    if (
+      typeof generator.threshold === "number" &&
+      input.length < generator.threshold
+    ) {
+      return;
+    }
+
     // The generator is in the item's name rather than its etag: two presets
     // reading the same asset must not answer for one another.
     const cacheItem = cache.getItemCache(
@@ -1434,24 +1479,63 @@ class TerserPlugin {
 
       return;
     }
+    // Re-encoding that bought nothing is not worth a second file. Measured
+    // against the bytes read rather than the asset's own reported size, which
+    // a source map would count too.
+    if (
+      typeof generator.minRatio === "number" &&
+      output.code.length / input.length > generator.minRatio
+    ) {
+      return;
+    }
+
     const generatedSource = new RawSource(output.code);
     // The derived name carries the original's hash, so what the original
     // promised about its own name still holds; its sourcemap does not follow.
-    const generatedInfo = { ...info, generated: true };
+    const generatedInfo = { ...info, ...generator.assetInfo, generated: true };
 
     delete generatedInfo.related;
 
     if (compilation.getAsset(generatedName)) {
       compilation.updateAsset(generatedName, generatedSource, generatedInfo);
+    } else {
+      compilation.emitAsset(generatedName, generatedSource, generatedInfo);
+    }
+
+    const deleteOriginal = generator.deleteOriginalAssets;
+
+    if (!deleteOriginal) {
+      if (relatedName) {
+        compilation.updateAsset(name, source, {
+          related: { [relatedName]: generatedName },
+        });
+      }
 
       return;
     }
 
-    compilation.emitAsset(generatedName, generatedSource, generatedInfo);
-
-    if (generator.deleteOriginalAssets && compilation.getAsset(name)) {
-      compilation.deleteAsset(name);
+    if (!compilation.getAsset(name)) {
+      return;
     }
+
+    if (deleteOriginal === "keep-source-map") {
+      // The map is the original's own; detaching it first is what keeps the
+      // asset from being deleted along with it.
+      compilation.updateAsset(name, source, { related: { sourceMap: null } });
+      compilation.deleteAsset(name);
+
+      return;
+    }
+
+    if (typeof deleteOriginal === "function") {
+      if (deleteOriginal(name)) {
+        compilation.deleteAsset(name);
+      }
+
+      return;
+    }
+
+    compilation.deleteAsset(name);
   }
 
   /**
@@ -1461,15 +1545,16 @@ class TerserPlugin {
    * @private
    * @param {Compiler} compiler compiler
    * @param {Compilation} compilation compilation
+   * @param {ReturnType<TerserPlugin["assetGenerators"]>} generators the generators running at this stage
+   * @param {number} availableNumberOfCores how many generations may be in flight at once
    * @returns {Promise<void>}
    */
-  async generateAssets(compiler, compilation) {
-    const generators = this.assetGenerators();
-
-    if (generators.length === 0) {
-      return;
-    }
-
+  async generateAssets(
+    compiler,
+    compilation,
+    generators,
+    availableNumberOfCores,
+  ) {
     const cache = compilation.getCache("TerserWebpackPlugin|generateAssets");
     const scheduled = [];
 
@@ -1485,13 +1570,38 @@ class TerserPlugin {
           continue;
         }
 
-        scheduled.push(
+        scheduled.push(() =>
           this.generateAsset(compiler, compilation, cache, asset, generator),
         );
       }
     }
 
-    await Promise.all(scheduled);
+    if (scheduled.length === 0) {
+      return;
+    }
+
+    // A generator runs in this process, so the bound the minify path applies
+    // without a pool applies here too: re-encoding holds a whole asset in
+    // memory, and every asset at once is how a large build runs out of it.
+    await throttleAll(
+      availableNumberOfCores > 0
+        ? Math.min(scheduled.length, availableNumberOfCores)
+        : scheduled.length,
+      scheduled,
+    );
+  }
+
+  /**
+   * The `processAssets` stage the minimizers run in, and the default for an
+   * `asset` generator that names none.
+   * @private
+   * @param {Compiler} compiler compiler
+   * @returns {number} the stage
+   */
+  minimizeStage(compiler) {
+    return typeof this.options.stage === "number"
+      ? this.options.stage
+      : compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE;
   }
 
   /**
@@ -1838,22 +1948,16 @@ class TerserPlugin {
       }
     }
 
-    // `filename`, `filter` and `deleteOriginalAssets` describe a file written
-    // beside another, which only an `asset` generator does.
+    // These describe a file written beside another, which only an `asset`
+    // generator does.
     for (const one of this.generators()) {
       const misplaced = [];
 
       if (one.type !== "asset") {
-        if (typeof one.filename !== "undefined") {
-          misplaced.push("filename");
-        }
-
-        if (typeof one.filter !== "undefined") {
-          misplaced.push("filter");
-        }
-
-        if (typeof one.deleteOriginalAssets !== "undefined") {
-          misplaced.push("deleteOriginalAssets");
+        for (const field of ASSET_GENERATOR_FIELDS) {
+          if (typeof one[field] !== "undefined") {
+            misplaced.push(field);
+          }
         }
       }
 
@@ -2050,27 +2154,46 @@ class TerserPlugin {
         }
       }
 
+      const stage = this.minimizeStage(compiler);
+
       compilation.hooks.processAssets.tapPromise(
-        {
-          name: pluginName,
-          stage:
-            compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE,
-          additionalAssets: true,
-        },
+        { name: pluginName, stage, additionalAssets: true },
         (assets) =>
           this.optimize(compiler, compilation, assets, {
             availableNumberOfCores,
           }),
       );
 
-      compilation.hooks.processAssets.tapPromise(
-        {
-          name: pluginName,
-          stage:
-            compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE,
-        },
-        () => this.generateAssets(compiler, compilation),
-      );
+      // One tap per stage the generators asked for: a file written beside a
+      // minified asset and one written beside a compressed asset are the same
+      // work at two different moments of `processAssets`.
+      /** @type {Map<number, ReturnType<TerserPlugin["assetGenerators"]>>} */
+      const generatorsByStage = new Map();
+
+      for (const generator of this.assetGenerators()) {
+        const at =
+          typeof generator.stage === "number" ? generator.stage : stage;
+        const already = generatorsByStage.get(at);
+
+        if (already) {
+          already.push(generator);
+        } else {
+          generatorsByStage.set(at, [generator]);
+        }
+      }
+
+      for (const [at, generators] of generatorsByStage) {
+        compilation.hooks.processAssets.tapPromise(
+          { name: pluginName, stage: at },
+          () =>
+            this.generateAssets(
+              compiler,
+              compilation,
+              generators,
+              availableNumberOfCores,
+            ),
+        );
+      }
 
       compilation.hooks.statsPrinter.tap(pluginName, (stats) => {
         stats.hooks.print
@@ -2113,5 +2236,6 @@ TerserPlugin.napiRsImageMinify = napiRsImageMinify;
 TerserPlugin.sharpMinify = sharpMinify;
 TerserPlugin.sharpGenerate = sharpGenerate;
 TerserPlugin.svgoMinify = svgoMinify;
+TerserPlugin.zlibCompress = zlibCompress;
 
 module.exports = TerserPlugin;

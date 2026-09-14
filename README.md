@@ -120,6 +120,7 @@ Using supported `devtool` values enable source map generation.
 - **[`include`](#include)**
 - **[`exclude`](#exclude)**
 - **[`parallel`](#parallel)**
+- **[`stage`](#stage)**
 - **[`minify`](#minify)**
 - **[`minimizerOptions`](#minimizeroptions)** (deprecated)
 - **[`generate`](#generate)**
@@ -260,6 +261,35 @@ module.exports = {
     minimizer: [
       new MinimizerPlugin({
         parallel: 4,
+      }),
+    ],
+  },
+};
+```
+
+### `stage`
+
+Type:
+
+```ts
+type stage = number;
+```
+
+Default: `compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE`
+
+Which [`processAssets`](https://webpack.js.org/api/compilation-hooks/#processassets) stage the minimizers run in, as one of webpack's `Compilation.PROCESS_ASSETS_STAGE_*` constants. It is also the default for every [`asset` generator](#generate) that names no `stage` of its own.
+
+The default is where minification belongs: after the bundle is rendered and before its hashes are taken. Move it when the work has to see what a later stage produced — compressing an asset, for instance, has to read the bytes a user downloads, which is `PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER`.
+
+```js
+const { Compilation } = require("webpack");
+
+module.exports = {
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new MinimizerPlugin({
+        stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
       }),
     ],
   },
@@ -665,7 +695,13 @@ interface generator {
   type?: "import" | "asset";
   filename?: string;
   filter?: (name: string) => boolean;
-  deleteOriginalAssets?: boolean;
+  deleteOriginalAssets?:
+    boolean | "keep-source-map" | ((name: string) => boolean);
+  stage?: number;
+  threshold?: number;
+  minRatio?: number;
+  relatedName?: string;
+  assetInfo?: Record<string, any>;
 }
 
 type generate =
@@ -781,14 +817,14 @@ new MinimizerPlugin({
 `type` decides which of the two things a generator does, and they are not
 interchangeable — they read different input, at different points in the build:
 
-|                                | `"import"` (the default)                   | `"asset"`                                               |
-| :----------------------------- | :----------------------------------------- | :------------------------------------------------------ |
-| Reads                          | a module, **as it builds**                 | an asset, **once it is emitted**                        |
-| Produces                       | that module's own bytes, renamed with them | a **new file beside** the one it read                   |
-| Picked by                      | `?as=<name>` on the import                 | `test` / `include` / `exclude`, then `filter`           |
-| Reaches a file nothing imports | no                                         | yes — copied assets included                            |
-| Fields it reads                | `implementation`, `options`                | those plus `filename`, `filter`, `deleteOriginalAssets` |
-| webpack                        | **5.111** or newer                         | any supported version                                   |
+|                                | `"import"` (the default)                   | `"asset"`                                                                                                             |
+| :----------------------------- | :----------------------------------------- | :-------------------------------------------------------------------------------------------------------------------- |
+| Reads                          | a module, **as it builds**                 | an asset, **once it is emitted**                                                                                      |
+| Produces                       | that module's own bytes, renamed with them | a **new file beside** the one it read                                                                                 |
+| Picked by                      | `?as=<name>` on the import                 | `test` / `include` / `exclude`, then `filter`                                                                         |
+| Reaches a file nothing imports | no                                         | yes — copied assets included                                                                                          |
+| Fields it reads                | `implementation`, `options`                | those plus `filename`, `filter`, `deleteOriginalAssets`, `stage`, `threshold`, `minRatio`, `relatedName`, `assetInfo` |
+| webpack                        | **5.111** or newer                         | any supported version                                                                                                 |
 
 **`"import"`** is the only point at which a rename can reach the bundle: the
 asset is named while its module is built, so every reference follows it. The
@@ -846,9 +882,80 @@ photo.jpg     still there, unless `deleteOriginalAssets`
 photo.webp    generated beside it
 ```
 
-`filename`, `filter` and `deleteOriginalAssets` describe a file being written
-beside another, so they belong to `"asset"` and setting one on an `"import"`
-generator is an error rather than a field that quietly does nothing.
+`filename`, `filter`, `deleteOriginalAssets`, `stage`, `threshold`, `minRatio`,
+`relatedName` and `assetInfo` describe a file being written beside another, so
+they belong to `"asset"` and setting one on an `"import"` generator is an error
+rather than a field that quietly does nothing.
+
+`deleteOriginalAssets` also takes `"keep-source-map"`, which detaches the
+original's source map before deleting it so that map survives, and a function
+asked per asset.
+
+An `"asset"` generator that re-encodes an asset for transport rather than for
+another format takes four more fields, and they are what let one describe
+compression:
+
+- **`stage`** — which [`processAssets`](#stage) stage it runs in. Defaults to
+  the plugin's own `stage`. Compression has to read the bytes a user
+  downloads, so it runs at `PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER`, after
+  every minimizer.
+- **`threshold`** — assets smaller than this many bytes are left alone.
+- **`minRatio`** — the result is kept only when
+  `generated size / original size` is at or below it, so a re-encoding that
+  bought nothing does not become a second file.
+- **`relatedName`** — records the result on the original as
+  `info.related[relatedName]`, which is how a dev server finds the compressed
+  form of an asset, and how an asset that already carries one is declined.
+- **`assetInfo`** — extra [`AssetInfo`](https://webpack.js.org/api/stats/)
+  keys the generated asset carries.
+
+`zlibCompress` ships with the plugin and is written against them. It takes
+`algorithm` — a `zlib` function's name, or one of your own taking
+`(input, options, callback)` — and `compressionOptions` for it:
+
+```js
+const MinimizerPlugin = require("minimizer-webpack-plugin");
+const { Compilation } = require("webpack");
+
+module.exports = {
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new MinimizerPlugin({
+        test: /\.(js|css|html|svg)$/i,
+        generate: {
+          gzip: {
+            implementation: MinimizerPlugin.zlibCompress,
+            options: { algorithm: "gzip" },
+            type: "asset",
+            stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
+            filename: "[path][base].gz",
+            relatedName: "gzipped",
+            assetInfo: { compressed: true },
+            threshold: 0,
+            minRatio: 0.8,
+          },
+          brotli: {
+            implementation: MinimizerPlugin.zlibCompress,
+            options: { algorithm: "brotliCompress" },
+            type: "asset",
+            stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
+            filename: "[path][base].br",
+            relatedName: "brotliCompressed",
+            assetInfo: { compressed: true },
+            minRatio: 0.8,
+          },
+        },
+      }),
+    ],
+  },
+};
+```
+
+Minification and compression are then one plugin over one pass of filtering and
+one cache, and the ordering they need — compress what minification produced — is
+what `stage` states rather than what applying two plugins in the right order
+happens to give.
 
 `ecma` is filled in from
 [`output.environment`](https://webpack.js.org/configuration/output/#outputenvironment)
