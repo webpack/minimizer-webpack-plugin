@@ -1420,6 +1420,17 @@ class MinimizerPlugin {
   }
 
   /**
+   * The minimizers as a list, whichever shape they were written in. Empty is
+   * `minify: false`, which is what every pass over them then does nothing for.
+   * @private
+   * @param {EXPECTED_ANY} implementation one implementation, or an array
+   * @returns {EXPECTED_ANY[]} them
+   */
+  minimizerImplementations(implementation) {
+    return Array.isArray(implementation) ? implementation : [implementation];
+  }
+
+  /**
    * Every name the functions this plugin runs mark an asset with, which is
    * what stats have to know how to print.
    * @private
@@ -2276,12 +2287,20 @@ class MinimizerPlugin {
         options: this.options.minimizer.options,
       });
 
+      // Nothing minifies, so nothing it could do varies the bundle: salting the
+      // hash anyway would rename every file a generator-only instance touches.
+      const minifies =
+        this.minimizerImplementations(this.options.minimizer.implementation)
+          .length > 0;
+
       // The salt is the name this plugin shipped under, and every `[contenthash]`
       // is taken over it: renaming it would rename every file a user serves.
-      hooks.chunkHash.tap(pluginName, (chunk, hash) => {
-        hash.update("TerserPlugin");
-        hash.update(data);
-      });
+      if (minifies) {
+        hooks.chunkHash.tap(pluginName, (chunk, hash) => {
+          hash.update("TerserPlugin");
+          hash.update(data);
+        });
+      }
 
       // Added in webpack 5.110: source one language embeds in another, which no
       // asset carries and `processAssets` therefore never sees.
@@ -2290,6 +2309,7 @@ class MinimizerPlugin {
         (/** @type {unknown} */ (compilation.hooks));
 
       if (
+        minifies &&
         embeddedHooks.renderEmbeddedSource &&
         embeddedHooks.embeddedSourceHash
       ) {

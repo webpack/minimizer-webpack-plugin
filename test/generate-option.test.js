@@ -1858,6 +1858,49 @@ describe("generate with nothing to minify", () => {
     expect(getErrors(stats)).toEqual([]);
   });
 
+  it("should not change what the build is named when it minifies nothing", async () => {
+    /**
+     * @param {boolean} withPlugin whether to apply the plugin
+     * @returns {Promise<string[]>} the emitted names
+     */
+    const namesFrom = async (withPlugin) => {
+      const compiler = getCompiler({
+        entry: path.resolve(__dirname, "./fixtures/images.js"),
+        output: {
+          path: path.resolve(__dirname, "./dist"),
+          filename: "[name].js?ver=[fullhash]",
+        },
+        module: { rules: IMAGE_RULES },
+      });
+
+      if (withPlugin) {
+        new MinimizerPlugin({
+          minify: false,
+          generate: {
+            implementation: (input) => ({
+              code: Buffer.from(Object.values(input)[0]),
+            }),
+            type: "asset",
+            filename: "[path][name].copy[ext]",
+          },
+        }).apply(compiler);
+      }
+
+      const stats = await compile(compiler);
+
+      return Object.keys(stats.compilation.assets)
+        .filter((name) => name.includes(".js?ver="))
+        .sort();
+    };
+
+    const without = await namesFrom(false);
+    const with_ = await namesFrom(true);
+
+    // The plugin salts the chunk hash with what its minimizers are, and with
+    // none there is nothing to vary: adding it must not rename a user's files.
+    expect(with_.filter((name) => !name.includes(".copy."))).toEqual(without);
+  });
+
   it("should minify nothing when `minify` is false", async () => {
     const compiler = getCompiler({
       entry: path.resolve(__dirname, "./fixtures/images.js"),
