@@ -1225,7 +1225,12 @@ describe("generate option in watch mode", () => {
 
   beforeEach(() => {
     toWebp.calls = 0;
-    context = fs.mkdtempSync(path.join(os.tmpdir(), "minimizer-watch-"));
+    // Through `realpathSync`: `os.tmpdir()` is a symlink on macOS, and webpack
+    // resolves a module through the real path, so a module under a symlinked
+    // context is not named relative to it.
+    context = fs.realpathSync(
+      fs.mkdtempSync(path.join(os.tmpdir(), "minimizer-watch-")),
+    );
 
     fs.writeFileSync(
       path.join(context, "index.js"),
@@ -1363,7 +1368,9 @@ describe("generate option with the filesystem cache", () => {
   beforeEach(() => {
     toWebp.calls = 0;
     toAvif.calls = 0;
-    context = fs.mkdtempSync(path.join(os.tmpdir(), "minimizer-fs-cache-"));
+    context = fs.realpathSync(
+      fs.mkdtempSync(path.join(os.tmpdir(), "minimizer-fs-cache-")),
+    );
     cacheDirectory = path.join(context, "cache");
 
     fs.writeFileSync(
