@@ -983,6 +983,36 @@ describe("generate assets", () => {
     expect(getErrors(stats)[0]).toMatch(/could not read the colour profile/);
     expect(getWarnings(stats)).toHaveLength(1);
     expect(getWarnings(stats)[0]).toMatch(/fell back to the default quality/);
+    // The bytes it answered with are the ones it was given, so writing them as
+    // a `.webp` would be a file claiming an encoding it does not have.
+    expect(assets).not.toContain("image.webp");
+    expect(assets).toContain("image.jpg");
+  });
+
+  it("should still generate where a generator only warns", async () => {
+    /**
+     * @param {{ [file: string]: string | Buffer }} input input
+     * @returns {EXPECTED_ANY} the result, with a warning
+     */
+    function noisy(input) {
+      const [[name, code]] = Object.entries(input);
+
+      return {
+        code: Buffer.from(code),
+        filename: replaceExtension(name, "webp"),
+        warnings: ["fell back to the default quality"],
+      };
+    }
+
+    noisy.supportsBinary = () => true;
+    noisy.supportsWorker = () => false;
+
+    const { stats, assets } = await build({
+      generate: { webp: { implementation: noisy, type: "asset" } },
+    });
+
+    expect(getErrors(stats)).toEqual([]);
+    expect(getWarnings(stats)).toHaveLength(1);
     expect(assets).toContain("image.webp");
   });
 

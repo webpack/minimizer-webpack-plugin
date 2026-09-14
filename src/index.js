@@ -1494,6 +1494,13 @@ class TerserPlugin {
       compilation.warnings.push(warning);
     }
 
+    // A generator that failed still answers with something — the bytes it was
+    // given, normally — and writing those under the name the result would have
+    // had is a file claiming to be an encoding it is not.
+    if (output.errors && output.errors.length > 0) {
+      return;
+    }
+
     const generatedName = generator.filename
       ? interpolateSize(
           compilation.getAssetPath(generator.filename, { filename: name }),

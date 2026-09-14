@@ -988,6 +988,11 @@ one cache, and the ordering they need — compress what minification produced �
 what `stage` states rather than what applying two plugins in the right order
 happens to give.
 
+A generator reporting an **error** writes no file: what it answers with in that
+case is normally the bytes it was given, and naming those after an encoding
+they do not have is worse than the missing file. A **warning** is not an error
+— the result is written as usual.
+
 `ecma` is filled in from
 [`output.environment`](https://webpack.js.org/configuration/output/#outputenvironment)
 unless a generator's options set it, the same way it is for a minimizer's —
