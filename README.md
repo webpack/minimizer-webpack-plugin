@@ -979,7 +979,12 @@ see [`minify`](#minify).
 [webpack filename template](https://webpack.js.org/configuration/output/#outputfilename)
 resolved against the asset read, so `[path]`, `[name]`, `[base]`, `[ext]` and
 `[query]` are available; content hashes are not, because the name derives from
-one the original already carries.
+one the original already carries. A function of the path data works too.
+
+Naming the file it read is how a generator writes **over** an asset rather than
+beside it — re-encoding for transport where the server, not the URL, says what
+the encoding is. There is then no original left: `deleteOriginalAssets` and
+`relatedName` have nothing to act on and are ignored.
 
 In watch mode the rename is carried on the module rather than reapplied each
 build, so a rebuild that does not touch the image keeps pointing at the

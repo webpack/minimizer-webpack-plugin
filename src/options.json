@@ -285,9 +285,16 @@
               "enum": ["import", "asset"]
             },
             "filename": {
-              "description": "Name for the generated asset, as a webpack filename template. `asset` generators only; by default the generator's own name for it is used.",
-              "type": "string",
-              "minLength": 1
+              "description": "Name for the generated asset, as a webpack filename template or a function of the path data. `asset` generators only; by default the generator's own name for it is used.",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "instanceof": "Function"
+                }
+              ]
             },
             "filter": {
               "description": "Decides per asset whether to generate from it, on top of `test`/`include`/`exclude`.",
@@ -372,9 +379,16 @@
                     "enum": ["import", "asset"]
                   },
                   "filename": {
-                    "description": "Name for the generated asset, as a webpack filename template. `asset` generators only; by default the generator's own name for it is used.",
-                    "type": "string",
-                    "minLength": 1
+                    "description": "Name for the generated asset, as a webpack filename template or a function of the path data. `asset` generators only; by default the generator's own name for it is used.",
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "instanceof": "Function"
+                      }
+                    ]
                   },
                   "filter": {
                     "description": "Decides per asset whether to generate from it, on top of `test`/`include`/`exclude`.",

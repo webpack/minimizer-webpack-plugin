@@ -1198,7 +1198,7 @@ class TerserPlugin {
    * @param {string | undefined} name the preset it is written under, where it has one
    * @param {EXPECTED_ANY} entry what was written there
    * @param {EXPECTED_ANY} declared what `generatorOptions` says for it
-   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | "keep-source-map" | ((name: string) => boolean) | undefined, stage: number | undefined, threshold: number | undefined, minRatio: number | undefined, relatedName: string | undefined, assetInfo: AssetInfo | ((info: AssetInfo, name: string, generatedName: string) => AssetInfo) | undefined }} the generator
+   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: TemplatePath | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | "keep-source-map" | ((name: string) => boolean) | undefined, stage: number | undefined, threshold: number | undefined, minRatio: number | undefined, relatedName: string | undefined, assetInfo: AssetInfo | ((info: AssetInfo, name: string, generatedName: string) => AssetInfo) | undefined }} the generator
    */
   describeGenerator(name, entry, declared) {
     const descriptor = isDescriptor(entry) ? entry : undefined;
@@ -1539,10 +1539,13 @@ class TerserPlugin {
       compilation.emitAsset(generatedName, generatedSource, generatedInfo);
     }
 
-    const deleteOriginal = generator.deleteOriginalAssets;
+    // A generator naming the file it read wrote over it, so there is no
+    // original left beside the result to delete or to point at.
+    const deleteOriginal =
+      generatedName === name ? false : generator.deleteOriginalAssets;
 
     if (!deleteOriginal) {
-      if (relatedName) {
+      if (relatedName && generatedName !== name) {
         compilation.updateAsset(name, source, {
           related: { [relatedName]: generatedName },
         });

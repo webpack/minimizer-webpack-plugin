@@ -474,6 +474,40 @@ describe('"zlibCompress" generator', () => {
     expect(getWarnings(stats)).toEqual([]);
   });
 
+  it("should take a `filename` function", async () => {
+    compressionPlugin({
+      filename: (pathData) => `${pathData.filename}.gz`,
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(Object.keys(stats.compilation.assets)).toEqual([
+      "one.js",
+      "one.js.gz",
+    ]);
+    expect(getErrors(stats)).toEqual([]);
+    expect(getWarnings(stats)).toEqual([]);
+  });
+
+  it("should write over the asset it read when named after it", async () => {
+    compressionPlugin({
+      filename: "[path][base]",
+      // Nothing to delete and nothing to point at: the result took its place.
+      deleteOriginalAssets: true,
+      relatedName: "gzipped",
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(Object.keys(stats.compilation.assets)).toEqual(["one.js"]);
+    expect(stats.compilation.getAsset("one.js").info.related).toBeUndefined();
+    expect(
+      zlib.gunzipSync(readBytes(compiler, stats, "one.js")).toString(),
+    ).toContain("webpack");
+    expect(getErrors(stats)).toEqual([]);
+    expect(getWarnings(stats)).toEqual([]);
+  });
+
   it("should report an algorithm `zlib` does not have", async () => {
     compressionPlugin({ options: { algorithm: "nope" } }).apply(compiler);
 

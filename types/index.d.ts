@@ -103,7 +103,7 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    * @param {string | undefined} name the preset it is written under, where it has one
    * @param {EXPECTED_ANY} entry what was written there
    * @param {EXPECTED_ANY} declared what `generatorOptions` says for it
-   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | "keep-source-map" | ((name: string) => boolean) | undefined, stage: number | undefined, threshold: number | undefined, minRatio: number | undefined, relatedName: string | undefined, assetInfo: AssetInfo | ((info: AssetInfo, name: string, generatedName: string) => AssetInfo) | undefined }} the generator
+   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: TemplatePath | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | "keep-source-map" | ((name: string) => boolean) | undefined, stage: number | undefined, threshold: number | undefined, minRatio: number | undefined, relatedName: string | undefined, assetInfo: AssetInfo | ((info: AssetInfo, name: string, generatedName: string) => AssetInfo) | undefined }} the generator
    */
   private describeGenerator;
   /**
