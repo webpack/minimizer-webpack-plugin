@@ -31,6 +31,35 @@
           "$ref": "#/definitions/Rule"
         }
       ]
+    },
+    "MinimizerImplementation": {
+      "description": "The minimizer itself: a function, a module path string (worker `require`s it), or `{ path, export }` for a named export.",
+      "anyOf": [
+        {
+          "instanceof": "Function"
+        },
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "description": "Absolute path or resolvable id of the module that exports the minimizer.",
+              "type": "string",
+              "minLength": 1
+            },
+            "export": {
+              "description": "Named export when the module is not `module.exports` / `default`.",
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": ["path"]
+        }
+      ]
     }
   },
   "title": "MinimizerPluginOptions",
@@ -186,11 +215,11 @@
       ]
     },
     "minify": {
-      "description": "Allows you to override default minify function. Written as an object it states how to run one minimizer, options included.",
+      "description": "Allows you to override default minify function. Written as an object it states how to run one minimizer, options included. A string or `{ path, export }` loads the minimizer by module path in workers (like sass-loader `implementation`).",
       "link": "https://github.com/webpack/minimizer-webpack-plugin#number",
       "anyOf": [
         {
-          "instanceof": "Function"
+          "$ref": "#/definitions/MinimizerImplementation"
         },
         {
           "type": "array",
@@ -198,7 +227,7 @@
           "items": {
             "anyOf": [
               {
-                "instanceof": "Function"
+                "$ref": "#/definitions/MinimizerImplementation"
               },
               {
                 "type": "object",
@@ -206,7 +235,7 @@
                 "properties": {
                   "implementation": {
                     "description": "The minimizer itself.",
-                    "instanceof": "Function"
+                    "$ref": "#/definitions/MinimizerImplementation"
                   },
                   "options": {
                     "description": "Options for this minimizer. Preferred over `minimizerOptions`, which is deprecated; setting both for one minimizer is an error.",
@@ -229,7 +258,7 @@
           "properties": {
             "implementation": {
               "description": "The minimizer itself.",
-              "instanceof": "Function"
+              "$ref": "#/definitions/MinimizerImplementation"
             },
             "options": {
               "description": "Options for this minimizer. Preferred over `minimizerOptions`, which is deprecated; setting both for one minimizer is an error.",
