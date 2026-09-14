@@ -59,11 +59,13 @@ These only minify — they never change an image's format or name; see
 Transport encodings:
 
 - `zlib` and anything shaped like it — `MinimizerPlugin.compress`. Compresses an
-  asset so a server can serve it under `Content-Encoding`, writing the result
-  beside the asset it read. Takes `algorithm` — a `zlib` function's name
-  (`gzip`, `brotliCompress`, `deflate`, `zstdCompress`, …) or one of your own —
-  and `compressionOptions` for it. Needs no extra dependency, and is an
-  [`asset` generator](#generate) rather than a minimizer.
+  asset so a server can serve it under `Content-Encoding`. Takes `algorithm` — a
+  `zlib` function's name (`gzip`, `brotliCompress`, `deflate`, `zstdCompress`, …)
+  or one of your own — and `compressionOptions` for it, and needs no extra
+  dependency. Give it to [`minify`](#minify) to compress an asset **in place**,
+  or to [`generate`](#generate) as an `asset` generator to write the compressed
+  file **beside** the original; either way [`stage`](#stage) is what puts it
+  after the minimizers.
 
 All of the non-default minimizers are declared as **optional** peer
 dependencies — install only the ones you actually use. One plugin instance
@@ -900,7 +902,9 @@ had its say.
 `MinimizerPlugin.compress` ships with the plugin and is written against that.
 `algorithm` says which compression to run — a `zlib` function's name, or one of
 your own taking `(input, options, callback)` — and `compressionOptions` is what
-that algorithm is run with, the way `terserMinify` takes terser's own options:
+that algorithm is run with, the way `terserMinify` takes terser's own options.
+Here it is as an `asset` generator, which writes the compressed file beside the
+one it read, so both survive and the URL says which is which:
 
 ```js
 const MinimizerPlugin = require("minimizer-webpack-plugin");
@@ -942,6 +946,48 @@ cache, and the ordering they need — compress what minification produced — is
 what `stage` states rather than what applying two plugins in the right order
 happens to give. Each algorithm is run at its own maximum by default (`zlib`'s
 best level, brotli's best quality); name `compressionOptions` to say otherwise.
+
+It is an ordinary minimizer too, so [`minify`](#minify) takes it the way it
+takes `terserMinify` or `swcMinify`. There it compresses the asset **in place**
+rather than beside it — the shape for a server that says what the encoding is
+through `Content-Encoding` while the URL stays as it was:
+
+```js
+const MinimizerPlugin = require("minimizer-webpack-plugin");
+const { Compilation } = require("webpack");
+
+module.exports = {
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new MinimizerPlugin({
+        test: /\.js$/i,
+        stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
+        minify: MinimizerPlugin.compress,
+        minimizerOptions: { algorithm: "gzip" },
+      }),
+    ],
+  },
+};
+```
+
+An array runs its minimizers in order, each one reading what the last produced,
+so minifying and then compressing in place is one entry after another — and each
+states its own `options`:
+
+```js
+new MinimizerPlugin({
+  test: /\.js$/i,
+  stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
+  minify: [
+    { implementation: MinimizerPlugin.terserMinify },
+    {
+      implementation: MinimizerPlugin.compress,
+      options: { algorithm: "brotliCompress" },
+    },
+  ],
+});
+```
 
 `ecma` is filled in from
 [`output.environment`](https://webpack.js.org/configuration/output/#outputenvironment)

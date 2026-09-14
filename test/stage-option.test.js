@@ -191,6 +191,82 @@ describe('"stage" option', () => {
   });
 });
 
+describe('"compress" as a minimizer', () => {
+  let compiler;
+
+  beforeEach(() => {
+    compiler = getCompiler({
+      entry: { one: path.resolve(__dirname, "./fixtures/entry.js") },
+    });
+  });
+
+  it("should compress the asset in place when given to `minify`", async () => {
+    new MinimizerPlugin({
+      test: /\.js$/i,
+      // Where the server says what the encoding is, the asset keeps its name
+      // and there is nothing beside it.
+      stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
+      minify: MinimizerPlugin.compress,
+      minimizerOptions: { algorithm: "gzip" },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(Object.keys(stats.compilation.assets)).toEqual(["one.js"]);
+    expect(
+      zlib.gunzipSync(readBytes(compiler, stats, "one.js")).toString(),
+    ).toContain("webpack");
+    expect(stats.compilation.getAsset("one.js").info.minimized).toBe(true);
+    expect(getErrors(stats)).toEqual([]);
+    expect(getWarnings(stats)).toEqual([]);
+  });
+
+  it("should take its options from its own entry in a `minify` array", async () => {
+    new MinimizerPlugin({
+      test: /\.js$/i,
+      stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
+      minify: [
+        {
+          implementation: (input) => ({
+            code: `/* minified */${Object.values(input)[0]}`,
+          }),
+        },
+        {
+          implementation: MinimizerPlugin.compress,
+          options: { algorithm: "brotliCompress" },
+        },
+      ],
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+    const text = zlib
+      .brotliDecompressSync(readBytes(compiler, stats, "one.js"))
+      .toString();
+
+    // Each minimizer in the array feeds the next, so the compressed bytes are
+    // what the one before it produced.
+    expect(Object.keys(stats.compilation.assets)).toEqual(["one.js"]);
+    expect(text.startsWith("/* minified */")).toBe(true);
+    expect(getErrors(stats)).toEqual([]);
+    expect(getWarnings(stats)).toEqual([]);
+  });
+
+  it("should report an algorithm `zlib` does not have", async () => {
+    new MinimizerPlugin({
+      test: /\.js$/i,
+      minify: MinimizerPlugin.compress,
+      minimizerOptions: { algorithm: "nope" },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(getErrors(stats)).toHaveLength(1);
+    expect(getErrors(stats)[0]).toMatch(
+      /algorithm "nope" is not found in "zlib"/,
+    );
+  });
+});
+
 describe('"compress" generator', () => {
   let compiler;
 
