@@ -579,11 +579,13 @@ describe("MinimizerPlugin", () => {
   });
 
   it("buildError method", () => {
+    // The label it reports under is the plugin's, so an instance answers.
+    const plugin = new MinimizerPlugin();
     const error = new Error("Message");
 
     error.stack = null;
 
-    expect(MinimizerPlugin.buildError(error, "test.js")).toMatchSnapshot();
+    expect(plugin.buildError(error, "test.js")).toMatchSnapshot();
 
     const errorWithLineAndCol = new Error("Message");
 
@@ -592,7 +594,7 @@ describe("MinimizerPlugin", () => {
     errorWithLineAndCol.col = 1;
 
     expect(
-      MinimizerPlugin.buildError(
+      plugin.buildError(
         errorWithLineAndCol,
         "test.js",
         new TraceMap(rawSourceMap),
@@ -608,7 +610,7 @@ describe("MinimizerPlugin", () => {
     otherErrorWithLineAndCol.col = 1;
 
     expect(
-      MinimizerPlugin.buildError(
+      plugin.buildError(
         otherErrorWithLineAndCol,
         "test.js",
         new TraceMap(rawSourceMap),
@@ -620,9 +622,7 @@ describe("MinimizerPlugin", () => {
 
     errorWithStack.stack = "Stack";
 
-    expect(
-      MinimizerPlugin.buildError(errorWithStack, "test.js"),
-    ).toMatchSnapshot();
+    expect(plugin.buildError(errorWithStack, "test.js")).toMatchSnapshot();
   });
 
   it("should respect the hash options #1", async () => {

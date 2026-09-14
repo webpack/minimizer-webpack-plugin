@@ -11,22 +11,6 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
   private static isSourceMap;
   /**
    * @private
-   * @param {unknown} warning warning
-   * @param {string} file file
-   * @returns {Error} built warning
-   */
-  private static buildWarning;
-  /**
-   * @private
-   * @param {Error | ErrorObject | string} error error
-   * @param {string} file file
-   * @param {TraceMap=} sourceMap source map
-   * @param {Compilation["requestShortener"]=} requestShortener request shortener
-   * @returns {Error} built error
-   */
-  private static buildError;
-  /**
-   * @private
    * @param {Parallel} parallel value of the `parallel` option
    * @returns {number} number of cores for parallelism
    */
@@ -48,6 +32,22 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    * @type {InternalPluginOptions<T>}
    */
   private options;
+  /**
+   * @private
+   * @param {unknown} warning warning
+   * @param {string} file file
+   * @returns {Error} built warning
+   */
+  private buildWarning;
+  /**
+   * @private
+   * @param {Error | ErrorObject | string} error error
+   * @param {string} file file
+   * @param {TraceMap=} sourceMap source map
+   * @param {Compilation["requestShortener"]=} requestShortener request shortener
+   * @returns {Error} built error
+   */
+  private buildError;
   /**
    * Whether `test`, `include` and `exclude` accept a name.
    *
@@ -166,6 +166,7 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    * @private
    * @param {Compiler} compiler compiler
    * @param {Compilation} compilation compilation
+   * @param {Record<string, import("webpack").sources.Source>} assets the assets to read
    * @param {ReturnType<TerserPlugin["assetGenerators"]>} generators the generators running at this stage
    * @param {number} availableNumberOfCores how many generations may be in flight at once
    * @returns {Promise<void>}
@@ -635,6 +636,10 @@ type BasePluginOptions = {
    */
   stage?: number | undefined;
   /**
+   * how the plugin names itself in the errors and warnings it reports
+   */
+  label?: string | undefined;
+  /**
    * rewrites a module's own bytes as it is built, so a re-encoding can rename the asset
    */
   generate?: MinimizerImplementation<EXPECTED_ANY> | undefined;
@@ -657,6 +662,7 @@ type DefinedDefaultMinimizerAndOptions<T> =
       };
 type InternalPluginOptions<T> = BasePluginOptions & {
   stage: number | undefined;
+  label: string;
   minimizer?: {
     implementation: MinimizerImplementation<T>;
     options: MinimizerOptions<T>;

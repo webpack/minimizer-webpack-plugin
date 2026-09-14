@@ -121,6 +121,7 @@ Using supported `devtool` values enable source map generation.
 - **[`exclude`](#exclude)**
 - **[`parallel`](#parallel)**
 - **[`stage`](#stage)**
+- **[`label`](#label)**
 - **[`minify`](#minify)**
 - **[`minimizerOptions`](#minimizeroptions)** (deprecated)
 - **[`generate`](#generate)**
@@ -296,6 +297,22 @@ module.exports = {
 };
 ```
 
+### `label`
+
+Type:
+
+```ts
+type label = string;
+```
+
+Default: `"Terser plugin"`
+
+How the plugin names itself in the errors and warnings it reports, which read
+`<asset> from <label>`. Worth setting where this plugin is the engine under
+something with a name of its own — a compression plugin built on
+[`generate`](#generate) reports `main.js from Compression plugin`, not
+`from Terser plugin`.
+
 ### `minify`
 
 Type:
@@ -368,9 +385,10 @@ Which minimizer runs, and the options it runs with. By default the plugin uses
 an unpublished version or a fork.
 
 `false` minifies nothing, for a plugin whose whole job is
-[`generate`](#generate) — compressing what is emitted, say. Without it a
-generator-only plugin would still run terser over every `.js` asset `test`
-matched.
+[`generate`](#generate) — compressing what is emitted, say. It also drops
+[`test`](#test)'s default: that default is terser's, because JavaScript is what
+terser minifies, and a plugin minifying nothing has no reason to prefer one
+language over another. Set `test` yourself to narrow what its generators read.
 
 > **Warning**
 >

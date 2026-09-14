@@ -422,6 +422,35 @@ describe('"zlibCompress" generator', () => {
     });
   });
 
+  it("should read every asset when `minify` is false and no `test` is given", async () => {
+    compiler = getCompiler({
+      entry: { one: path.resolve(__dirname, "./fixtures/entry.js") },
+      devtool: "source-map",
+    });
+    new MinimizerPlugin({
+      minify: false,
+      generate: {
+        implementation: MinimizerPlugin.zlibCompress,
+        type: "asset",
+        filename: "[path][base].gz",
+        stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    // `.map` too: nothing here minifies, so the JavaScript default does not
+    // apply and `test` was not given.
+    expect(Object.keys(stats.compilation.assets).sort()).toEqual([
+      "one.js",
+      "one.js.gz",
+      "one.js.map",
+      "one.js.map.gz",
+    ]);
+    expect(getErrors(stats)).toEqual([]);
+    expect(getWarnings(stats)).toEqual([]);
+  });
+
   it("should generate without minifying anything when `minify` is false", async () => {
     const seen = [];
 
@@ -508,6 +537,43 @@ describe('"zlibCompress" generator', () => {
     expect(getWarnings(stats)).toEqual([]);
   });
 
+  it("should read an asset another plugin emitted after it ran", async () => {
+    class EmitLate {
+      apply(inner) {
+        inner.hooks.compilation.tap("EmitLate", (compilation) => {
+          compilation.hooks.processAssets.tap(
+            {
+              name: "EmitLate",
+              stage:
+                compilation.constructor.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER +
+                1,
+            },
+            () => {
+              compilation.emitAsset(
+                "late.js",
+                new compiler.webpack.sources.RawSource("a".repeat(2000)),
+              );
+            },
+          );
+        });
+      }
+    }
+
+    new EmitLate().apply(compiler);
+    compressionPlugin().apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(Object.keys(stats.compilation.assets).sort()).toEqual([
+      "late.js",
+      "late.js.gz",
+      "one.js",
+      "one.js.gz",
+    ]);
+    expect(getErrors(stats)).toEqual([]);
+    expect(getWarnings(stats)).toEqual([]);
+  });
+
   it("should report an algorithm `zlib` does not have", async () => {
     compressionPlugin({ options: { algorithm: "nope" } }).apply(compiler);
 
@@ -517,5 +583,26 @@ describe('"zlibCompress" generator', () => {
     expect(getErrors(stats)[0]).toMatch(
       /algorithm "nope" is not found in "zlib"/,
     );
+    expect(getErrors(stats)[0]).toMatch(/from Terser plugin/);
+  });
+
+  it("should report under the label it was given", async () => {
+    new MinimizerPlugin({
+      test: /\.js$/i,
+      parallel: false,
+      minify: false,
+      label: "Compression plugin",
+      generate: {
+        implementation: MinimizerPlugin.zlibCompress,
+        options: { algorithm: "nope" },
+        type: "asset",
+        filename: "[path][base].gz",
+        stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(getErrors(stats)[0]).toMatch(/from Compression plugin/);
   });
 });

@@ -39,7 +39,7 @@ exports[`validation should validate \`stage\` and the keys an \`asset\` generato
 exports[`validation should validate a minimizer added through \`optimization.minimizer\` 1`] = `
 "Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
  - options has an unknown property 'unknown'. These properties are valid:
-   object { test?, include?, exclude?, minimizerOptions?, terserOptions?, extractComments?, parallel?, stage?, minify?, generate?, generatorOptions? }"
+   object { test?, include?, exclude?, minimizerOptions?, terserOptions?, extractComments?, parallel?, stage?, label?, minify?, generate?, generatorOptions? }"
 `;
 
 exports[`validation validate 1`] = `
@@ -258,7 +258,7 @@ exports[`validation validate 16`] = `
 exports[`validation validate 17`] = `
 "Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
  - options has an unknown property 'unknown'. These properties are valid:
-   object { test?, include?, exclude?, minimizerOptions?, terserOptions?, extractComments?, parallel?, stage?, minify?, generate?, generatorOptions? }"
+   object { test?, include?, exclude?, minimizerOptions?, terserOptions?, extractComments?, parallel?, stage?, label?, minify?, generate?, generatorOptions? }"
 `;
 
 exports[`validation validate 18`] = `
