@@ -1,8 +1,8 @@
-export = TerserPlugin;
+export = MinimizerPlugin;
 /**
  * @template [T=import("terser").MinifyOptions]
  */
-declare class TerserPlugin<T = import("terser").MinifyOptions> {
+declare class MinimizerPlugin<T = import("terser").MinifyOptions> {
   /**
    * @private
    * @param {unknown} input Input to check
@@ -102,7 +102,7 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
   /**
    * Every generator `generate` holds, whichever shape it was written in.
    * @private
-   * @returns {ReturnType<TerserPlugin["describeGenerator"]>[]} them, in the order they were written
+   * @returns {ReturnType<MinimizerPlugin["describeGenerator"]>[]} them, in the order they were written
    */
   private generators;
   /**
@@ -135,7 +135,7 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    * The generators that run over emitted assets rather than over a module as
    * it builds.
    * @private
-   * @returns {ReturnType<TerserPlugin["describeGenerator"]>[]} them, in the order they were written
+   * @returns {ReturnType<MinimizerPlugin["describeGenerator"]>[]} them, in the order they were written
    */
   private assetGenerators;
   /**
@@ -155,7 +155,7 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    * @param {Compilation} compilation compilation
    * @param {ReturnType<Compilation["getCache"]>} cache the generation cache
    * @param {Asset} asset the asset to generate from
-   * @param {ReturnType<TerserPlugin["assetGenerators"]>[0]} generator the generator to run
+   * @param {ReturnType<MinimizerPlugin["assetGenerators"]>[0]} generator the generator to run
    * @returns {Promise<void>}
    */
   private generateAsset;
@@ -166,7 +166,7 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    * @private
    * @param {Compiler} compiler compiler
    * @param {Compilation} compilation compilation
-   * @param {ReturnType<TerserPlugin["assetGenerators"]>} generators the generators running at this stage
+   * @param {ReturnType<MinimizerPlugin["assetGenerators"]>} generators the generators running at this stage
    * @returns {Promise<void>}
    */
   private generateAssets;
@@ -244,7 +244,7 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    */
   apply(compiler: Compiler): void;
 }
-declare namespace TerserPlugin {
+declare namespace MinimizerPlugin {
   export {
     terserMinify,
     uglifyJsMinify,

@@ -492,7 +492,9 @@ describe("embedded sources", () => {
     const stats = await compile(compiler);
 
     expect(getErrors(stats)).toHaveLength(1);
-    expect(getErrors(stats)[0]).toMatch(/Terser plugin\ncannot read this/);
+    expect(getErrors(stats)[0]).toMatch(
+      /minimizer-webpack-plugin\ncannot read this/,
+    );
     // Reported, not thrown, and the body it failed over stays as written.
     expect(stats.compilation.getAsset("host.page").source.source()).toContain(
       "<script>  var  a  =  1  </script>",
