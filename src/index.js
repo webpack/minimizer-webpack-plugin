@@ -244,6 +244,25 @@ const ASSET_GENERATOR_FIELDS = /** @type {const} */ ([
   "assetInfo",
 ]);
 
+/**
+ * An asset's own bytes. `source()` answers with a string wherever any part of
+ * the source is one, and re-encoding that loses every byte above 0x7f, so a
+ * source that can hand back its buffer is asked for it.
+ * @param {import("webpack").sources.Source} source the asset's source
+ * @returns {Buffer} its bytes
+ */
+const readSourceBytes = (source) => {
+  // A plugin that does not build on `webpack-sources` has no `buffer`.
+  // See https://github.com/webpack/compression-webpack-plugin/issues/236
+  if (typeof source.buffer === "function") {
+    return source.buffer();
+  }
+
+  const code = source.source();
+
+  return Buffer.isBuffer(code) ? code : Buffer.from(code);
+};
+
 const getTraceMapping = memoize(() => require("@jridgewell/trace-mapping"));
 const getSerializeJavascript = memoize(() => require("./serialize-javascript"));
 
@@ -1408,8 +1427,7 @@ class TerserPlugin {
       return;
     }
 
-    const code = source.source();
-    const input = Buffer.isBuffer(code) ? code : Buffer.from(code);
+    const input = readSourceBytes(source);
 
     if (
       typeof generator.threshold === "number" &&
@@ -1428,8 +1446,11 @@ class TerserPlugin {
       }),
       cache.getLazyHashedEtag(source),
     );
+    // The `Source` rather than the bytes: webpack skips re-writing a file whose
+    // source object it has already emitted, so a rebuild that restores one
+    // writes nothing, where a fresh `RawSource` over the same bytes rewrites.
     let output =
-      /** @type {{ code: Buffer, filename?: string, width?: number, height?: number, errors?: (Error | string)[], warnings?: (Error | string)[] } | undefined} */
+      /** @type {{ source: import("webpack").sources.RawSource, filename?: string, width?: number, height?: number, errors?: (Error | string)[], warnings?: (Error | string)[] } | undefined} */
       (await cacheItem.getPromise());
 
     if (!output) {
@@ -1463,12 +1484,13 @@ class TerserPlugin {
       }
 
       output = {
-        code:
+        source: new RawSource(
           typeof generated.code === "undefined"
             ? input
             : Buffer.isBuffer(generated.code)
               ? generated.code
               : Buffer.from(generated.code),
+        ),
         filename: generated.filename,
         width: generated.width,
         height: generated.height,
@@ -1527,12 +1549,12 @@ class TerserPlugin {
     // a source map would count too.
     if (
       typeof generator.minRatio === "number" &&
-      output.code.length / input.length > generator.minRatio
+      output.source.size() / input.length > generator.minRatio
     ) {
       return;
     }
 
-    const generatedSource = new RawSource(output.code);
+    const generatedSource = output.source;
     // The derived name carries the original's hash, so what the original
     // promised about its own name still holds; its sourcemap does not follow.
     const inherited = { ...info };

@@ -1,3 +1,4 @@
+import fs from "fs";
 import path from "path";
 import zlib from "zlib";
 
@@ -570,6 +571,127 @@ describe('"zlibCompress" generator', () => {
       "one.js",
       "one.js.gz",
     ]);
+    expect(getErrors(stats)).toEqual([]);
+    expect(getWarnings(stats)).toEqual([]);
+  });
+
+  it("should re-emit nothing on a rebuild that changed nothing", async () => {
+    compiler = getCompiler({
+      cache: { type: "memory" },
+      entry: { one: path.resolve(__dirname, "./fixtures/entry.js") },
+    });
+    compressionPlugin().apply(compiler);
+
+    await compile(compiler);
+
+    const rebuilt = await compile(compiler);
+
+    expect(rebuilt.compilation.emittedAssets.size).toBe(0);
+    expect(getErrors(rebuilt)).toEqual([]);
+    expect(getWarnings(rebuilt)).toEqual([]);
+  });
+
+  it("should read an asset's real bytes when a plugin prepended text to it", async () => {
+    const header = "// added by a plugin\n";
+
+    class PrependText {
+      apply(inner) {
+        inner.hooks.compilation.tap("PrependText", (compilation) => {
+          const { ConcatSource, RawSource } = inner.webpack.sources;
+
+          compilation.hooks.processAssets.tap(
+            {
+              name: "PrependText",
+              stage: Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
+            },
+            () => {
+              const asset = compilation.getAsset("image.png");
+
+              compilation.updateAsset(
+                asset.name,
+                new ConcatSource(new RawSource(header), asset.source),
+              );
+            },
+          );
+        });
+      }
+    }
+
+    compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/images.js"),
+      module: {
+        rules: [
+          {
+            test: /\.(png|jpe?g|svg)$/i,
+            type: "asset/resource",
+            generator: { filename: "[name][ext]" },
+          },
+        ],
+      },
+    });
+    new PrependText().apply(compiler);
+    new MinimizerPlugin({
+      test: /\.png$/i,
+      minify: false,
+      generate: {
+        implementation: MinimizerPlugin.zlibCompress,
+        type: "asset",
+        filename: "[path][base].gz",
+        stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
+        minRatio: Infinity,
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+    const expected = Buffer.concat([
+      Buffer.from(header),
+      fs.readFileSync(path.resolve(__dirname, "./fixtures/image.png")),
+    ]);
+
+    // Text beside bytes makes `source()` a string, and reading the asset that
+    // way turns every byte above 0x7f into a replacement character.
+    expect(readBytes(compiler, stats, "image.png")).toEqual(expected);
+    expect(zlib.gunzipSync(readBytes(compiler, stats, "image.png.gz"))).toEqual(
+      expected,
+    );
+    expect(getErrors(stats)).toEqual([]);
+    expect(getWarnings(stats)).toEqual([]);
+  });
+
+  it("should read a source that is not built on `webpack-sources`", async () => {
+    // https://github.com/webpack/compression-webpack-plugin/issues/236
+    const text = "b".repeat(1000);
+
+    class EmitForeignSource {
+      apply(inner) {
+        inner.hooks.compilation.tap("EmitForeignSource", (compilation) => {
+          compilation.hooks.processAssets.tap(
+            {
+              name: "EmitForeignSource",
+              stage: Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
+            },
+            () => {
+              compilation.emitAsset("foreign.js", {
+                source: () => text,
+                size: () => text.length,
+                map: () => null,
+                sourceAndMap: () => ({ source: text, map: null }),
+                updateHash: (hash) => hash.update(text),
+              });
+            },
+          );
+        });
+      }
+    }
+
+    new EmitForeignSource().apply(compiler);
+    compressionPlugin().apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(
+      zlib.gunzipSync(readBytes(compiler, stats, "foreign.js.gz")).toString(),
+    ).toBe(text);
     expect(getErrors(stats)).toEqual([]);
     expect(getWarnings(stats)).toEqual([]);
   });
