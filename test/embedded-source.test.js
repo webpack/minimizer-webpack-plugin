@@ -320,7 +320,7 @@ describe("embedded source", () => {
     // Reported rather than thrown, and the source is embedded as it was
     // written — a build does not die because something nested did not parse.
     expect(getErrors(stats)).toHaveLength(1);
-    expect(getErrors(stats)[0]).toMatch(/Terser plugin\nbroken/);
+    expect(getErrors(stats)[0]).toMatch(/minimizer-webpack-plugin\nbroken/);
   });
 
   it("reports what a minimizer returned over embedded source", async () => {
@@ -343,7 +343,9 @@ describe("embedded source", () => {
     const stats = await compile(compiler);
 
     expect(getErrors(stats)).toHaveLength(1);
-    expect(getErrors(stats)[0]).toMatch(/Terser plugin\ncannot read this/);
+    expect(getErrors(stats)[0]).toMatch(
+      /minimizer-webpack-plugin\ncannot read this/,
+    );
     expect(getWarnings(stats)).toHaveLength(1);
     expect(getWarnings(stats)[0]).toMatch(/Warning: odd, that/);
   });
@@ -579,7 +581,9 @@ describe("embedded source", () => {
       // written exactly as it was. Read off the compilation rather than the
       // output: an errored build emits nothing.
       expect(getErrors(stats)).toHaveLength(1);
-      expect(getErrors(stats)[0]).toMatch(/Terser plugin\ncannot read this/);
+      expect(getErrors(stats)[0]).toMatch(
+        /minimizer-webpack-plugin\ncannot read this/,
+      );
       expect(
         stats.compilation.getAsset("document.html").source.source(),
       ).toContain(
