@@ -56,6 +56,15 @@ Image minimizers:
 These only minify — they never change an image's format or name; see
 [Images](#images).
 
+Transport encodings:
+
+- `zlib` and anything shaped like it — `MinimizerPlugin.compress`. Compresses an
+  asset so a server can serve it under `Content-Encoding`, writing the result
+  beside the asset it read. Takes `algorithm` — a `zlib` function's name
+  (`gzip`, `brotliCompress`, `deflate`, `zstdCompress`, …) or one of your own —
+  and `compressionOptions` for it. Needs no extra dependency, and is an
+  [`asset` generator](#generate) rather than a minimizer.
+
 All of the non-default minimizers are declared as **optional** peer
 dependencies — install only the ones you actually use. One plugin instance
 covers several languages at once: give [`minify`](#minify) an array and each
@@ -923,9 +932,10 @@ compression:
   answers with the whole thing — which is how a result in another encoding
   keeps none of it. `generated: true` is set either way.
 
-`zlibCompress` ships with the plugin and is written against them. It takes
-`algorithm` — a `zlib` function's name, or one of your own taking
-`(input, options, callback)` — and `compressionOptions` for it:
+`MinimizerPlugin.compress` ships with the plugin and is written against them.
+`algorithm` says which compression to run — a `zlib` function's name, or one of
+your own taking `(input, options, callback)` — and `compressionOptions` is what
+that algorithm is run with, the way `terserMinify` takes terser's own options:
 
 ```js
 const MinimizerPlugin = require("minimizer-webpack-plugin");
@@ -939,7 +949,7 @@ module.exports = {
         test: /\.(js|css|html|svg)$/i,
         generate: {
           gzip: {
-            implementation: MinimizerPlugin.zlibCompress,
+            implementation: MinimizerPlugin.compress,
             options: { algorithm: "gzip" },
             type: "asset",
             stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
@@ -950,7 +960,7 @@ module.exports = {
             minRatio: 0.8,
           },
           brotli: {
-            implementation: MinimizerPlugin.zlibCompress,
+            implementation: MinimizerPlugin.compress,
             options: { algorithm: "brotliCompress" },
             type: "asset",
             stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,

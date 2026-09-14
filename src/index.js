@@ -5,6 +5,7 @@ const path = require("path");
 const { minify } = require("./minify");
 const {
   cleanCssMinify,
+  compress,
   cssnanoMinify,
   cssoMinify,
   esbuildMinify,
@@ -35,7 +36,6 @@ const {
   terserMinify,
   throttleAll,
   uglifyJsMinify,
-  zlibCompress,
 } = require("./utils");
 
 /** @typedef {import("schema-utils/declarations/validate").Schema} Schema */
@@ -2355,6 +2355,6 @@ MinimizerPlugin.napiRsImageMinify = napiRsImageMinify;
 MinimizerPlugin.sharpMinify = sharpMinify;
 MinimizerPlugin.sharpGenerate = sharpGenerate;
 MinimizerPlugin.svgoMinify = svgoMinify;
-MinimizerPlugin.zlibCompress = zlibCompress;
+MinimizerPlugin.compress = compress;
 
 module.exports = MinimizerPlugin;

@@ -261,7 +261,7 @@ declare namespace MinimizerPlugin {
     sharpMinify,
     sharpGenerate,
     svgoMinify,
-    zlibCompress,
+    compress,
     Schema,
     Compiler,
     Compilation,
@@ -326,7 +326,7 @@ import { napiRsImageMinify } from "./utils";
 import { sharpMinify } from "./utils";
 import { sharpGenerate } from "./utils";
 import { svgoMinify } from "./utils";
-import { zlibCompress } from "./utils";
+import { compress } from "./utils";
 type Schema = import("schema-utils/declarations/validate").Schema;
 type Compiler = import("webpack").Compiler;
 type Compilation = import("webpack").Compilation;

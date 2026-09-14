@@ -3685,7 +3685,7 @@ function memoize(fn) {
  * @param {string} algorithm the algorithm's name
  * @returns {CustomOptions} its defaults
  */
-function zlibDefaultCompressionOptions(zlib, algorithm) {
+function defaultCompressionOptions(zlib, algorithm) {
   switch (algorithm) {
     case "gzip":
     case "deflate":
@@ -3705,14 +3705,15 @@ function zlibDefaultCompressionOptions(zlib, algorithm) {
 
 /**
  * Compress an asset's bytes, so what a server sends under `Content-Encoding`
- * is written beside the asset it came from. `algorithm` names a function of
- * `zlib` or is one of your own, taking `(input, options, callback)`.
+ * is written beside the asset it came from. `algorithm` names which one — a
+ * function of `zlib`, or one of your own taking `(input, options, callback)` —
+ * and `compressionOptions` is what that algorithm is run with.
  * @param {Input} input input
  * @param {RawSourceMap=} sourceMap source map (ignored, compressed bytes carry none)
  * @param {CustomOptions=} minimizerOptions options
  * @returns {Promise<MinimizedResult>} minimized result
  */
-async function zlibCompress(input, sourceMap, minimizerOptions) {
+async function compress(input, sourceMap, minimizerOptions) {
   const [[name, code]] = Object.entries(input);
   const { algorithm = "gzip", compressionOptions } = minimizerOptions || {};
   let run = algorithm;
@@ -3735,7 +3736,7 @@ async function zlibCompress(input, sourceMap, minimizerOptions) {
     }
 
     options = {
-      ...zlibDefaultCompressionOptions(zlib, algorithm),
+      ...defaultCompressionOptions(zlib, algorithm),
       ...options,
     };
   }
@@ -3768,22 +3769,22 @@ async function zlibCompress(input, sourceMap, minimizerOptions) {
 /**
  * @returns {string | undefined} the version the compressed bytes depend on
  */
-zlibCompress.getMinimizerVersion = () => process.versions.node;
+compress.getMinimizerVersion = () => process.versions.node;
 
 /**
  * @returns {boolean} true, compressed output is binary
  */
-zlibCompress.supportsBinary = () => true;
+compress.supportsBinary = () => true;
 
 /**
  * @returns {boolean} false, the bytes have no way across to a worker
  */
-zlibCompress.supportsWorker = () => false;
+compress.supportsWorker = () => false;
 
 /**
  * @returns {boolean} false
  */
-zlibCompress.supportsWorkerThreads = () => false;
+compress.supportsWorkerThreads = () => false;
 
 module.exports = {
   CLASSIC_SCRIPT,
@@ -3791,6 +3792,7 @@ module.exports = {
   MODULE_SCRIPT,
   asFunction,
   cleanCssMinify,
+  compress,
   cssnanoMinify,
   cssoMinify,
   esbuildMinify,
@@ -3824,5 +3826,4 @@ module.exports = {
   terserMinify,
   throttleAll,
   uglifyJsMinify,
-  zlibCompress,
 };

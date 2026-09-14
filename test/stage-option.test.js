@@ -148,7 +148,7 @@ describe('"stage" option', () => {
   });
 });
 
-describe('"zlibCompress" generator', () => {
+describe('"compress" generator', () => {
   let compiler;
 
   beforeEach(() => {
@@ -171,7 +171,7 @@ describe('"zlibCompress" generator', () => {
         map: sourceMap,
       }),
       generate: {
-        implementation: MinimizerPlugin.zlibCompress,
+        implementation: MinimizerPlugin.compress,
         type: "asset",
         filename: "[path][base].gz",
         stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
@@ -261,14 +261,14 @@ describe('"zlibCompress" generator', () => {
       minify: (input) => ({ code: Object.values(input)[0] }),
       generate: {
         gzip: {
-          implementation: MinimizerPlugin.zlibCompress,
+          implementation: MinimizerPlugin.compress,
           type: "asset",
           stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
           filename: "[path][base].gz",
           deleteOriginalAssets: true,
         },
         brotli: {
-          implementation: MinimizerPlugin.zlibCompress,
+          implementation: MinimizerPlugin.compress,
           options: { algorithm: "brotliCompress" },
           type: "asset",
           stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
@@ -398,7 +398,7 @@ describe('"zlibCompress" generator', () => {
     // The generator path always hands it a `Buffer` and an options object, so
     // both fallbacks are reachable only by calling it directly.
     const text = "a".repeat(1000);
-    const { code } = await MinimizerPlugin.zlibCompress({ "one.js": text });
+    const { code } = await MinimizerPlugin.compress({ "one.js": text });
 
     expect(zlib.gunzipSync(code).toString()).toBe(text);
   });
@@ -431,7 +431,7 @@ describe('"zlibCompress" generator', () => {
     new MinimizerPlugin({
       minify: false,
       generate: {
-        implementation: MinimizerPlugin.zlibCompress,
+        implementation: MinimizerPlugin.compress,
         type: "asset",
         filename: "[path][base].gz",
         stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
@@ -458,7 +458,7 @@ describe('"zlibCompress" generator', () => {
     new MinimizerPlugin({
       minify: false,
       generate: {
-        implementation: MinimizerPlugin.zlibCompress,
+        implementation: MinimizerPlugin.compress,
         type: "asset",
         filename: "[path][base].gz",
         stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
@@ -634,7 +634,7 @@ describe('"zlibCompress" generator', () => {
       test: /\.png$/i,
       minify: false,
       generate: {
-        implementation: MinimizerPlugin.zlibCompress,
+        implementation: MinimizerPlugin.compress,
         type: "asset",
         filename: "[path][base].gz",
         stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
