@@ -67,7 +67,7 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    * @param {Compiler} compiler compiler
    * @param {Compilation} compilation compilation
    * @param {Record<string, import("webpack").sources.Source>} assets assets
-   * @param {{ availableNumberOfCores: number }} optimizeOptions optimize options
+   * @param {{ availableNumberOfCores: number, only?: number[], cacheSuffix?: string, minimized?: Set<string> }} optimizeOptions how many may run at once, which minimizers this pass runs, what keeps its cache apart from another pass over the same asset, and which assets an earlier pass of this plugin already minimized
    * @returns {Promise<void>}
    */
   private optimize;
@@ -171,6 +171,16 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    * @returns {number} the stage
    */
   private minimizeStage;
+  /**
+   * Which minimizers run at which `processAssets` stage, as indices into the
+   * configured ones. A `stage` in the options puts them all in one pass;
+   * otherwise each runs where it asks to, and they still chain — through the
+   * asset, which the later pass reads back.
+   * @private
+   * @param {Compiler} compiler compiler
+   * @returns {Map<number, number[]>} the indices, by stage
+   */
+  private minimizersByStage;
   /**
    * Minify one source a module embeds in another language's output — CSS or
    * HTML reaching the bundle inside a JavaScript string literal, an
@@ -545,7 +555,7 @@ type MinimizeFunctionHelpers = {
   getEmbeddedTypes?:
     ((minimizerOptions?: EXPECTED_OBJECT) => string[] | undefined) | undefined;
   /**
-   * which `processAssets` stage this minimizer has to run in, named off the `Compilation` it is handed — compressing reads the bytes a user downloads, so it asks for `PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER`. A `stage` written in the options answers over it; among several, the latest asked for wins, since they run as one chain
+   * which `processAssets` stage this minimizer has to run in, named off the `Compilation` it is handed — compressing reads the bytes a user downloads, so it asks for `PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER`. A `stage` written in the options answers over it and puts every minimizer in one pass; otherwise each runs where it asks, chaining through the asset a later pass reads back
    */
   getStage?:
     | ((

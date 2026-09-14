@@ -277,7 +277,7 @@ describe("a minimizer that asks for its own stage", () => {
     expect(getErrors(stats)).toEqual([]);
   });
 
-  it("should run a chain at the latest stage any of it asks for", async () => {
+  it("should run each of an array where it asks, not all at the latest", async () => {
     const order = [];
 
     new RecordStage(
@@ -287,8 +287,9 @@ describe("a minimizer that asks for its own stage", () => {
     ).apply(compiler);
     new MinimizerPlugin({
       parallel: false,
-      // They run as one chain, each reading what the last produced, so the
-      // latest stage asked for is the one the chain can run in.
+      // They still chain — through the asset, which the later pass reads back
+      // — but dragging the first to the last one's stage would carry it past
+      // the hash, and the name would then describe bytes nobody is served.
       minify: [
         asking(order, "first"),
         asking(
@@ -301,8 +302,54 @@ describe("a minimizer that asks for its own stage", () => {
 
     const stats = await compile(compiler);
 
-    expect(order).toEqual(["hash", "first", "second"]);
+    expect(order).toEqual(["first", "hash", "second"]);
     expect(getErrors(stats)).toEqual([]);
+  });
+
+  it("should hash what minification produced, not what compression read", async () => {
+    /**
+     * @param {object=} options plugin options
+     * @returns {Promise<string>} the emitted JavaScript asset's name
+     */
+    const nameOf = async (options) => {
+      const own = getCompiler({
+        entry: { one: path.resolve(__dirname, "./fixtures/entry.js") },
+        output: {
+          path: path.resolve(__dirname, "dist"),
+          filename: "[name].[contenthash].js",
+        },
+      });
+
+      if (options) {
+        new MinimizerPlugin(options).apply(own);
+      }
+
+      const stats = await compile(own);
+
+      return Object.keys(stats.compilation.assets).find((name) =>
+        name.endsWith(".js"),
+      );
+    };
+
+    const untouched = await nameOf();
+    const terserOnly = await nameOf({
+      test: /\.js$/i,
+      parallel: false,
+      minify: MinimizerPlugin.terserMinify,
+    });
+    const chained = await nameOf({
+      test: /\.js$/i,
+      parallel: false,
+      minify: [
+        { implementation: MinimizerPlugin.terserMinify },
+        { implementation: MinimizerPlugin.compress },
+      ],
+    });
+
+    // Minification lands before the hash is taken even with compression in the
+    // array, so the name is terser's — not the one an untouched build gets.
+    expect(chained).toBe(terserOnly);
+    expect(chained).not.toBe(untouched);
   });
 
   it("should run a generator where its implementation asks", async () => {

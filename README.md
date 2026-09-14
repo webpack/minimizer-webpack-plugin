@@ -294,13 +294,19 @@ Which [`processAssets`](https://webpack.js.org/api/compilation-hooks/#processass
 `getStage` of its own, the way it says what it is through `getMinimizerVersion`
 or `getTypes` — `MinimizerPlugin.compress` asks for
 `PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER` because compressed bytes are what a
-user downloads, so nothing in your config has to repeat that. Where several run
-as one chain, the latest stage any of them asks for is the one the chain runs
-in.
+user downloads, so nothing in your config has to repeat that.
 
-This option is the last word over all of that — reach for it to override a
-minimizer, or to move one that asks for nothing. Minification's own default is
-where it belongs: after the bundle is rendered and before its hashes are taken.
+Where an array mixes them, **each runs at the stage it asks for** rather than
+all of them at one. They still chain, through the asset itself: minification
+rewrites it at its stage and compression reads that back at its own. Dragging
+the whole array to the latest stage would carry minification past
+`PROCESS_ASSETS_STAGE_OPTIMIZE_HASH`, and `[contenthash]` would then name bytes
+nobody is served.
+
+Setting this option is the last word over all of that, and puts every minimizer
+in one pass at the stage you named — reach for it to override a minimizer, or to
+move one that asks for nothing. Minification's own default is where it belongs:
+after the bundle is rendered and before its hashes are taken.
 
 ```js
 // A minimizer of your own says so like this, and is handed the `Compilation`
@@ -995,8 +1001,9 @@ module.exports = {
 
 An array runs its minimizers in order, each one reading what the last produced,
 so minifying and then compressing in place is one entry after another — and each
-states its own `options`. The chain runs at the latest stage any of its members
-asks for, which here is the one `compress` asks for:
+states its own `options`. Each runs at the stage it asks for — terser before the
+hash is taken, `compress` after — so `[contenthash]` still names what
+minification produced:
 
 ```js
 new MinimizerPlugin({

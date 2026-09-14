@@ -174,7 +174,7 @@ const {
  * @property {(name: string, info?: AssetInfo) => boolean | undefined=} filter return true when the minimizer supports the asset, otherwise false. When an array of minimizers is configured, each asset is dispatched only to the minimizers whose `filter` accepts it. Assets rejected by every minimizer in the array are skipped entirely.
  * @property {() => string[] | undefined=} getTypes the languages this minimizer minifies, e.g. `["css"]`. Source that carries no filename — what a module embeds in another language's output — is dispatched by this rather than by `test` / `filter`, and a minimizer that declares nothing is never handed any
  * @property {(minimizerOptions?: EXPECTED_OBJECT) => string[] | undefined=} getEmbeddedTypes the languages this minimizer can hand out from inside what it minifies, through the `renderEmbeddedSource` option. Empty (or absent) means it nests nothing a caller can reach, and the option is not passed
- * @property {(compilation: typeof import("webpack").Compilation) => number | undefined=} getStage which `processAssets` stage this minimizer has to run in, named off the `Compilation` it is handed — compressing reads the bytes a user downloads, so it asks for `PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER`. A `stage` written in the options answers over it; among several, the latest asked for wins, since they run as one chain
+ * @property {(compilation: typeof import("webpack").Compilation) => number | undefined=} getStage which `processAssets` stage this minimizer has to run in, named off the `Compilation` it is handed — compressing reads the bytes a user downloads, so it asks for `PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER`. A `stage` written in the options answers over it and puts every minimizer in one pass; otherwise each runs where it asks, chaining through the asset a later pass reads back
  */
 
 /**
@@ -514,7 +514,7 @@ class TerserPlugin {
    * @param {Compiler} compiler compiler
    * @param {Compilation} compilation compilation
    * @param {Record<string, import("webpack").sources.Source>} assets assets
-   * @param {{ availableNumberOfCores: number }} optimizeOptions optimize options
+   * @param {{ availableNumberOfCores: number, only?: number[], cacheSuffix?: string, minimized?: Set<string> }} optimizeOptions how many may run at once, which minimizers this pass runs, what keeps its cache apart from another pass over the same asset, and which assets an earlier pass of this plugin already minimized
    * @returns {Promise<void>}
    */
   async optimize(compiler, compilation, assets, optimizeOptions) {
@@ -548,6 +548,12 @@ class TerserPlugin {
       const { filters } = this.options.minimizer;
 
       for (let i = 0; i < implementations.length; i++) {
+        // A pass runs only the minimizers asking for its stage; the rest read
+        // this same asset at theirs.
+        if (optimizeOptions.only && !optimizeOptions.only.includes(i)) {
+          continue;
+        }
+
         const impl = implementations[i];
         // What `minify` states about this entry answers for it; the property on
         // the function is what a minimizer says about itself, and is the
@@ -573,8 +579,13 @@ class TerserPlugin {
           const { info } = /** @type {Asset} */ (compilation.getAsset(name));
 
           if (
-            // Skip double minimize assets from child compilation
-            info.minimized ||
+            // Skip double minimize assets from child compilation. An asset an
+            // earlier pass of this plugin minimized is not that: the passes
+            // chain through it, so a later one reads what the last wrote.
+            (info.minimized &&
+              !(
+                optimizeOptions.minimized && optimizeOptions.minimized.has(name)
+              )) ||
             // Skip minimizing for extracted comments assets
             info.extractedComments
           ) {
@@ -603,7 +614,10 @@ class TerserPlugin {
           );
 
           const eTag = cache.getLazyHashedEtag(source);
-          const cacheItem = cache.getItemCache(name, eTag);
+          const cacheItem = cache.getItemCache(
+            `${name}${optimizeOptions.cacheSuffix || ""}`,
+            eTag,
+          );
           const output = await cacheItem.getPromise();
 
           if (!output) {
@@ -1001,6 +1015,10 @@ class TerserPlugin {
         }
 
         compilation.updateAsset(name, output.source, newInfo);
+
+        if (optimizeOptions.minimized) {
+          optimizeOptions.minimized.add(name);
+        }
       });
     }
 
@@ -1536,18 +1554,45 @@ class TerserPlugin {
    * @returns {number} the stage
    */
   minimizeStage(compiler) {
-    if (typeof this.options.stage === "number") {
-      return this.options.stage;
+    return typeof this.options.stage === "number"
+      ? this.options.stage
+      : compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE;
+  }
+
+  /**
+   * Which minimizers run at which `processAssets` stage, as indices into the
+   * configured ones. A `stage` in the options puts them all in one pass;
+   * otherwise each runs where it asks to, and they still chain — through the
+   * asset, which the later pass reads back.
+   * @private
+   * @param {Compiler} compiler compiler
+   * @returns {Map<number, number[]>} the indices, by stage
+   */
+  minimizersByStage(compiler) {
+    const { implementation } = this.options.minimizer;
+    const each = Array.isArray(implementation)
+      ? implementation
+      : [implementation];
+    const stated = this.minimizeStage(compiler);
+    /** @type {Map<number, number[]>} */
+    const byStage = new Map();
+
+    for (let i = 0; i < each.length; i++) {
+      const asked =
+        typeof this.options.stage === "number"
+          ? undefined
+          : declaredStage(compiler, each[i]);
+      const at = typeof asked === "number" ? asked : stated;
+      const already = byStage.get(at);
+
+      if (already) {
+        already.push(i);
+      } else {
+        byStage.set(at, [i]);
+      }
     }
 
-    const asked = declaredStage(
-      compiler,
-      this.options.minimizer.implementation,
-    );
-
-    return typeof asked === "number"
-      ? asked
-      : compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE;
+    return byStage;
   }
 
   /**
@@ -2112,13 +2157,27 @@ class TerserPlugin {
 
       const stage = this.minimizeStage(compiler);
 
-      compilation.hooks.processAssets.tapPromise(
-        { name: pluginName, stage, additionalAssets: true },
-        (assets) =>
-          this.optimize(compiler, compilation, assets, {
-            availableNumberOfCores,
-          }),
-      );
+      const minimizersByStage = this.minimizersByStage(compiler);
+      // What this plugin has already minimized in this compilation, so a later
+      // pass reads it back rather than taking `info.minimized` for a child
+      // compilation's work.
+      /** @type {Set<string>} */
+      const minimized = new Set();
+
+      for (const [at, only] of minimizersByStage) {
+        compilation.hooks.processAssets.tapPromise(
+          { name: pluginName, stage: at, additionalAssets: true },
+          (assets) =>
+            this.optimize(compiler, compilation, assets, {
+              availableNumberOfCores,
+              only,
+              minimized,
+              // Only where a second pass exists to be confused with: one pass
+              // keeps the cache keys every earlier release wrote.
+              cacheSuffix: minimizersByStage.size > 1 ? `|${at}` : "",
+            }),
+        );
+      }
 
       // One tap per stage the generators asked for: a file written beside a
       // minified asset and one written beside a compressed asset are the same
