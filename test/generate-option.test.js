@@ -1287,6 +1287,27 @@ describe("generate options", () => {
     ).toThrow(/`filter` and `deleteOriginalAssets` in `generate`'s 'webp'/);
   });
 
+  it("should reject the compression fields on an `import` generator", () => {
+    const webp = encoderNamed("WEBP");
+
+    // They describe a second file being worth writing, and an `import`
+    // generator writes none — it re-encodes the module it was asked for.
+    expect(() =>
+      construct({
+        generate: {
+          webp: {
+            implementation: webp,
+            threshold: 1024,
+            minRatio: 0.8,
+            relatedName: "gzipped",
+          },
+        },
+      }),
+    ).toThrow(
+      /`threshold` and `minRatio` and `relatedName` in `generate`'s 'webp'/,
+    );
+  });
+
   it("should reject options given in both places for one generator", () => {
     const webp = encoderNamed("WEBP");
 
@@ -1783,6 +1804,65 @@ describe("replaceExtension", () => {
     ["dir.x/readme", "png", "dir.x/readme.png"],
   ])("should rewrite %s to .%s", (name, extension, expected) => {
     expect(replaceExtension(name, extension)).toBe(expected);
+  });
+});
+
+describe("what a generated file promises about its name", () => {
+  /**
+   * @param {string} filename the generator's filename template
+   * @returns {Promise<import("webpack").AssetInfo>} what the generated file says
+   */
+  const infoFor = async (filename) => {
+    const copy = (input) => ({
+      code: Buffer.from(Object.values(input)[0]),
+    });
+
+    copy.supportsBinary = () => true;
+    copy.supportsWorker = () => false;
+
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/images.js"),
+      output: {
+        path: path.resolve(__dirname, "./dist"),
+        filename: "[name].[contenthash].js",
+      },
+      module: {
+        rules: [
+          {
+            test: /\.(png|jpe?g|svg|webp)/i,
+            type: "asset/resource",
+            generator: { filename: "[name].[contenthash][ext]" },
+          },
+        ],
+      },
+    });
+
+    new MinimizerPlugin({
+      test: /\.png$/i,
+      minify: false,
+      generate: { implementation: copy, type: "asset", filename },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+    const generated = Object.keys(stats.compilation.assets).find((name) =>
+      name.includes(".copy"),
+    );
+
+    return stats.compilation.getAsset(generated).info;
+  };
+
+  it("should stay immutable where the name still carries the original's", async () => {
+    const info = await infoFor("[path][name].copy[ext]");
+
+    expect(info.immutable).toBe(true);
+  });
+
+  it("should not claim immutable where the name does not", async () => {
+    const info = await infoFor("fixed.copy.png");
+
+    // The original's promise rested on a hash in its name; a fixed name
+    // carries none, so the file behind it can change.
+    expect(info.immutable).toBeUndefined();
   });
 });
 
