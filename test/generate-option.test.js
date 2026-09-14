@@ -1075,6 +1075,62 @@ describe("generate assets", () => {
     expect(assets).toContain("image.webp?as=webp");
   });
 
+  it("should keep the original bytes when the generator returns no code", async () => {
+    /**
+     * @param {{ [file: string]: string | Buffer }} input input
+     * @returns {{ filename: string }} a name, and nothing else
+     */
+    const rename = (input) => {
+      const [[name]] = Object.entries(input);
+
+      return { filename: replaceExtension(name, "webp") };
+    };
+
+    rename.supportsBinary = () => true;
+    rename.supportsWorker = () => false;
+
+    const { compiler, stats, assets } = await build({
+      generate: { webp: { implementation: rename, type: "asset" } },
+    });
+
+    // Saying nothing about the bytes is not saying the file is empty: what it
+    // read is what gets written under the name it asked for.
+    expect(getErrors(stats)).toEqual([]);
+    expect(assets).toContain("image.webp");
+    expect(
+      compiler.outputFileSystem
+        .readFileSync(
+          path.join(stats.compilation.outputOptions.path, "image.webp"),
+        )
+        .equals(
+          fs.readFileSync(path.resolve(__dirname, "./fixtures/image.jpg")),
+        ),
+    ).toBe(true);
+  });
+
+  it("should take a generator's text result as bytes", async () => {
+    /**
+     * @param {{ [file: string]: string | Buffer }} input input
+     * @returns {{ code: string, filename: string }} text, not a buffer
+     */
+    const asText = (input) => {
+      const [[name]] = Object.entries(input);
+
+      return { code: "WEBP:as text", filename: replaceExtension(name, "webp") };
+    };
+
+    asText.supportsBinary = () => true;
+    asText.supportsWorker = () => false;
+
+    const { compiler, stats, assets } = await build({
+      generate: { webp: { implementation: asText, type: "asset" } },
+    });
+
+    expect(getErrors(stats)).toEqual([]);
+    expect(assets).toContain("image.webp");
+    expect(readAsset("image.webp", compiler, stats)).toBe("WEBP:as text");
+  });
+
   it("should write no file when the generator reported an error", async () => {
     const webp = encoderNamed("WEBP", "webp");
 
