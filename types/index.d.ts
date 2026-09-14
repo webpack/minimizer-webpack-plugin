@@ -67,7 +67,7 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    * @param {Compiler} compiler compiler
    * @param {Compilation} compilation compilation
    * @param {Record<string, import("webpack").sources.Source>} assets assets
-   * @param {{ availableNumberOfCores: number, only?: number[], cacheSuffix?: string, minimized?: Set<string> }} optimizeOptions how many may run at once, which minimizers this pass runs, what keeps its cache apart from another pass over the same asset, and which assets an earlier pass of this plugin already minimized
+   * @param {{ availableNumberOfCores: number, only?: number[], cacheSuffix?: string, written: Map<string, Set<string>> }} optimizeOptions how many may run at once, which minimizers this pass runs, what keeps its cache apart from another pass over the same asset, and what an earlier pass of this plugin already wrote onto each asset
    * @returns {Promise<void>}
    */
   private optimize;
@@ -561,6 +561,10 @@ type MinimizeFunctionHelpers = {
         compilation: typeof import("webpack").Compilation,
       ) => number | undefined)
     | undefined;
+  /**
+   * what the asset it wrote says about itself, merged into that asset's info. `compress` marks it `compressed`, another encoding of the bytes being no smaller a version of them, and one saying nothing wrote a minified asset and is recorded `minimized`. It is also what is not run again over an asset already carrying it, which is how a minified asset a child compilation handed up is left alone
+   */
+  getAssetInfo?: ((info: AssetInfo) => AssetInfo | undefined) | undefined;
 };
 type MinimizerImplementation<T> = T extends EXPECTED_ANY[]
   ? {

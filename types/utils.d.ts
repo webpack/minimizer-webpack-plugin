@@ -103,6 +103,12 @@ export namespace compress {
    */
   function getStage(compilation: typeof import("webpack").Compilation): number;
   /**
+   * Another encoding of the bytes is not a smaller version of them, so what it
+   * wrote is compressed rather than minimized.
+   * @returns {import("webpack").AssetInfo} what the compressed asset says
+   */
+  function getAssetInfo(): import("webpack").AssetInfo;
+  /**
    * @returns {boolean} true, compressed output is binary
    */
   function supportsBinary(): boolean;
