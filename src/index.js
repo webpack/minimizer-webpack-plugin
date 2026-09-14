@@ -284,6 +284,24 @@ const declaredFlags = (implementation, fallback) => {
   return names.length > 0 ? names : [fallback];
 };
 
+/**
+ * Whether an asset is already marked with every name a function writes,
+ * counting only what this plugin did not mark it with itself.
+ * @param {Record<string, EXPECTED_ANY>} says what the asset says about itself
+ * @param {Set<string> | undefined} written what this plugin marked it with
+ * @param {string[]} flags the names the function writes
+ * @returns {boolean} true when it has been through this already
+ */
+const saysAlready = (says, written, flags) => {
+  for (const flag of flags) {
+    if (!says[flag] || (written && written.has(flag))) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
 const VALIDATION_CONFIGURATION = {
   name: "Terser Plugin",
   baseDataPath: "options",
@@ -559,30 +577,11 @@ class TerserPlugin {
       ? this.options.minimizer.implementation
       : [this.options.minimizer.implementation];
 
-    /**
-     * The names a minimizer's work goes under, which is `minimized` where it
-     * says nothing — every minimizer but `compress` today.
-     * @param {number} at index into `implementations`
-     * @returns {string[]} the names it marks the asset with
-     */
-    const writesFlags = (at) => declaredFlags(implementations[at], "minimized");
-
-    /**
-     * Whether the asset is already marked with every name a minimizer writes,
-     * counting only what this plugin did not mark it with itself.
-     * @param {string} name asset name
-     * @param {AssetInfo} info what the asset says about itself
-     * @param {string[]} flags the names the minimizer writes
-     * @returns {boolean} true when it has been through this already
-     */
-    const saysAlready = (name, info, flags) => {
-      const written = optimizeOptions.written.get(name);
-      const says = /** @type {Record<string, EXPECTED_ANY>} */ (info);
-
-      return flags.every(
-        (flag) => says[flag] && !(written && written.has(flag)),
-      );
-    };
+    // What each minimizer marks an asset with, asked once here rather than
+    // again for every asset it is offered.
+    const flagsByMinimizer = implementations.map((one) =>
+      declaredFlags(one, "minimized"),
+    );
 
     /**
      * Remember what this plugin marked an asset with, which is what a later
@@ -615,6 +614,8 @@ class TerserPlugin {
     const matchingMinimizers = (name, info) => {
       const matched = [];
       const { filters } = this.options.minimizer;
+      const written = optimizeOptions.written.get(name);
+      const says = /** @type {Record<string, EXPECTED_ANY>} */ (info);
 
       for (let i = 0; i < implementations.length; i++) {
         // A pass runs only the minimizers asking for its stage; the rest read
@@ -628,7 +629,7 @@ class TerserPlugin {
         // Skip double minimize assets from child compilation: one already
         // saying what this minimizer writes has been through it. An earlier
         // pass of this plugin is not that — those chain through the asset.
-        if (saysAlready(name, info, writesFlags(i))) {
+        if (saysAlready(says, written, flagsByMinimizer[i])) {
           continue;
         }
 
@@ -1075,19 +1076,16 @@ class TerserPlugin {
 
         /** @type {AssetInfo} */
         const newInfo = {};
-        /** @type {string[]} */
-        const flags = [];
 
         // The name each minimizer this asset went through works under: a
         // minified asset, or another encoding of the same bytes.
         for (const at of matched) {
-          for (const flag of writesFlags(at)) {
+          for (const flag of flagsByMinimizer[at]) {
             /** @type {Record<string, EXPECTED_ANY>} */ (newInfo)[flag] = true;
-            flags.push(flag);
           }
         }
 
-        recordWritten(name, flags);
+        recordWritten(name, Object.keys(newInfo));
 
         if (output.extractedCommentsSource) {
           newInfo.related = {
@@ -1634,11 +1632,14 @@ class TerserPlugin {
     const scheduled = [];
     // Every name this plugin's generators work under, so none of them reads a
     // file another one wrote — whichever name that one marked it with.
-    const produced = new Set();
+    /** @type {string[]} */
+    const produced = [];
 
     for (const one of this.assetGenerators()) {
       for (const flag of declaredFlags(one.implementation, "generated")) {
-        produced.add(flag);
+        if (!produced.includes(flag)) {
+          produced.push(flag);
+        }
       }
     }
 
@@ -1651,7 +1652,7 @@ class TerserPlugin {
 
       const says = /** @type {Record<string, EXPECTED_ANY>} */ (asset.info);
 
-      if ([...produced].some((flag) => says[flag])) {
+      if (produced.some((flag) => says[flag])) {
         continue;
       }
 
