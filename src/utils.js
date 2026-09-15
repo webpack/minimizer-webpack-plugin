@@ -2443,48 +2443,14 @@ function isDescriptor(entry) {
 }
 
 /**
- * What a `minify` descriptor says about writing beside the asset it read,
- * which is nothing at all unless it named a file to write.
- * @param {EXPECTED_ANY} descriptor one `minify` descriptor
- * @returns {MinimizerSidecar | undefined} what it stated, or undefined to rewrite in place
- */
-function readSidecar(descriptor) {
-  if (typeof descriptor.filename !== "string") {
-    return undefined;
-  }
-
-  return {
-    filename: descriptor.filename,
-    threshold: descriptor.threshold,
-    minRatio: descriptor.minRatio,
-    relatedName: descriptor.relatedName,
-    deleteOriginalAssets: descriptor.deleteOriginalAssets,
-  };
-}
-
-/**
- * What one `minify` descriptor says about where its result goes. A descriptor
- * naming a `filename` writes its result beside the asset it read rather than
- * over it, which is what compressing an asset is.
- * @typedef {object} MinimizerSidecar
- * @property {string} filename name for the written file, as a webpack filename template
- * @property {number=} threshold only assets larger than this, in bytes
- * @property {number=} minRatio keep it only when this much smaller than what it read
- * @property {string | false=} relatedName the key it is recorded under on the asset it read
- * @property {boolean=} deleteOriginalAssets remove the asset it read
- */
-
-/**
  * Flattens the objects `minify` may hold into the implementation-and-options
  * pair the rest of the plugin reads, so a descriptor's own `options` and the
  * deprecated `minimizerOptions` end up in one place, aligned by position.
- * `filters` and `sidecars` are parallel to `implementation`, and hold only what
- * a descriptor stated: a `filters` entry left undefined falls back to the
- * function's own `filter`, and a `sidecars` one left undefined is a minimizer
- * that rewrites its asset in place.
+ * `filters` is parallel to `implementation`, and holds only what a descriptor
+ * stated: an entry left undefined falls back to the function's own `filter`.
  * @param {EXPECTED_ANY} minify what `minify` was set to
  * @param {EXPECTED_ANY} declared what `minimizerOptions` says
- * @returns {{ implementation: EXPECTED_ANY, options: EXPECTED_ANY, filters?: (((name: string, info: EXPECTED_ANY) => boolean | undefined) | undefined)[], sidecars?: (MinimizerSidecar | undefined)[] }} the pair, and the filters and sidecars descriptors stated
+ * @returns {{ implementation: EXPECTED_ANY, options: EXPECTED_ANY, filters?: (((name: string, info: EXPECTED_ANY) => boolean | undefined) | undefined)[] }} the pair, and the filters descriptors stated
  */
 function normalizeMinimizers(minify, declared) {
   // TODO drop the `declared` fallback in the next major release, with the
@@ -2497,9 +2463,6 @@ function normalizeMinimizers(minify, declared) {
     const filters = minify.map((one) =>
       isDescriptor(one) ? one.filter : undefined,
     );
-    const sidecars = minify.map((one) =>
-      isDescriptor(one) ? readSidecar(one) : undefined,
-    );
 
     return {
       implementation: minify.map((one) =>
@@ -2511,13 +2474,10 @@ function normalizeMinimizers(minify, declared) {
           : getMinimizerOptionsAt(declared, index),
       ),
       ...(filters.some((one) => typeof one === "function") ? { filters } : {}),
-      ...(sidecars.some(Boolean) ? { sidecars } : {}),
     };
   }
 
   if (isDescriptor(minify)) {
-    const sidecar = readSidecar(minify);
-
     return {
       implementation: minify.implementation,
       options:
@@ -2525,7 +2485,6 @@ function normalizeMinimizers(minify, declared) {
       ...(typeof minify.filter === "function"
         ? { filters: [minify.filter] }
         : {}),
-      ...(sidecar ? { sidecars: [sidecar] } : {}),
     };
   }
 

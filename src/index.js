@@ -47,7 +47,6 @@ const {
 /** @typedef {import("jest-worker").Worker} JestWorker */
 /** @typedef {import("@jridgewell/trace-mapping").EncodedSourceMap & { sources: string[], sourcesContent?: string[], file: string }} RawSourceMap */
 /** @typedef {import("@jridgewell/trace-mapping").TraceMap} TraceMap */
-/** @typedef {import("./utils").MinimizerSidecar} MinimizerSidecar */
 
 /** @typedef {RegExp | string} Rule */
 /** @typedef {Rule[] | Rule} Rules */
@@ -224,7 +223,7 @@ const {
 
 /**
  * @template T
- * @typedef {BasePluginOptions & { minimizer: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T>, filters?: (((name: string, info: AssetInfo) => boolean | undefined) | undefined)[], sidecars?: (MinimizerSidecar | undefined)[] }, generator?: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T> } }} InternalPluginOptions
+ * @typedef {BasePluginOptions & { minimizer: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T>, filters?: (((name: string, info: AssetInfo) => boolean | undefined) | undefined)[] }, generator?: { implementation: MinimizerImplementation<T>, options: MinimizerOptions<T> } }} InternalPluginOptions
  */
 
 /**
@@ -348,7 +347,7 @@ class MinimizerPlugin {
     // — but only for an instance that was given nothing else to do. One
     // configured to generate reads whatever its generator takes, and minifying
     // its images as JavaScript is not a default anyone asked for.
-    const minify =
+    const minimizers =
       typeof declaredMinify !== "undefined"
         ? declaredMinify
         : generate
@@ -386,8 +385,8 @@ class MinimizerPlugin {
       include,
       exclude,
       minimizer:
-        /** @type {{ implementation: MinimizerImplementation<T>, options: MinimizerOptions<T>, filters?: (((name: string, info: AssetInfo) => boolean | undefined) | undefined)[], sidecars?: (MinimizerSidecar | undefined)[] }} */
-        (normalizeMinimizers(minify, resolvedMinimizerOptions)),
+        /** @type {{ implementation: MinimizerImplementation<T>, options: MinimizerOptions<T>, filters?: (((name: string, info: AssetInfo) => boolean | undefined) | undefined)[] }} */
+        (normalizeMinimizers(minimizers, resolvedMinimizerOptions)),
       // Absent unless asked for: it runs while modules build, where the plugin
       // otherwise does nothing.
       generator: generate
@@ -641,17 +640,10 @@ class MinimizerPlugin {
       const written = optimizeOptions.written.get(name);
       const says = /** @type {Record<string, EXPECTED_ANY>} */ (info);
 
-      const inPlace = this.rewritesInPlace();
-
       for (let i = 0; i < implementations.length; i++) {
         // A pass runs only the minimizers asking for its stage; the rest read
         // this same asset at theirs.
         if (optimizeOptions.only && !optimizeOptions.only.includes(i)) {
-          continue;
-        }
-
-        // One that named a file to write does not replace this asset.
-        if (!inPlace(i)) {
           continue;
         }
 
@@ -1315,7 +1307,7 @@ class MinimizerPlugin {
    * @param {string | undefined} name the preset it is written under, where it has one
    * @param {EXPECTED_ANY} entry what was written there
    * @param {EXPECTED_ANY} declared what `generatorOptions` says for it
-   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, flag: string | undefined, filename: string | undefined, filter: ((name: string, info: AssetInfo) => boolean | undefined) | undefined, deleteOriginalAssets: boolean | undefined, threshold: number | undefined, minRatio: number | undefined, relatedName: string | false | undefined }} the generator
+   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | undefined, threshold: number | undefined, minRatio: number | undefined, relatedName: string | false | undefined }} the generator
    */
   describeGenerator(name, entry, declared) {
     const descriptor = isDescriptor(entry) ? entry : undefined;
@@ -1328,9 +1320,6 @@ class MinimizerPlugin {
       // where a generator's options are its own.
       options: (typeof own === "undefined" ? declared : own) || {},
       type: descriptor ? descriptor.type : undefined,
-      // A generator writes a file nothing else would have written, so its work
-      // goes under `generated` unless it names its own.
-      flag: undefined,
       filename: descriptor ? descriptor.filename : undefined,
       filter: descriptor ? descriptor.filter : undefined,
       deleteOriginalAssets: descriptor
@@ -1482,65 +1471,6 @@ class MinimizerPlugin {
    */
   assetGenerators() {
     return this.generators().filter((one) => one.type === "asset");
-  }
-
-  /**
-   * The minimizers that write beside the asset they read rather than over it,
-   * shaped as the generators they are: compressing an asset is minifying it
-   * into a second file, so it is written under `minify` and runs here.
-   * @private
-   * @returns {ReturnType<MinimizerPlugin["describeGenerator"]>[]} them, in the order they were written
-   */
-  sidecarMinimizers() {
-    const { sidecars, filters } = this.options.minimizer;
-
-    if (!sidecars) {
-      return [];
-    }
-
-    const minimizers = this.minimizers();
-    const { options } = this.options.minimizer;
-
-    // `flatMap` is newer than the Node this plugin still runs on.
-    return sidecars.reduce((found, sidecar, i) => {
-      if (sidecar) {
-        found.push({
-          name: undefined,
-          implementation: /** @type {EXPECTED_ANY} */ (minimizers[i]),
-          options:
-            /** @type {EXPECTED_ANY} */
-            (
-              Array.isArray(this.options.minimizer.implementation)
-                ? getMinimizerOptionsAt(options, i)
-                : options
-            ) || {},
-          type: "asset",
-          // What it marks the file it writes with, which is `minimized`
-          // where it says nothing and `compressed` for `compress`.
-          flag: "minimized",
-          filename: sidecar.filename,
-          filter: filters ? filters[i] : undefined,
-          deleteOriginalAssets: sidecar.deleteOriginalAssets,
-          threshold: sidecar.threshold,
-          minRatio: sidecar.minRatio,
-          relatedName: sidecar.relatedName,
-        });
-      }
-
-      return found;
-    }, /** @type {ReturnType<MinimizerPlugin["describeGenerator"]>[]} */ ([]));
-  }
-
-  /**
-   * Every minimizer index that rewrites its asset in place, which is every one
-   * that did not name a file to write beside it.
-   * @private
-   * @returns {(i: number) => boolean} whether the minimizer at that index runs in place
-   */
-  rewritesInPlace() {
-    const { sidecars } = this.options.minimizer;
-
-    return (i) => !sidecars || !sidecars[i];
   }
 
   /**
@@ -1744,10 +1674,7 @@ class MinimizerPlugin {
 
     // The name this generator works under, which is `generated` where it says
     // nothing and `compressed` for `compress`.
-    for (const flag of declaredFlags(
-      generator.implementation,
-      generator.flag || "generated",
-    )) {
+    for (const flag of declaredFlags(generator.implementation, "generated")) {
       /** @type {Record<string, EXPECTED_ANY>} */ (generatedInfo)[flag] = true;
     }
 
@@ -1801,14 +1728,8 @@ class MinimizerPlugin {
     /** @type {string[]} */
     const produced = [];
 
-    for (const one of [
-      ...this.assetGenerators(),
-      ...this.sidecarMinimizers(),
-    ]) {
-      for (const flag of declaredFlags(
-        one.implementation,
-        one.flag || "generated",
-      )) {
+    for (const one of this.assetGenerators()) {
+      for (const flag of declaredFlags(one.implementation, "generated")) {
         if (!produced.includes(flag)) {
           produced.push(flag);
         }
@@ -1829,9 +1750,7 @@ class MinimizerPlugin {
       }
 
       for (const generator of generators) {
-        const decides = generator.filter;
-
-        if (decides && decides(name, asset.info) === false) {
+        if (generator.filter && !generator.filter(name)) {
           continue;
         }
 
@@ -1869,17 +1788,10 @@ class MinimizerPlugin {
       ? implementation
       : [implementation];
     const fallback = this.defaultStage(compiler);
-    const inPlace = this.rewritesInPlace();
     /** @type {Map<number, number[]>} */
     const byStage = new Map();
 
     for (let i = 0; i < each.length; i++) {
-      // One that named a file to write runs where a generator does, over what
-      // is emitted rather than over the asset it would have replaced.
-      if (!inPlace(i)) {
-        continue;
-      }
-
       const asked = declaredStage(compiler, each[i]);
       const at = typeof asked === "number" ? asked : fallback;
       const already = byStage.get(at);
@@ -2381,13 +2293,11 @@ class MinimizerPlugin {
         options: this.options.minimizer.options,
       });
 
-      // Nothing rewrites an asset, so nothing this instance does varies the
-      // bundle: salting the hash anyway would rename every file it only writes
-      // beside.
-      const inPlace = this.rewritesInPlace();
-      const minifies = this.minimizerImplementations(
-        this.options.minimizer.implementation,
-      ).some((one, i) => inPlace(i));
+      // Nothing minifies, so nothing it could do varies the bundle: salting the
+      // hash anyway would rename every file a generator-only instance touches.
+      const minifies =
+        this.minimizerImplementations(this.options.minimizer.implementation)
+          .length > 0;
 
       // The salt is the name this plugin shipped under, and every `[contenthash]`
       // is taken over it: renaming it would rename every file a user serves.
@@ -2503,10 +2413,7 @@ class MinimizerPlugin {
       /** @type {Map<number, ReturnType<MinimizerPlugin["assetGenerators"]>>} */
       const generatorsByStage = new Map();
 
-      for (const generator of [
-        ...this.assetGenerators(),
-        ...this.sidecarMinimizers(),
-      ]) {
+      for (const generator of this.assetGenerators()) {
         const asked = declaredStage(compiler, generator.implementation);
         const at = typeof asked === "number" ? asked : fallback;
         const already = generatorsByStage.get(at);

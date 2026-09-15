@@ -216,37 +216,6 @@
                   "filter": {
                     "description": "Which assets this minimizer is offered, decided by name and info. Overrides a `filter` on the minimizer function itself.",
                     "instanceof": "Function"
-                  },
-                  "filename": {
-                    "description": "Name for a file written beside the asset this minimizer read, as a webpack filename template. Naming one makes it write there rather than over the asset, which is what compressing an asset does.",
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "threshold": {
-                    "description": "Write beside only assets larger than this, in bytes. Needs `filename`.",
-                    "type": "number",
-                    "minimum": 0
-                  },
-                  "minRatio": {
-                    "description": "Keep the file written beside only when it is this much smaller than the asset it was read from, as `written size / original size`. Needs `filename`.",
-                    "type": "number",
-                    "exclusiveMinimum": 0
-                  },
-                  "relatedName": {
-                    "description": "The key the file written beside is recorded under in the original's `related` info, which is how a server finds it. `false` records nothing. Needs `filename`.",
-                    "anyOf": [
-                      {
-                        "type": "string",
-                        "minLength": 1
-                      },
-                      {
-                        "enum": [false]
-                      }
-                    ]
-                  },
-                  "deleteOriginalAssets": {
-                    "description": "Removes the asset read from. Needs `filename`.",
-                    "type": "boolean"
                   }
                 },
                 "required": ["implementation"]
@@ -270,37 +239,6 @@
             "filter": {
               "description": "Which assets this minimizer is offered, decided by name and info. Overrides a `filter` on the minimizer function itself.",
               "instanceof": "Function"
-            },
-            "filename": {
-              "description": "Name for a file written beside the asset this minimizer read, as a webpack filename template. Naming one makes it write there rather than over the asset, which is what compressing an asset does.",
-              "type": "string",
-              "minLength": 1
-            },
-            "threshold": {
-              "description": "Write beside only assets larger than this, in bytes. Needs `filename`.",
-              "type": "number",
-              "minimum": 0
-            },
-            "minRatio": {
-              "description": "Keep the file written beside only when it is this much smaller than the asset it was read from, as `written size / original size`. Needs `filename`.",
-              "type": "number",
-              "exclusiveMinimum": 0
-            },
-            "relatedName": {
-              "description": "The key the file written beside is recorded under in the original's `related` info, which is how a server finds it. `false` records nothing. Needs `filename`.",
-              "anyOf": [
-                {
-                  "type": "string",
-                  "minLength": 1
-                },
-                {
-                  "enum": [false]
-                }
-              ]
-            },
-            "deleteOriginalAssets": {
-              "description": "Removes the asset read from. Needs `filename`.",
-              "type": "boolean"
             }
           },
           "required": ["implementation"]

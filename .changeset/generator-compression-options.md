@@ -2,4 +2,4 @@
 "minimizer-webpack-plugin": minor
 ---
 
-Let a `minify` minimizer write beside the asset it read, with `filename`, `threshold`, `minRatio`, `relatedName` and `deleteOriginalAssets`.
+Add `threshold`, `minRatio` and `relatedName` to an `asset` generator, and default the minimizer only where nothing else was configured.

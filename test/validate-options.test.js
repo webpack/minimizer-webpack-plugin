@@ -344,26 +344,7 @@ describe("validation", () => {
     }).not.toThrow();
 
     expect(() => {
-      createCompiler({
-        minify: {
-          implementation: () => ({ code: "" }),
-          filename: "[path][base].gz",
-          threshold: 0,
-          minRatio: 0.8,
-          relatedName: "gzipped",
-          deleteOriginalAssets: false,
-        },
-      });
-    }).not.toThrow();
-
-    expect(() => {
       createCompiler({ minify: false });
-    }).toThrowErrorMatchingSnapshot();
-
-    expect(() => {
-      createCompiler({
-        minify: { implementation: () => ({ code: "" }), filename: "" },
-      });
     }).toThrowErrorMatchingSnapshot();
   });
 
