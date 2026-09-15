@@ -96,7 +96,7 @@ declare class MinimizerPlugin<T = import("terser").MinifyOptions> {
    * @param {string | undefined} name the preset it is written under, where it has one
    * @param {EXPECTED_ANY} entry what was written there
    * @param {EXPECTED_ANY} declared what `generatorOptions` says for it
-   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | undefined }} the generator
+   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | undefined, threshold: number | undefined, minRatio: number | undefined, relatedName: string | false | undefined }} the generator
    */
   private describeGenerator;
   /**
@@ -124,6 +124,14 @@ declare class MinimizerPlugin<T = import("terser").MinifyOptions> {
    * @returns {boolean} true when one does
    */
   private hasModuleGenerator;
+  /**
+   * The minimizers as a list, whichever shape they were written in. Empty is
+   * `minify: false`, which is what every pass over them then does nothing for.
+   * @private
+   * @param {EXPECTED_ANY} implementation one implementation, or an array
+   * @returns {EXPECTED_ANY[]} them
+   */
+  private minimizerImplementations;
   /**
    * Every name the functions this plugin runs mark an asset with, which is
    * what stats have to know how to print.
@@ -167,6 +175,7 @@ declare class MinimizerPlugin<T = import("terser").MinifyOptions> {
    * @param {Compiler} compiler compiler
    * @param {Compilation} compilation compilation
    * @param {ReturnType<MinimizerPlugin["assetGenerators"]>} generators the generators running at this stage
+   * @param {Record<string, import("webpack").sources.Source>} assets the assets this pass was handed
    * @returns {Promise<void>}
    */
   private generateAssets;
@@ -662,12 +671,12 @@ type BasePluginOptions = {
 type DefinedDefaultMinimizerAndOptions<T> =
   T extends import("terser").MinifyOptions
     ? {
-        minify?: MinimizerImplementation<T> | undefined;
+        minify?: MinimizerImplementation<T> | false | undefined;
         minimizerOptions?: MinimizerOptions<T> | undefined;
         terserOptions?: MinimizerOptions<T> | undefined;
       }
     : {
-        minify: MinimizerImplementation<T>;
+        minify: MinimizerImplementation<T> | false;
         minimizerOptions?: MinimizerOptions<T> | undefined;
         terserOptions?: MinimizerOptions<T> | undefined;
       };

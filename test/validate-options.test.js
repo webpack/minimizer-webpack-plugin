@@ -342,6 +342,10 @@ describe("validation", () => {
         terserOptions: { ecma: 5 },
       });
     }).not.toThrow();
+
+    expect(() => {
+      createCompiler({ minify: false });
+    }).toThrowErrorMatchingSnapshot();
   });
 
   it("should validate a minimizer added through `optimization.minimizer`", () => {
