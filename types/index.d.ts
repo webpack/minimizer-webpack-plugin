@@ -96,7 +96,7 @@ declare class MinimizerPlugin<T = import("terser").MinifyOptions> {
    * @param {string | undefined} name the preset it is written under, where it has one
    * @param {EXPECTED_ANY} entry what was written there
    * @param {EXPECTED_ANY} declared what `generatorOptions` says for it
-   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | undefined, threshold: number | undefined, minRatio: number | undefined, relatedName: string | false | undefined }} the generator
+   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, flag: string | undefined, filename: string | undefined, filter: ((name: string, info: AssetInfo) => boolean | undefined) | undefined, deleteOriginalAssets: boolean | undefined, threshold: number | undefined, minRatio: number | undefined, relatedName: string | false | undefined }} the generator
    */
   private describeGenerator;
   /**
@@ -146,6 +146,21 @@ declare class MinimizerPlugin<T = import("terser").MinifyOptions> {
    * @returns {ReturnType<MinimizerPlugin["describeGenerator"]>[]} them, in the order they were written
    */
   private assetGenerators;
+  /**
+   * The minimizers that write beside the asset they read rather than over it,
+   * shaped as the generators they are: compressing an asset is minifying it
+   * into a second file, so it is written under `minify` and runs here.
+   * @private
+   * @returns {ReturnType<MinimizerPlugin["describeGenerator"]>[]} them, in the order they were written
+   */
+  private sidecarMinimizers;
+  /**
+   * Every minimizer index that rewrites its asset in place, which is every one
+   * that did not name a file to write beside it.
+   * @private
+   * @returns {(i: number) => boolean} whether the minimizer at that index runs in place
+   */
+  private rewritesInPlace;
   /**
    * Carries the generator's identity into the persistent cache's version.
    * A generator rewrites a module's own build result, which the pack restores
@@ -287,6 +302,7 @@ declare namespace MinimizerPlugin {
     JestWorker,
     RawSourceMap,
     TraceMap,
+    MinimizerSidecar,
     Rule,
     Rules,
     EXPECTED_ANY,
@@ -354,6 +370,7 @@ type RawSourceMap = import("@jridgewell/trace-mapping").EncodedSourceMap & {
   file: string;
 };
 type TraceMap = import("@jridgewell/trace-mapping").TraceMap;
+type MinimizerSidecar = import("./utils").MinimizerSidecar;
 type Rule = RegExp | string;
 type Rules = Rule[] | Rule;
 type EXPECTED_ANY = any;
@@ -687,6 +704,7 @@ type InternalPluginOptions<T> = BasePluginOptions & {
     filters?: (
       ((name: string, info: AssetInfo) => boolean | undefined) | undefined
     )[];
+    sidecars?: (MinimizerSidecar | undefined)[];
   };
   generator?: {
     implementation: MinimizerImplementation<T>;

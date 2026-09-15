@@ -1839,7 +1839,6 @@ describe("what a generated file promises about its name", () => {
 
     new MinimizerPlugin({
       test: /\.png$/i,
-      minify: false,
       generate: { implementation: copy, type: "asset", filename },
     }).apply(compiler);
 
@@ -1898,7 +1897,6 @@ describe("generate with nothing to minify", () => {
     });
 
     new MinimizerPlugin({
-      minify: false,
       generate: {
         implementation: copy,
         type: "asset",
@@ -1924,7 +1922,6 @@ describe("generate with nothing to minify", () => {
 
     new MinimizerPlugin({
       test: /\.png$/i,
-      minify: false,
       generate: {
         implementation: copy,
         type: "asset",
@@ -1955,7 +1952,6 @@ describe("generate with nothing to minify", () => {
 
       if (withPlugin) {
         new MinimizerPlugin({
-          minify: false,
           generate: {
             implementation: (input) => ({
               code: Buffer.from(Object.values(input)[0]),
@@ -1981,13 +1977,21 @@ describe("generate with nothing to minify", () => {
     expect(with_.filter((name) => !name.includes(".copy."))).toEqual(without);
   });
 
-  it("should minify nothing when `minify` is false", async () => {
+  it("should minify nothing when only a generator is configured", async () => {
     const compiler = getCompiler({
       entry: path.resolve(__dirname, "./fixtures/images.js"),
       module: { rules: IMAGE_RULES },
     });
 
-    new MinimizerPlugin({ minify: false }).apply(compiler);
+    new MinimizerPlugin({
+      generate: {
+        implementation: (input) => ({
+          code: Buffer.from(Object.values(input)[0]),
+        }),
+        type: "asset",
+        filename: "[path][name].copy[ext]",
+      },
+    }).apply(compiler);
 
     const stats = await compile(compiler);
     const bundle = readAsset("main.js", compiler, stats);
@@ -2049,7 +2053,6 @@ describe("generate from an asset emitted late", () => {
     new EmitLate().apply(compiler);
     new MinimizerPlugin({
       test: /\.txt$/i,
-      minify: false,
       generate: {
         implementation: copy,
         type: "asset",
@@ -2113,7 +2116,6 @@ describe("generate assets, what is worth writing", () => {
 
     new MinimizerPlugin({
       test: /\.png$/i,
-      minify: false,
       generate: {
         implementation,
         type: "asset",
@@ -2212,7 +2214,6 @@ describe("generate assets, what is worth writing", () => {
     new AlreadyCopied().apply(compiler);
     new MinimizerPlugin({
       test: /\.png$/i,
-      minify: false,
       generate: {
         implementation: scale,
         type: "asset",

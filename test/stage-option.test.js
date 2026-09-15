@@ -911,3 +911,127 @@ describe("what a function says it wrote", () => {
     expect(printed).not.toContain("[minimized]");
   });
 });
+
+describe("a minimizer that writes beside the asset it read", () => {
+  it("should write the compressed file rather than replace the asset", async () => {
+    const compiler = getCompiler();
+
+    new MinimizerPlugin({
+      minify: {
+        implementation: MinimizerPlugin.compress,
+        options: { algorithm: "gzip" },
+        filename: "[path][base].gz",
+        relatedName: "gzipped",
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(getErrors(stats)).toEqual([]);
+    expect(Object.keys(stats.compilation.assets).sort()).toEqual([
+      "main.js",
+      "main.js.gz",
+    ]);
+    expect(zlib.gunzipSync(readBytes(compiler, stats, "main.js.gz"))).toEqual(
+      readBytes(compiler, stats, "main.js"),
+    );
+
+    const original = /** @type {import("webpack").Asset} */ (
+      stats.compilation.getAsset("main.js")
+    );
+    const written = /** @type {import("webpack").Asset} */ (
+      stats.compilation.getAsset("main.js.gz")
+    );
+
+    expect(written.info.compressed).toBe(true);
+    expect(written.info.minimized).toBeUndefined();
+    expect(original.info.minimized).toBeUndefined();
+    expect(
+      /** @type {{ [key: string]: string }} */ (original.info.related).gzipped,
+    ).toBe("main.js.gz");
+  });
+
+  it("should compress what the minimizer before it left, not what webpack rendered", async () => {
+    const compiler = getCompiler();
+
+    new MinimizerPlugin({
+      minify: [
+        MinimizerPlugin.terserMinify,
+        {
+          implementation: MinimizerPlugin.compress,
+          filename: "[path][base].gz",
+        },
+      ],
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(getErrors(stats)).toEqual([]);
+    expect(Object.keys(stats.compilation.assets).sort()).toEqual([
+      "main.js",
+      "main.js.gz",
+    ]);
+    expect(zlib.gunzipSync(readBytes(compiler, stats, "main.js.gz"))).toEqual(
+      readBytes(compiler, stats, "main.js"),
+    );
+    expect(
+      /** @type {import("webpack").Asset} */ (
+        stats.compilation.getAsset("main.js")
+      ).info.minimized,
+    ).toBe(true);
+  });
+
+  it("should leave the chunk hash alone, having replaced nothing", async () => {
+    /**
+     * @param {MinimizerPlugin=} plugin the plugin to apply, or none
+     * @returns {Promise<string | undefined>} the name the bundle was emitted under
+     */
+    const build = async (plugin) => {
+      const compiler = getCompiler({
+        output: {
+          path: path.resolve(__dirname, "./dist"),
+          filename: "[name].[fullhash].js",
+        },
+      });
+
+      if (plugin) {
+        plugin.apply(compiler);
+      }
+
+      const stats = await compile(compiler);
+
+      return Object.keys(stats.compilation.assets).find((name) =>
+        name.endsWith(".js"),
+      );
+    };
+
+    expect(
+      await build(
+        new MinimizerPlugin({
+          minify: {
+            implementation: MinimizerPlugin.compress,
+            filename: "[path][base].gz",
+          },
+        }),
+      ),
+    ).toBe(await build());
+  });
+
+  it("should skip an asset already carrying the name it records under", async () => {
+    const compiler = getCompiler();
+
+    new MinimizerPlugin({
+      minify: {
+        implementation: MinimizerPlugin.compress,
+        filename: "[path][base].gz",
+        relatedName: "gzipped",
+        threshold: 1024 * 1024,
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(getErrors(stats)).toEqual([]);
+    expect(Object.keys(stats.compilation.assets)).toEqual(["main.js"]);
+  });
+});

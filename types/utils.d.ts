@@ -5,6 +5,33 @@ export type QueryParameter = {
   name: string;
   read: (value: string) => EXPECTED_ANY;
 };
+/**
+ * What one `minify` descriptor says about where its result goes. A descriptor
+ * naming a `filename` writes its result beside the asset it read rather than
+ * over it, which is what compressing an asset is.
+ */
+export type MinimizerSidecar = {
+  /**
+   * name for the written file, as a webpack filename template
+   */
+  filename: string;
+  /**
+   * only assets larger than this, in bytes
+   */
+  threshold?: number | undefined;
+  /**
+   * keep it only when this much smaller than what it read
+   */
+  minRatio?: number | undefined;
+  /**
+   * the key it is recorded under on the asset it read
+   */
+  relatedName?: (string | false) | undefined;
+  /**
+   * remove the asset it read
+   */
+  deleteOriginalAssets?: boolean | undefined;
+};
 export type FunctionReturning<T> = () => T;
 export type ExtractCommentsOptions =
   import("./index.js").ExtractCommentsOptions;
@@ -579,14 +606,27 @@ export namespace napiRsImageMinify {
   function filter(name: string): boolean;
 }
 /**
+ * What one `minify` descriptor says about where its result goes. A descriptor
+ * naming a `filename` writes its result beside the asset it read rather than
+ * over it, which is what compressing an asset is.
+ * @typedef {object} MinimizerSidecar
+ * @property {string} filename name for the written file, as a webpack filename template
+ * @property {number=} threshold only assets larger than this, in bytes
+ * @property {number=} minRatio keep it only when this much smaller than what it read
+ * @property {string | false=} relatedName the key it is recorded under on the asset it read
+ * @property {boolean=} deleteOriginalAssets remove the asset it read
+ */
+/**
  * Flattens the objects `minify` may hold into the implementation-and-options
  * pair the rest of the plugin reads, so a descriptor's own `options` and the
  * deprecated `minimizerOptions` end up in one place, aligned by position.
- * `filters` is parallel to `implementation`, and holds only what a descriptor
- * stated: an entry left undefined falls back to the function's own `filter`.
+ * `filters` and `sidecars` are parallel to `implementation`, and hold only what
+ * a descriptor stated: a `filters` entry left undefined falls back to the
+ * function's own `filter`, and a `sidecars` one left undefined is a minimizer
+ * that rewrites its asset in place.
  * @param {EXPECTED_ANY} minify what `minify` was set to
  * @param {EXPECTED_ANY} declared what `minimizerOptions` says
- * @returns {{ implementation: EXPECTED_ANY, options: EXPECTED_ANY, filters?: (((name: string, info: EXPECTED_ANY) => boolean | undefined) | undefined)[] }} the pair, and the filters descriptors stated
+ * @returns {{ implementation: EXPECTED_ANY, options: EXPECTED_ANY, filters?: (((name: string, info: EXPECTED_ANY) => boolean | undefined) | undefined)[], sidecars?: (MinimizerSidecar | undefined)[] }} the pair, and the filters and sidecars descriptors stated
  */
 export function normalizeMinimizers(
   minify: EXPECTED_ANY,
@@ -597,6 +637,7 @@ export function normalizeMinimizers(
   filters?: (
     ((name: string, info: EXPECTED_ANY) => boolean | undefined) | undefined
   )[];
+  sidecars?: (MinimizerSidecar | undefined)[];
 };
 /**
  * The version a package reports. Read by walking up from its resolved entry
