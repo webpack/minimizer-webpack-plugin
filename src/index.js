@@ -1501,33 +1501,34 @@ class MinimizerPlugin {
     const minimizers = this.minimizers();
     const { options } = this.options.minimizer;
 
-    return sidecars.flatMap((sidecar, i) =>
-      sidecar
-        ? [
-            {
-              name: undefined,
-              implementation: /** @type {EXPECTED_ANY} */ (minimizers[i]),
-              options:
-                /** @type {EXPECTED_ANY} */
-                (
-                  Array.isArray(this.options.minimizer.implementation)
-                    ? getMinimizerOptionsAt(options, i)
-                    : options
-                ) || {},
-              type: "asset",
-              // What it marks the file it writes with, which is `minimized`
-              // where it says nothing and `compressed` for `compress`.
-              flag: "minimized",
-              filename: sidecar.filename,
-              filter: filters ? filters[i] : undefined,
-              deleteOriginalAssets: sidecar.deleteOriginalAssets,
-              threshold: sidecar.threshold,
-              minRatio: sidecar.minRatio,
-              relatedName: sidecar.relatedName,
-            },
-          ]
-        : [],
-    );
+    // `flatMap` is newer than the Node this plugin still runs on.
+    return sidecars.reduce((found, sidecar, i) => {
+      if (sidecar) {
+        found.push({
+          name: undefined,
+          implementation: /** @type {EXPECTED_ANY} */ (minimizers[i]),
+          options:
+            /** @type {EXPECTED_ANY} */
+            (
+              Array.isArray(this.options.minimizer.implementation)
+                ? getMinimizerOptionsAt(options, i)
+                : options
+            ) || {},
+          type: "asset",
+          // What it marks the file it writes with, which is `minimized`
+          // where it says nothing and `compressed` for `compress`.
+          flag: "minimized",
+          filename: sidecar.filename,
+          filter: filters ? filters[i] : undefined,
+          deleteOriginalAssets: sidecar.deleteOriginalAssets,
+          threshold: sidecar.threshold,
+          minRatio: sidecar.minRatio,
+          relatedName: sidecar.relatedName,
+        });
+      }
+
+      return found;
+    }, /** @type {ReturnType<MinimizerPlugin["describeGenerator"]>[]} */ ([]));
   }
 
   /**
@@ -1735,7 +1736,11 @@ class MinimizerPlugin {
       return;
     }
 
-    const generatedInfo = { ...info };
+    // A new file rather than a rewritten one, so it inherits nothing: what the
+    // original's info says of its hashes, its module and where its source came
+    // from is true of that file and not of this one.
+    /** @type {AssetInfo} */
+    const generatedInfo = {};
 
     // The name this generator works under, which is `generated` where it says
     // nothing and `compressed` for `compress`.
@@ -1746,18 +1751,14 @@ class MinimizerPlugin {
       /** @type {Record<string, EXPECTED_ANY>} */ (generatedInfo)[flag] = true;
     }
 
-    delete generatedInfo.related;
-
-    // Only where the name it was given still derives from the original's, which
-    // is what carried the hash the original's immutability rests on.
+    // The exception, and only where the name it was given still derives from
+    // the original's: that is what carried the hash the promise rests on.
     if (
       info.immutable &&
-      !(
-        typeof generator.filename === "string" &&
-        /(\[name]|\[base]|\[file])/.test(generator.filename)
-      )
+      typeof generator.filename === "string" &&
+      /(\[name]|\[base]|\[file])/.test(generator.filename)
     ) {
-      delete generatedInfo.immutable;
+      generatedInfo.immutable = true;
     }
 
     if (compilation.getAsset(generatedName)) {
