@@ -2050,6 +2050,46 @@ describe("generate beside the minifier", () => {
     );
   });
 
+  it("should salt where a function names the file, which cannot be read ahead", async () => {
+    /**
+     * @param {boolean} withPlugin whether to apply the plugin
+     * @returns {Promise<string[]>} the emitted JavaScript names
+     */
+    const namesFrom = async (withPlugin) => {
+      const compiler = getCompiler({
+        entry: path.resolve(__dirname, "./fixtures/images.js"),
+        output: {
+          path: path.resolve(__dirname, "./dist"),
+          filename: () => "[name].[fullhash].js",
+        },
+        module: { rules: IMAGE_RULES },
+      });
+
+      if (withPlugin) {
+        new MinimizerPlugin({
+          test: /\.png$/i,
+          generate: {
+            implementation: (input) => ({
+              code: Buffer.from(Object.values(input)[0]),
+            }),
+            type: "asset",
+            filename: "[path][name].copy[ext]",
+          },
+        }).apply(compiler);
+      }
+
+      const stats = await compile(compiler);
+
+      return Object.keys(stats.compilation.assets)
+        .filter((name) => name.endsWith(".js"))
+        .sort();
+    };
+
+    // Nothing can be read off a function before it is called, so the salt
+    // stands rather than being skipped on a guess.
+    expect(await namesFrom(true)).not.toEqual(await namesFrom(false));
+  });
+
   it("should still minify when only a generator was configured", async () => {
     const compiler = getCompiler({
       entry: path.resolve(__dirname, "./fixtures/images.js"),

@@ -275,13 +275,13 @@ const chunkAssetName = (compilation, chunk) => {
     return undefined;
   }
 
-  // Every hash stands for one character it has not got yet: what is being
-  // asked of the name is its path and extension, which no hash carries.
+  // Every placeholder stands for text it has not got yet: what is being asked
+  // of the name is its path and extension, which none of them carries.
   return template
     .replace(/\[(?:full|chunk|content)hash(?::\d+)?]/gi, "0")
-    .replace(/\[name]/gi, String(chunk.name || chunk.id || ""))
-    .replace(/\[id]/gi, String(chunk.id || ""))
-    .replace(/\[runtime]/gi, String(chunk.runtime || ""));
+    .replace(/\[name]/gi, String(chunk.name || chunk.id))
+    .replace(/\[id]/gi, String(chunk.id))
+    .replace(/\[runtime]/gi, String(chunk.runtime));
 };
 
 /**
