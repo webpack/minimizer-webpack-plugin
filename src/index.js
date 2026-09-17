@@ -257,6 +257,34 @@ const declaredStage = (compiler, implementation) => {
 };
 
 /**
+ * The name a chunk's JavaScript asset will take, as far as it is knowable
+ * while the hash that name contains is still being computed.
+ * @param {Compilation} compilation compilation
+ * @param {import("webpack").Chunk} chunk chunk
+ * @returns {string | undefined} the name, or undefined where a function names it
+ */
+const chunkAssetName = (compilation, chunk) => {
+  const { outputOptions } = compilation;
+  const template =
+    chunk.filenameTemplate ||
+    (chunk.canBeInitial()
+      ? outputOptions.filename
+      : outputOptions.chunkFilename);
+
+  if (typeof template !== "string") {
+    return undefined;
+  }
+
+  // Every hash stands for one character it has not got yet: what is being
+  // asked of the name is its path and extension, which no hash carries.
+  return template
+    .replace(/\[(?:full|chunk|content)hash(?::\d+)?]/gi, "0")
+    .replace(/\[name]/gi, String(chunk.name || chunk.id || ""))
+    .replace(/\[id]/gi, String(chunk.id || ""))
+    .replace(/\[runtime]/gi, String(chunk.runtime || ""));
+};
+
+/**
  * The names an implementation's work goes under in an asset's info, which is
  * the union where several ran as one chain.
  * @param {EXPECTED_ANY} implementation one implementation, or an array of them
@@ -560,6 +588,31 @@ class MinimizerPlugin {
     // Rejecting on either spelling, so naming the file excludes it whatever
     // it carries and naming the query still excludes it.
     return !(exclude && (matchPart(name, exclude) || matchPart(bare, exclude)));
+  }
+
+  /**
+   * Whether any configured minimizer would be handed an asset of this name,
+   * by the plugin's own `test`/`include`/`exclude` and then by its own filter.
+   * @private
+   * @param {Compiler} compiler compiler
+   * @param {string} name asset name
+   * @returns {boolean} true when one of them would take it
+   */
+  minifiesName(compiler, name) {
+    if (!this.matchesName(compiler, name)) {
+      return false;
+    }
+
+    const { filters } = this.options.minimizer;
+
+    return this.minimizers().some((implementation, i) => {
+      const decides =
+        filters && typeof filters[i] === "function"
+          ? filters[i]
+          : implementation.filter;
+
+      return typeof decides !== "function" || decides(name, {}) !== false;
+    });
   }
 
   /**
@@ -2283,9 +2336,20 @@ class MinimizerPlugin {
         options: this.options.minimizer.options,
       });
 
-      // The salt is the name this plugin shipped under, and every `[contenthash]`
-      // is taken over it: renaming it would rename every file a user serves.
       hooks.chunkHash.tap(pluginName, (chunk, hash) => {
+        const willBe = chunkAssetName(compilation, chunk);
+
+        // A chunk no minimizer here would be handed cannot vary with them, so
+        // salting it would rename a file this instance never rewrites.
+        if (
+          typeof willBe === "string" &&
+          !this.minifiesName(compiler, willBe)
+        ) {
+          return;
+        }
+
+        // The salt is the name this plugin shipped under, and every
+        // `[fullhash]` is taken over it: renaming it would rename every file.
         hash.update("TerserPlugin");
         hash.update(data);
       });

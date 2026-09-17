@@ -1970,6 +1970,86 @@ describe("generate beside the minifier", () => {
     expect(getErrors(stats)).toEqual([]);
   });
 
+  it("should not rename a bundle no minimizer of its own would touch", async () => {
+    /**
+     * @param {boolean} withPlugin whether to apply the plugin
+     * @returns {Promise<string[]>} the emitted JavaScript names
+     */
+    const namesFrom = async (withPlugin) => {
+      const compiler = getCompiler({
+        entry: path.resolve(__dirname, "./fixtures/images.js"),
+        output: {
+          path: path.resolve(__dirname, "./dist"),
+          filename: "[name].[fullhash].js",
+        },
+        module: { rules: IMAGE_RULES },
+      });
+
+      if (withPlugin) {
+        new MinimizerPlugin({
+          test: /\.png$/i,
+          generate: {
+            implementation: (input) => ({
+              code: Buffer.from(Object.values(input)[0]),
+            }),
+            type: "asset",
+            filename: "[path][name].copy[ext]",
+          },
+        }).apply(compiler);
+      }
+
+      const stats = await compile(compiler);
+
+      return Object.keys(stats.compilation.assets)
+        .filter((name) => name.endsWith(".js"))
+        .sort();
+    };
+
+    // `test` names images, so no minimizer here is ever handed the bundle:
+    // salting its hash would rename a file this instance never rewrites.
+    expect(await namesFrom(true)).toEqual(await namesFrom(false));
+  });
+
+  it("should still rename when a minimizer would be handed the bundle", async () => {
+    /**
+     * @param {EXPECTED_ANY} minimizerOptions what to run terser with
+     * @returns {Promise<string[]>} the emitted JavaScript names
+     */
+    const namesFrom = async (minimizerOptions) => {
+      const compiler = getCompiler({
+        entry: path.resolve(__dirname, "./fixtures/images.js"),
+        output: {
+          path: path.resolve(__dirname, "./dist"),
+          filename: "[name].[fullhash].js",
+        },
+        module: { rules: IMAGE_RULES },
+      });
+
+      new MinimizerPlugin({
+        minimizerOptions,
+        generate: {
+          implementation: (input) => ({
+            code: Buffer.from(Object.values(input)[0]),
+          }),
+          type: "asset",
+          filename: "[path][name].copy[ext]",
+        },
+      }).apply(compiler);
+
+      const stats = await compile(compiler);
+
+      return Object.keys(stats.compilation.assets)
+        .filter((name) => name.endsWith(".js"))
+        .sort();
+    };
+
+    // The guard above must not cost the salt its job: what terser is run with
+    // still varies the name of what it rewrote.
+    expect(await namesFrom({ mangle: true })).not.toEqual(
+      await namesFrom({ mangle: false }),
+    );
+  });
+
   it("should still minify when only a generator was configured", async () => {
     const compiler = getCompiler({
       entry: path.resolve(__dirname, "./fixtures/images.js"),

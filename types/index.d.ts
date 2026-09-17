@@ -63,6 +63,15 @@ declare class MinimizerPlugin<T = import("terser").MinifyOptions> {
    */
   private matchesName;
   /**
+   * Whether any configured minimizer would be handed an asset of this name,
+   * by the plugin's own `test`/`include`/`exclude` and then by its own filter.
+   * @private
+   * @param {Compiler} compiler compiler
+   * @param {string} name asset name
+   * @returns {boolean} true when one of them would take it
+   */
+  private minifiesName;
+  /**
    * @private
    * @param {Compiler} compiler compiler
    * @param {Compilation} compilation compilation
