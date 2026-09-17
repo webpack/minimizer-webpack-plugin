@@ -63,15 +63,6 @@ declare class MinimizerPlugin<T = import("terser").MinifyOptions> {
    */
   private matchesName;
   /**
-   * Whether any configured minimizer would be handed an asset of this name,
-   * by the plugin's own `test`/`include`/`exclude` and then by its own filter.
-   * @private
-   * @param {Compiler} compiler compiler
-   * @param {string} name asset name
-   * @returns {boolean} true when one of them would take it
-   */
-  private minifiesName;
-  /**
    * @private
    * @param {Compiler} compiler compiler
    * @param {Compilation} compilation compilation
@@ -314,6 +305,8 @@ declare namespace MinimizerPlugin {
     InternalOptions,
     MinimizerWorker,
     Parallel,
+    GeneratorDescriptor,
+    Generate,
     BasePluginOptions,
     DefinedDefaultMinimizerAndOptions,
     InternalPluginOptions,
@@ -639,6 +632,61 @@ type MinimizerWorker<T> = JestWorker & {
   minify: (options: InternalOptions<T>) => Promise<MinimizedResult>;
 };
 type Parallel = undefined | boolean | number;
+/**
+ * One generator, written as an object stating how to run it.
+ */
+type GeneratorDescriptor = {
+  /**
+   * the generator itself
+   */
+  implementation: MinimizerImplementation<EXPECTED_ANY>;
+  /**
+   * options for this generator, preferred over the deprecated `generatorOptions`
+   */
+  options?: MinimizerOptions<EXPECTED_ANY> | undefined;
+  /**
+   * `import` re-encodes a module as it is built, so the import that asked for it is renamed with it; `asset` writes a new file beside one already emitted
+   */
+  type?: ("import" | "asset") | undefined;
+  /**
+   * name for the generated asset, as a webpack filename template. `asset` generators only
+   */
+  filename?: string | undefined;
+  /**
+   * decides per asset whether to generate from it, on top of `test`/`include`/`exclude`
+   */
+  filter?: ((name: string) => boolean) | undefined;
+  /**
+   * removes the asset generated from. `asset` generators only
+   */
+  deleteOriginalAssets?: boolean | undefined;
+  /**
+   * generate only from assets larger than this, in bytes. `asset` generators only
+   */
+  threshold?: number | undefined;
+  /**
+   * keep the generated asset only when it is this much smaller than the one it was read from. `asset` generators only
+   */
+  minRatio?: number | undefined;
+  /**
+   * the key the generated asset is recorded under in the original's `related` info. `asset` generators only
+   */
+  relatedName?: (string | false) | undefined;
+};
+/**
+ * What `generate` may be written as: one generator, a list of them, a
+ * descriptor, or an object naming descriptors an asset asks for with `?as=`.
+ */
+type Generate =
+  | MinimizerImplementation<EXPECTED_ANY>
+  | MinimizerImplementation<EXPECTED_ANY>[]
+  | GeneratorDescriptor
+  | {
+      [preset: string]:
+        | MinimizerImplementation<EXPECTED_ANY>
+        | MinimizerImplementation<EXPECTED_ANY>[]
+        | GeneratorDescriptor;
+    };
 type BasePluginOptions = {
   /**
    * test rule
@@ -661,9 +709,9 @@ type BasePluginOptions = {
    */
   parallel?: Parallel | undefined;
   /**
-   * rewrites a module's own bytes as it is built, so a re-encoding can rename the asset
+   * rewrites a module's own bytes as it is built, so a re-encoding can rename the asset, or writes a new file beside one already emitted
    */
-  generate?: MinimizerImplementation<EXPECTED_ANY> | undefined;
+  generate?: Generate | undefined;
   /**
    * options for `generate`
    */
@@ -672,12 +720,12 @@ type BasePluginOptions = {
 type DefinedDefaultMinimizerAndOptions<T> =
   T extends import("terser").MinifyOptions
     ? {
-        minify?: MinimizerImplementation<T> | false | undefined;
+        minify?: MinimizerImplementation<T> | undefined;
         minimizerOptions?: MinimizerOptions<T> | undefined;
         terserOptions?: MinimizerOptions<T> | undefined;
       }
     : {
-        minify: MinimizerImplementation<T> | false;
+        minify: MinimizerImplementation<T>;
         minimizerOptions?: MinimizerOptions<T> | undefined;
         terserOptions?: MinimizerOptions<T> | undefined;
       };

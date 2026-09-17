@@ -206,19 +206,39 @@ const {
  */
 
 /**
+ * One generator, written as an object stating how to run it.
+ * @typedef {object} GeneratorDescriptor
+ * @property {MinimizerImplementation<EXPECTED_ANY>} implementation the generator itself
+ * @property {MinimizerOptions<EXPECTED_ANY>=} options options for this generator, preferred over the deprecated `generatorOptions`
+ * @property {("import" | "asset")=} type `import` re-encodes a module as it is built, so the import that asked for it is renamed with it; `asset` writes a new file beside one already emitted
+ * @property {string=} filename name for the generated asset, as a webpack filename template. `asset` generators only
+ * @property {((name: string) => boolean)=} filter decides per asset whether to generate from it, on top of `test`/`include`/`exclude`
+ * @property {boolean=} deleteOriginalAssets removes the asset generated from. `asset` generators only
+ * @property {number=} threshold generate only from assets larger than this, in bytes. `asset` generators only
+ * @property {number=} minRatio keep the generated asset only when it is this much smaller than the one it was read from. `asset` generators only
+ * @property {(string | false)=} relatedName the key the generated asset is recorded under in the original's `related` info. `asset` generators only
+ */
+
+/**
+ * What `generate` may be written as: one generator, a list of them, a
+ * descriptor, or an object naming descriptors an asset asks for with `?as=`.
+ * @typedef {MinimizerImplementation<EXPECTED_ANY> | MinimizerImplementation<EXPECTED_ANY>[] | GeneratorDescriptor | { [preset: string]: MinimizerImplementation<EXPECTED_ANY> | MinimizerImplementation<EXPECTED_ANY>[] | GeneratorDescriptor }} Generate
+ */
+
+/**
  * @typedef {object} BasePluginOptions
  * @property {Rules=} test test rule
  * @property {Rules=} include include rile
  * @property {Rules=} exclude exclude rule
  * @property {ExtractCommentsOptions=} extractComments extract comments options
  * @property {Parallel=} parallel parallel option
- * @property {MinimizerImplementation<EXPECTED_ANY>=} generate rewrites a module's own bytes as it is built, so a re-encoding can rename the asset
+ * @property {Generate=} generate rewrites a module's own bytes as it is built, so a re-encoding can rename the asset, or writes a new file beside one already emitted
  * @property {MinimizerOptions<EXPECTED_ANY>=} generatorOptions options for `generate`
  */
 
 /**
  * @template T
- * @typedef {T extends import("terser").MinifyOptions ? { minify?: MinimizerImplementation<T> | false | undefined, minimizerOptions?: MinimizerOptions<T> | undefined, terserOptions?: MinimizerOptions<T> | undefined } : { minify: MinimizerImplementation<T> | false, minimizerOptions?: MinimizerOptions<T> | undefined, terserOptions?: MinimizerOptions<T> | undefined }} DefinedDefaultMinimizerAndOptions
+ * @typedef {T extends import("terser").MinifyOptions ? { minify?: MinimizerImplementation<T> | undefined, minimizerOptions?: MinimizerOptions<T> | undefined, terserOptions?: MinimizerOptions<T> | undefined } : { minify: MinimizerImplementation<T>, minimizerOptions?: MinimizerOptions<T> | undefined, terserOptions?: MinimizerOptions<T> | undefined }} DefinedDefaultMinimizerAndOptions
  */
 
 /**
@@ -588,31 +608,6 @@ class MinimizerPlugin {
     // Rejecting on either spelling, so naming the file excludes it whatever
     // it carries and naming the query still excludes it.
     return !(exclude && (matchPart(name, exclude) || matchPart(bare, exclude)));
-  }
-
-  /**
-   * Whether any configured minimizer would be handed an asset of this name,
-   * by the plugin's own `test`/`include`/`exclude` and then by its own filter.
-   * @private
-   * @param {Compiler} compiler compiler
-   * @param {string} name asset name
-   * @returns {boolean} true when one of them would take it
-   */
-  minifiesName(compiler, name) {
-    if (!this.matchesName(compiler, name)) {
-      return false;
-    }
-
-    const { filters } = this.options.minimizer;
-
-    return this.minimizers().some((implementation, i) => {
-      const decides =
-        filters && typeof filters[i] === "function"
-          ? filters[i]
-          : implementation.filter;
-
-      return typeof decides !== "function" || decides(name, {}) !== false;
-    });
   }
 
   /**
@@ -1720,13 +1715,23 @@ class MinimizerPlugin {
       generatedInfo.immutable = true;
     }
 
+    // A rebuild writes over the file it wrote last time rather than a new one,
+    // and what is recorded below is owed either way.
     if (compilation.getAsset(generatedName)) {
       compilation.updateAsset(generatedName, generatedSource, generatedInfo);
+    } else {
+      compilation.emitAsset(generatedName, generatedSource, generatedInfo);
+    }
+
+    if (generator.deleteOriginalAssets) {
+      // Deleting an asset takes everything its `related` names with it, so
+      // recording this file there first would delete the file just written.
+      if (compilation.getAsset(name)) {
+        compilation.deleteAsset(name);
+      }
 
       return;
     }
-
-    compilation.emitAsset(generatedName, generatedSource, generatedInfo);
 
     // Recorded on the asset it was read from, which is how a server asked for
     // that one finds this one.
@@ -1734,10 +1739,6 @@ class MinimizerPlugin {
       compilation.updateAsset(name, source, {
         related: { [generator.relatedName]: generatedName },
       });
-    }
-
-    if (generator.deleteOriginalAssets && compilation.getAsset(name)) {
-      compilation.deleteAsset(name);
     }
   }
 
@@ -2328,12 +2329,11 @@ class MinimizerPlugin {
       hooks.chunkHash.tap(pluginName, (chunk, hash) => {
         const willBe = chunkAssetName(compilation, chunk);
 
-        // A chunk no minimizer here would be handed cannot vary with them, so
-        // salting it would rename a file this instance never rewrites.
-        if (
-          typeof willBe === "string" &&
-          !this.minifiesName(compiler, willBe)
-        ) {
+        // A chunk this instance was never pointed at cannot vary with its
+        // minimizers, so salting it would rename a file it never rewrites. A
+        // `filter` is not asked: it reads an asset's info, which no asset has
+        // yet, and guessing one could skip the salt for an asset it then takes.
+        if (typeof willBe === "string" && !this.matchesName(compiler, willBe)) {
           return;
         }
 

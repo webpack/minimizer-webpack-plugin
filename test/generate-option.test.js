@@ -2119,6 +2119,183 @@ describe("generate beside the minifier", () => {
   });
 });
 
+describe("generate over a file that is already there", () => {
+  it("should record `related` and delete the original even when the file exists", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/images.js"),
+      module: { rules: IMAGE_RULES },
+    });
+
+    /** Writes the name the generator is about to write, before it runs. */
+    class AlreadyThere {
+      /**
+       * @param {import("webpack").Compiler} instance compiler
+       * @returns {void}
+       */
+      apply(instance) {
+        instance.hooks.compilation.tap("AlreadyThere", (compilation) => {
+          compilation.hooks.processAssets.tap(
+            {
+              name: "AlreadyThere",
+              stage:
+                compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
+            },
+            () => {
+              compilation.emitAsset(
+                "image.copy.png",
+                new compiler.webpack.sources.RawSource(Buffer.from("stale")),
+              );
+            },
+          );
+        });
+      }
+    }
+
+    new AlreadyThere().apply(compiler);
+    new MinimizerPlugin({
+      test: /^image\.png$/i,
+      generate: {
+        implementation: (input) => ({
+          code: Buffer.from(Object.values(input)[0]),
+        }),
+        type: "asset",
+        filename: "[path][name].copy[ext]",
+        relatedName: "copied",
+        deleteOriginalAssets: true,
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+    const names = Object.keys(stats.compilation.assets);
+
+    expect(getErrors(stats)).toEqual([]);
+    // Written over rather than emitted, and the original still gone with it.
+    expect(names).toContain("image.copy.png");
+    expect(names).not.toContain("image.png");
+    expect(readAsset("image.copy.png", compiler, stats)).not.toBe("stale");
+  });
+
+  it("should record `related` on the original where it is kept", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/images.js"),
+      module: { rules: IMAGE_RULES },
+    });
+
+    /** Writes the name the generator is about to write, before it runs. */
+    class AlreadyThere {
+      /**
+       * @param {import("webpack").Compiler} instance compiler
+       * @returns {void}
+       */
+      apply(instance) {
+        instance.hooks.compilation.tap("AlreadyThere", (compilation) => {
+          compilation.hooks.processAssets.tap(
+            {
+              name: "AlreadyThere",
+              stage:
+                compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
+            },
+            () => {
+              compilation.emitAsset(
+                "image.copy.png",
+                new compiler.webpack.sources.RawSource(Buffer.from("stale")),
+              );
+            },
+          );
+        });
+      }
+    }
+
+    new AlreadyThere().apply(compiler);
+    new MinimizerPlugin({
+      test: /^image\.png$/i,
+      generate: {
+        implementation: (input) => ({
+          code: Buffer.from(Object.values(input)[0]),
+        }),
+        type: "asset",
+        filename: "[path][name].copy[ext]",
+        relatedName: "copied",
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+    const original = /** @type {import("webpack").Asset} */ (
+      stats.compilation.getAsset("image.png")
+    );
+
+    expect(getErrors(stats)).toEqual([]);
+    expect(
+      /** @type {{ [key: string]: string }} */ (original.info.related).copied,
+    ).toBe("image.copy.png");
+  });
+});
+
+describe("deleting the asset a file was written beside", () => {
+  it("should keep the generated file when `relatedName` is set too", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/images.js"),
+      module: { rules: IMAGE_RULES },
+    });
+
+    new MinimizerPlugin({
+      test: /^image\.png$/i,
+      generate: {
+        implementation: (input) => ({
+          code: Buffer.from(Object.values(input)[0]),
+        }),
+        type: "asset",
+        filename: "[path][name].copy[ext]",
+        relatedName: "copied",
+        deleteOriginalAssets: true,
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+    const names = Object.keys(stats.compilation.assets);
+
+    // Deleting an asset takes everything its `related` names with it, so the
+    // two together must not delete the file that was just written.
+    expect(getErrors(stats)).toEqual([]);
+    expect(names).toContain("image.copy.png");
+    expect(names).not.toContain("image.png");
+  });
+
+  it("should not mind a second generator having deleted it already", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/images.js"),
+      module: { rules: IMAGE_RULES },
+    });
+
+    /**
+     * @param {string} suffix what to name what it writes
+     * @returns {EXPECTED_ANY} one generator
+     */
+    const copyTo = (suffix) => ({
+      implementation: (input) => ({
+        code: Buffer.from(Object.values(input)[0]),
+      }),
+      type: "asset",
+      filename: `[path][name].${suffix}[ext]`,
+      deleteOriginalAssets: true,
+    });
+
+    new MinimizerPlugin({
+      test: /^image\.png$/i,
+      generate: { one: copyTo("one"), two: copyTo("two") },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+    const names = Object.keys(stats.compilation.assets);
+
+    // Both wrote, and whichever deleted second found nothing left to delete.
+    expect(getErrors(stats)).toEqual([]);
+    expect(names).toContain("image.one.png");
+    expect(names).toContain("image.two.png");
+    expect(names).not.toContain("image.png");
+  });
+});
+
 describe("generate from an asset emitted late", () => {
   it("should generate from an asset added after the generators ran", async () => {
     const seen = [];
