@@ -134,14 +134,6 @@ declare class MinimizerPlugin<T = import("terser").MinifyOptions> {
    */
   private hasModuleGenerator;
   /**
-   * The minimizers as a list, whichever shape they were written in. Empty is
-   * `minify: false`, which is what every pass over them then does nothing for.
-   * @private
-   * @param {EXPECTED_ANY} implementation one implementation, or an array
-   * @returns {EXPECTED_ANY[]} them
-   */
-  private minimizerImplementations;
-  /**
    * Every name the functions this plugin runs mark an asset with, which is
    * what stats have to know how to print.
    * @private
