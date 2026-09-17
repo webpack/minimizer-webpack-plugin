@@ -343,26 +343,16 @@ class MinimizerPlugin {
       generatorOptions,
     } = this.rawOptions;
 
-    // The JavaScript minifier is what this plugin is for, so it is the default
-    // — but only for an instance that was given nothing else to do. One
-    // configured to generate reads whatever its generator takes, and minifying
-    // its images as JavaScript is not a default anyone asked for.
+    // The JavaScript minifier and the names it reads are what this plugin is,
+    // so both stand whether or not a generator was configured too.
     const minimizers =
       typeof declaredMinify !== "undefined"
         ? declaredMinify
-        : generate
-          ? []
-          : /** @type {MinimizerImplementation<T>} */ (
-              /** @type {unknown} */ (terserMinify)
-            );
-    // That default carries the `test` that belongs to it: a `.js` default over
-    // an instance that minifies nothing would hide every image from it.
+        : /** @type {MinimizerImplementation<T>} */ (
+            /** @type {unknown} */ (terserMinify)
+          );
     const test =
-      typeof declaredTest !== "undefined"
-        ? declaredTest
-        : typeof declaredMinify === "undefined" && generate
-          ? undefined
-          : /\.[cm]?js(\?.*)?$/i;
+      typeof declaredTest !== "undefined" ? declaredTest : /\.[cm]?js(\?.*)?$/i;
 
     // `terserOptions` is a deprecated alias of `minimizerOptions`; prefer the
     // new name when both are provided.
@@ -2293,20 +2283,12 @@ class MinimizerPlugin {
         options: this.options.minimizer.options,
       });
 
-      // Nothing minifies, so nothing it could do varies the bundle: salting the
-      // hash anyway would rename every file a generator-only instance touches.
-      const minifies =
-        this.minimizerImplementations(this.options.minimizer.implementation)
-          .length > 0;
-
       // The salt is the name this plugin shipped under, and every `[contenthash]`
       // is taken over it: renaming it would rename every file a user serves.
-      if (minifies) {
-        hooks.chunkHash.tap(pluginName, (chunk, hash) => {
-          hash.update("TerserPlugin");
-          hash.update(data);
-        });
-      }
+      hooks.chunkHash.tap(pluginName, (chunk, hash) => {
+        hash.update("TerserPlugin");
+        hash.update(data);
+      });
 
       // Added in webpack 5.110: source one language embeds in another, which no
       // asset carries and `processAssets` therefore never sees.
@@ -2315,7 +2297,6 @@ class MinimizerPlugin {
         (/** @type {unknown} */ (compilation.hooks));
 
       if (
-        minifies &&
         embeddedHooks.renderEmbeddedSource &&
         embeddedHooks.embeddedSourceHash
       ) {

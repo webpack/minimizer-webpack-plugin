@@ -1865,7 +1865,7 @@ describe("what a generated file promises about its name", () => {
   });
 });
 
-describe("generate with nothing to minify", () => {
+describe("generate beside the minifier", () => {
   /**
    * @returns {EXPECTED_ANY} a generator that hands back what it read
    */
@@ -1889,7 +1889,7 @@ describe("generate with nothing to minify", () => {
     return copy;
   };
 
-  it("should reach every asset when `minify` is false and `test` is not set", async () => {
+  it("should read the `.js` default where no `test` was set", async () => {
     const copy = copier();
     const compiler = getCompiler({
       entry: path.resolve(__dirname, "./fixtures/images.js"),
@@ -1906,10 +1906,9 @@ describe("generate with nothing to minify", () => {
 
     const stats = await compile(compiler);
 
-    // The `.js` default belongs to minifying: with nothing minifying it would
-    // hide every image from the generator, which is the whole job here.
-    expect(copy.saw).toContain("image.png");
-    expect(copy.saw).toContain("image.svg");
+    // The default is the plugin's, not the minifier's, so a generator written
+    // for images is given a `test` that names them.
+    expect(copy.saw).toEqual(["main.js"]);
     expect(getErrors(stats)).toEqual([]);
   });
 
@@ -1935,49 +1934,43 @@ describe("generate with nothing to minify", () => {
     expect(getErrors(stats)).toEqual([]);
   });
 
-  it("should not change what the build is named when it minifies nothing", async () => {
-    /**
-     * @param {boolean} withPlugin whether to apply the plugin
-     * @returns {Promise<string[]>} the emitted names
-     */
-    const namesFrom = async (withPlugin) => {
-      const compiler = getCompiler({
-        entry: path.resolve(__dirname, "./fixtures/images.js"),
-        output: {
-          path: path.resolve(__dirname, "./dist"),
-          filename: "[name].js?ver=[fullhash]",
-        },
-        module: { rules: IMAGE_RULES },
-      });
+  it("should minify as well as generate, and mark what it minified", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/images.js"),
+      module: { rules: IMAGE_RULES },
+    });
 
-      if (withPlugin) {
-        new MinimizerPlugin({
-          generate: {
-            implementation: (input) => ({
-              code: Buffer.from(Object.values(input)[0]),
-            }),
-            type: "asset",
-            filename: "[path][name].copy[ext]",
-          },
-        }).apply(compiler);
-      }
+    new MinimizerPlugin({
+      test: /\.(png|js)$/i,
+      generate: {
+        implementation: (input) => ({
+          code: Buffer.from(Object.values(input)[0]),
+        }),
+        type: "asset",
+        filename: "[path][name].copy[ext]",
+      },
+    }).apply(compiler);
 
-      const stats = await compile(compiler);
+    const stats = await compile(compiler);
 
-      return Object.keys(stats.compilation.assets)
-        .filter((name) => name.includes(".js?ver="))
-        .sort();
-    };
-
-    const without = await namesFrom(false);
-    const with_ = await namesFrom(true);
-
-    // The plugin salts the chunk hash with what its minimizers are, and with
-    // none there is nothing to vary: adding it must not rename a user's files.
-    expect(with_.filter((name) => !name.includes(".copy."))).toEqual(without);
+    // Both jobs run: the default minifier over the bundle, the generator over
+    // what `test` named — and `terserMinify` declines the image itself.
+    expect(readAsset("main.js", compiler, stats)).not.toContain("\n");
+    expect(
+      /** @type {import("webpack").Asset} */ (
+        stats.compilation.getAsset("main.js")
+      ).info.minimized,
+    ).toBe(true);
+    expect(
+      /** @type {import("webpack").Asset} */ (
+        stats.compilation.getAsset("image.png")
+      ).info.minimized,
+    ).toBeUndefined();
+    expect(Object.keys(stats.compilation.assets)).toContain("image.copy.png");
+    expect(getErrors(stats)).toEqual([]);
   });
 
-  it("should minify nothing when only a generator is configured", async () => {
+  it("should still minify when only a generator was configured", async () => {
     const compiler = getCompiler({
       entry: path.resolve(__dirname, "./fixtures/images.js"),
       module: { rules: IMAGE_RULES },
@@ -1994,13 +1987,14 @@ describe("generate with nothing to minify", () => {
     }).apply(compiler);
 
     const stats = await compile(compiler);
-    const bundle = readAsset("main.js", compiler, stats);
 
-    // Left as webpack rendered it: no minimizer ran, and the asset says so.
-    expect(bundle).toContain("\n");
+    // Configuring a generator does not turn the minifier off.
+    expect(readAsset("main.js", compiler, stats)).not.toContain("\n");
     expect(
-      stats.compilation.getAsset("main.js").info.minimized,
-    ).toBeUndefined();
+      /** @type {import("webpack").Asset} */ (
+        stats.compilation.getAsset("main.js")
+      ).info.minimized,
+    ).toBe(true);
     expect(getErrors(stats)).toEqual([]);
   });
 });
