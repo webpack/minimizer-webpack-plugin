@@ -56,6 +56,52 @@ const lateGenerator = (order, label) => {
   return run;
 };
 
+/**
+ * @param {string[]} order where to record
+ * @param {string} label what to record
+ * @param {number=} stage the stage it asks for, if any
+ * @returns {EXPECTED_ANY} the minimizer
+ */
+const asking = (order, label, stage) => {
+  /**
+   * @param {Record<string, string | Buffer>} input input
+   * @returns {{ code: string | Buffer }} the result
+   */
+  const run = (input) => {
+    order.push(label);
+
+    return { code: Object.values(input)[0] };
+  };
+
+  if (typeof stage === "number") {
+    run.getStage = () => stage;
+  }
+
+  return run;
+};
+
+/**
+ * The stages this plugin taps `processAssets` in, filled as the compilation
+ * starts rather than when this is called. Reads whatever was applied before
+ * it, so it is called after the plugin under test.
+ * @param {import("webpack").Compiler} own compiler
+ * @returns {number[]} the stages, in the order the hook runs them
+ */
+const tappedStages = (own) => {
+  /** @type {number[]} */
+  const stages = [];
+
+  own.hooks.compilation.tap("ReadTaps", (compilation) => {
+    for (const tap of compilation.hooks.processAssets.taps) {
+      if (tap.name === "MinimizerPlugin") {
+        stages.push(/** @type {number} */ (tap.stage));
+      }
+    }
+  });
+
+  return stages;
+};
+
 class RecordStage {
   constructor(order, label, stage) {
     this.order = order;
@@ -180,6 +226,87 @@ describe("where work runs", () => {
     expect(getErrors(stats)).toEqual([]);
     expect(getWarnings(stats)).toEqual([]);
   });
+
+  it("should tap once for every stage asked for, rather than once for all", async () => {
+    const order = [];
+
+    new MinimizerPlugin({
+      parallel: false,
+      minify: [
+        asking(order, "minify"),
+        asking(
+          order,
+          "transfer",
+          Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
+        ),
+        asking(order, "summarize", Compilation.PROCESS_ASSETS_STAGE_SUMMARIZE),
+      ],
+      generate: {
+        inline: {
+          implementation: asking(
+            order,
+            "inline",
+            Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE,
+          ),
+          type: "asset",
+          filename: "[path][base].inline",
+        },
+        report: {
+          implementation: asking(
+            order,
+            "report",
+            Compilation.PROCESS_ASSETS_STAGE_REPORT,
+          ),
+          type: "asset",
+          filename: "[path][base].report",
+        },
+      },
+    }).apply(compiler);
+
+    const stages = tappedStages(compiler);
+    const stats = await compile(compiler);
+
+    // Five of them written in neither this order nor one another's, so the
+    // hook holds one tap per stage and runs them where each asked to be.
+    expect(stages).toEqual([
+      Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE,
+      Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE,
+      Compilation.PROCESS_ASSETS_STAGE_SUMMARIZE,
+      Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
+      Compilation.PROCESS_ASSETS_STAGE_REPORT,
+    ]);
+    expect(order).toEqual([
+      "minify",
+      "inline",
+      "summarize",
+      "transfer",
+      "report",
+    ]);
+    expect(Object.keys(stats.compilation.assets).sort()).toEqual([
+      "one.js",
+      "one.js.inline",
+      "one.js.report",
+    ]);
+    expect(getErrors(stats)).toEqual([]);
+    expect(getWarnings(stats)).toEqual([]);
+  });
+
+  it("should tap once where nothing asks for a stage of its own", async () => {
+    const order = [];
+
+    new MinimizerPlugin({
+      parallel: false,
+      minify: [asking(order, "first"), asking(order, "second")],
+    }).apply(compiler);
+
+    const stages = tappedStages(compiler);
+    const stats = await compile(compiler);
+
+    expect(stages).toEqual([Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE]);
+    expect(order).toEqual(["first", "second"]);
+    expect(getErrors(stats)).toEqual([]);
+    expect(getWarnings(stats)).toEqual([]);
+  });
 });
 
 describe("a minimizer that asks for its own stage", () => {
@@ -190,30 +317,6 @@ describe("a minimizer that asks for its own stage", () => {
       entry: { one: path.resolve(__dirname, "./fixtures/entry.js") },
     });
   });
-
-  /**
-   * @param {string[]} order where to record
-   * @param {string} label what to record
-   * @param {number=} stage the stage it asks for, if any
-   * @returns {EXPECTED_ANY} the minimizer
-   */
-  const asking = (order, label, stage) => {
-    /**
-     * @param {Record<string, string | Buffer>} input input
-     * @returns {{ code: string | Buffer }} the result
-     */
-    const run = (input) => {
-      order.push(label);
-
-      return { code: Object.values(input)[0] };
-    };
-
-    if (typeof stage === "number") {
-      run.getStage = () => stage;
-    }
-
-    return run;
-  };
 
   it("should run where `getStage` asks, with no option given", async () => {
     const order = [];
