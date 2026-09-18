@@ -2352,6 +2352,114 @@ describe("deleting the asset a file was written beside", () => {
     expect(names).not.toContain("image.png");
   });
 
+  it("should leave the source map of the asset it deleted", async () => {
+    const compiler = getCompiler({
+      devtool: "source-map",
+      entry: { one: path.resolve(__dirname, "./fixtures/entry.js") },
+    });
+
+    /**
+     * @param {{ [file: string]: string | Buffer }} input input
+     * @returns {{ code: string | Buffer }} the same bytes
+     */
+    const copy = (input) => ({ code: Object.values(input)[0] });
+
+    copy.getStage = (
+      /** @type {typeof import("webpack").Compilation} */ compilation,
+    ) => compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER;
+
+    new MinimizerPlugin({
+      parallel: false,
+      test: /\.js$/i,
+      generate: {
+        implementation: copy,
+        type: "asset",
+        filename: "[path][base].gz",
+        deleteOriginalAssets: true,
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    // The map is `related` to the asset that went, and webpack deletes what an
+    // asset's `related` names: the code it maps is served compressed, not gone.
+    expect(getErrors(stats)).toEqual([]);
+    expect(Object.keys(stats.compilation.assets).sort()).toEqual([
+      "one.js.gz",
+      "one.js.map",
+    ]);
+  });
+
+  it("should leave what another generator wrote beside it", async () => {
+    const compiler = getCompiler({
+      entry: { one: path.resolve(__dirname, "./fixtures/entry.js") },
+    });
+
+    /**
+     * @param {string} suffix what to name what it writes
+     * @param {EXPECTED_ANY} extra what else to say about it
+     * @returns {EXPECTED_ANY} one generator
+     */
+    const copyTo = (suffix, extra) => ({
+      implementation: (
+        /** @type {{ [file: string]: string | Buffer }} */ input,
+      ) => ({ code: Object.values(input)[0] }),
+      type: "asset",
+      filename: `[path][base]${suffix}`,
+      ...extra,
+    });
+
+    new MinimizerPlugin({
+      parallel: false,
+      test: /\.js$/i,
+      generate: {
+        br: copyTo(".br", { relatedName: "brotli" }),
+        gz: copyTo(".gz", { deleteOriginalAssets: true }),
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    // The one deleting reads an original that names the other's file in its
+    // `related`, and that file is nothing to do with the deletion.
+    expect(getErrors(stats)).toEqual([]);
+    expect(Object.keys(stats.compilation.assets).sort()).toEqual([
+      "one.js.br",
+      "one.js.gz",
+    ]);
+  });
+
+  it("should ask a function which of them to delete", async () => {
+    const compiler = getCompiler({
+      entry: {
+        one: path.resolve(__dirname, "./fixtures/entry.js"),
+        two: path.resolve(__dirname, "./fixtures/entry.js"),
+      },
+    });
+
+    new MinimizerPlugin({
+      parallel: false,
+      test: /\.js$/i,
+      generate: {
+        implementation: (
+          /** @type {{ [file: string]: string | Buffer }} */ input,
+        ) => ({ code: Object.values(input)[0] }),
+        type: "asset",
+        filename: "[path][base].gz",
+        deleteOriginalAssets: (name) => name === "one.js",
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(getErrors(stats)).toEqual([]);
+    expect(Object.keys(stats.compilation.assets).sort()).toEqual([
+      "one.js.gz",
+      "two.js",
+      "two.js.gz",
+    ]);
+  });
+
   it("should keep a file written under the original's own name", async () => {
     const compiler = getCompiler({
       entry: { one: path.resolve(__dirname, "./fixtures/entry.js") },

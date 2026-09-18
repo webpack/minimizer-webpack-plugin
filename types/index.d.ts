@@ -96,7 +96,7 @@ declare class MinimizerPlugin<T = import("terser").MinifyOptions> {
    * @param {string | undefined} name the preset it is written under, where it has one
    * @param {EXPECTED_ANY} entry what was written there
    * @param {EXPECTED_ANY} declared what `generatorOptions` says for it
-   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | undefined, threshold: number | undefined, minRatio: number | undefined, relatedName: string | false | undefined }} the generator
+   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | ((name: string) => boolean) | undefined, threshold: number | undefined, minRatio: number | undefined, relatedName: string | false | undefined }} the generator
    */
   private describeGenerator;
   /**
@@ -664,9 +664,9 @@ type GeneratorDescriptor = {
    */
   filter?: ((name: string) => boolean) | undefined;
   /**
-   * removes the asset generated from. `asset` generators only
+   * removes the asset generated from, its own file alone — whatever its `related` names stays. Written as a function it is asked per asset. `asset` generators only
    */
-  deleteOriginalAssets?: boolean | undefined;
+  deleteOriginalAssets?: (boolean | ((name: string) => boolean)) | undefined;
   /**
    * generate only from assets larger than this, in bytes. `asset` generators only
    */
