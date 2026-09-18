@@ -2413,7 +2413,10 @@ class MinimizerPlugin {
         /** @type {EmbeddedSourceHooks} */
         (/** @type {unknown} */ (compilation.hooks));
 
+      // Nothing minifying rewrites no embedded source either, and salting the
+      // module hash would rename a file this instance never touches.
       if (
+        this.minimizers().length > 0 &&
         embeddedHooks.renderEmbeddedSource &&
         embeddedHooks.embeddedSourceHash
       ) {
