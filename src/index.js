@@ -644,6 +644,10 @@ class MinimizerPlugin {
       declaredFlags(one, "minimized"),
     );
 
+    // `additionalAssets` hands this pass whatever was emitted after it ran,
+    // this plugin's own generated files included, and those are not to minify.
+    const generated = this.generatedFlags();
+
     /**
      * Remember what this plugin marked an asset with, which is what a later
      * pass of it reads back rather than declining.
@@ -719,6 +723,12 @@ class MinimizerPlugin {
 
           // Skip minimizing for extracted comments assets
           if (info.extractedComments) {
+            return false;
+          }
+
+          const says = /** @type {Record<string, EXPECTED_ANY>} */ (info);
+
+          if (generated.some((flag) => says[flag])) {
             return false;
           }
 
@@ -1491,6 +1501,27 @@ class MinimizerPlugin {
   }
 
   /**
+   * Every name this plugin's `asset` generators mark what they wrote with,
+   * which is how both passes tell a generated file from one to work on.
+   * @private
+   * @returns {string[]} the names
+   */
+  generatedFlags() {
+    /** @type {string[]} */
+    const flags = [];
+
+    for (const one of this.assetGenerators()) {
+      for (const flag of declaredFlags(one.implementation, "generated")) {
+        if (!flags.includes(flag)) {
+          flags.push(flag);
+        }
+      }
+    }
+
+    return flags;
+  }
+
+  /**
    * The generators that run over emitted assets rather than over a module as
    * it builds.
    * @private
@@ -1756,18 +1787,9 @@ class MinimizerPlugin {
   async generateAssets(compiler, compilation, generators, assets) {
     const cache = compilation.getCache("TerserWebpackPlugin|generateAssets");
     const scheduled = [];
-    // Every name this plugin's generators work under, so none of them reads a
-    // file another one wrote — whichever name that one marked it with.
-    /** @type {string[]} */
-    const produced = [];
-
-    for (const one of this.assetGenerators()) {
-      for (const flag of declaredFlags(one.implementation, "generated")) {
-        if (!produced.includes(flag)) {
-          produced.push(flag);
-        }
-      }
-    }
+    // So no generator reads a file another one wrote, whichever name that one
+    // marked it with.
+    const produced = this.generatedFlags();
 
     for (const name of Object.keys(assets)) {
       const asset = compilation.getAsset(name);

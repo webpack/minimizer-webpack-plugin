@@ -2359,6 +2359,86 @@ describe("generate from an asset emitted late", () => {
     expect(Object.keys(stats.compilation.assets)).toContain("late.copy.txt");
     expect(getErrors(stats)).toEqual([]);
   });
+
+  it("should offer each asset once, and never a file of its own making", async () => {
+    const minified = [];
+    const generated = [];
+
+    /**
+     * @param {string[]} seen where to record what it was handed
+     * @returns {(input: { [file: string]: string | Buffer }) => { code: string | Buffer }} the function
+     */
+    const recording = (seen) => (input) => {
+      const [[name, code]] = Object.entries(input);
+
+      seen.push(name);
+
+      return { code };
+    };
+
+    class EmitLate {
+      /**
+       * @param {import("webpack").Compiler} inner compiler
+       * @returns {void}
+       */
+      apply(inner) {
+        const { RawSource } = inner.webpack.sources;
+
+        inner.hooks.compilation.tap("EmitLate", (compilation) => {
+          compilation.hooks.processAssets.tap(
+            {
+              name: "EmitLate",
+              stage: compilation.constructor.PROCESS_ASSETS_STAGE_REPORT,
+            },
+            () => {
+              if (!compilation.getAsset("late.js")) {
+                compilation.emitAsset(
+                  "late.js",
+                  new RawSource("var late = 1;"),
+                );
+              }
+            },
+          );
+        });
+      }
+    }
+
+    const generate = recording(generated);
+
+    generate.getStage = (
+      /** @type {typeof import("webpack").Compilation} */ compilation,
+    ) => compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER;
+
+    const compiler = getCompiler({
+      entry: { one: path.resolve(__dirname, "./fixtures/entry.js") },
+    });
+
+    new EmitLate().apply(compiler);
+    new MinimizerPlugin({
+      parallel: false,
+      test: /.*/,
+      minify: recording(minified),
+      generate: {
+        implementation: generate,
+        type: "asset",
+        filename: "[path][base].gz",
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    // Each asset once to each pass, `late.js` included — and `one.js.gz`, which
+    // the generator wrote, to neither: minifying it is what it is not.
+    expect(minified).toEqual(["one.js", "late.js"]);
+    expect(generated).toEqual(["one.js", "late.js"]);
+    expect(Object.keys(stats.compilation.assets).sort()).toEqual([
+      "late.js",
+      "late.js.gz",
+      "one.js",
+      "one.js.gz",
+    ]);
+    expect(getErrors(stats)).toEqual([]);
+  });
 });
 
 describe("generate assets, what is worth writing", () => {

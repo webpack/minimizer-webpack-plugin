@@ -132,6 +132,13 @@ declare class MinimizerPlugin<T = import("terser").MinifyOptions> {
    */
   private assetFlags;
   /**
+   * Every name this plugin's `asset` generators mark what they wrote with,
+   * which is how both passes tell a generated file from one to work on.
+   * @private
+   * @returns {string[]} the names
+   */
+  private generatedFlags;
+  /**
    * The generators that run over emitted assets rather than over a module as
    * it builds.
    * @private
