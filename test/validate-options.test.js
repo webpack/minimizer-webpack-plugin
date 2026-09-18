@@ -143,7 +143,7 @@ describe("validation", () => {
 
     expect(() => {
       createCompiler({ minify: [] });
-    }).toThrowErrorMatchingSnapshot();
+    }).not.toThrow();
 
     expect(() => {
       createCompiler({ minify: true });

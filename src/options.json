@@ -186,7 +186,7 @@
       ]
     },
     "minify": {
-      "description": "Allows you to override default minify function. Written as an object it states how to run one minimizer, options included.",
+      "description": "Allows you to override default minify function. Written as an object it states how to run one minimizer, options included. An empty array is no minimizers at all, for an instance whose whole job is its `generate`.",
       "link": "https://github.com/webpack/minimizer-webpack-plugin#number",
       "anyOf": [
         {
@@ -194,7 +194,6 @@
         },
         {
           "type": "array",
-          "minItems": 1,
           "items": {
             "anyOf": [
               {

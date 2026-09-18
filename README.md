@@ -346,7 +346,29 @@ Default: `MinimizerPlugin.terserMinify`
 
 Which minimizer runs, and the options it runs with. By default the plugin uses
 [terser](https://github.com/terser/terser); overriding it is also how you test
-an unpublished version or a fork.
+an unpublished version or a fork. The default stands whether or not a
+[`generate`](#generate) was configured too, and so does [`test`](#test)'s: the
+JavaScript minifier and the names it reads are what this plugin is.
+
+Nothing minifying is an **empty array** rather than a missing value, for an
+instance whose whole job is its `generate`:
+
+```js
+new MinimizerPlugin({
+  test: /.*/,
+  minify: [],
+  generate: {
+    implementation: MinimizerPlugin.compress,
+    options: { algorithm: "gzip" },
+    type: "asset",
+    filename: "[path][base].gz",
+  },
+});
+```
+
+`false` is not accepted. A list with nothing in it needs no guard at any of the
+places that run the minimizers — each simply does nothing — while a second kind
+of value does.
 
 > **Warning**
 >
@@ -692,7 +714,10 @@ interface generator {
   type?: "import" | "asset";
   filename?: string;
   filter?: (name: string) => boolean;
-  deleteOriginalAssets?: boolean;
+  deleteOriginalAssets?: boolean | ((name: string) => boolean);
+  threshold?: number;
+  minRatio?: number;
+  relatedName?: string | false;
 }
 
 type generate =
@@ -799,7 +824,16 @@ new MinimizerPlugin({
       // Optional. Narrows what this generator reads, on top of `test`.
       filter: (name) => !name.includes("icons/"),
       // Optional, `false` by default: the asset it read stays where it is.
+      // Written as a function it is asked per asset.
       deleteOriginalAssets: false,
+      // Optional. Skips an asset this small, before the generator is asked.
+      threshold: 10240,
+      // Optional. Drops the result unless it is this much smaller than what
+      // it read, as `generated size / original size`.
+      minRatio: 0.8,
+      // Optional. The key the new file is recorded under in the original's
+      // `related` info, which is how a server asked for one finds the other.
+      relatedName: "webp",
     },
   },
 });
@@ -808,14 +842,14 @@ new MinimizerPlugin({
 `type` decides which of the two things a generator does, and they are not
 interchangeable — they read different input, at different points in the build:
 
-|                                | `"import"` (the default)                   | `"asset"`                                               |
-| :----------------------------- | :----------------------------------------- | :------------------------------------------------------ |
-| Reads                          | a module, **as it builds**                 | an asset, **once it is emitted**                        |
-| Produces                       | that module's own bytes, renamed with them | a **new file beside** the one it read                   |
-| Picked by                      | `?as=<name>` on the import                 | `test` / `include` / `exclude`, then `filter`           |
-| Reaches a file nothing imports | no                                         | yes — copied assets included                            |
-| Fields it reads                | `implementation`, `options`                | those plus `filename`, `filter`, `deleteOriginalAssets` |
-| webpack                        | **5.111** or newer                         | any supported version                                   |
+|                                | `"import"` (the default)                   | `"asset"`                                                                                       |
+| :----------------------------- | :----------------------------------------- | :---------------------------------------------------------------------------------------------- |
+| Reads                          | a module, **as it builds**                 | an asset, **once it is emitted**                                                                |
+| Produces                       | that module's own bytes, renamed with them | a **new file beside** the one it read                                                           |
+| Picked by                      | `?as=<name>` on the import                 | `test` / `include` / `exclude`, then `filter`                                                   |
+| Reaches a file nothing imports | no                                         | yes — copied assets included                                                                    |
+| Fields it reads                | `implementation`, `options`                | those plus `filename`, `filter`, `deleteOriginalAssets`, `threshold`, `minRatio`, `relatedName` |
+| webpack                        | **5.111** or newer                         | any supported version                                                                           |
 
 **`"import"`** is the only point at which a rename can reach the bundle: the
 asset is named while its module is built, so every reference follows it. The
@@ -873,9 +907,31 @@ photo.jpg     still there, unless `deleteOriginalAssets`
 photo.webp    generated beside it
 ```
 
-`filename`, `filter` and `deleteOriginalAssets` describe a file being written
-beside another, so they belong to `"asset"` and setting one on an `"import"`
-generator is an error rather than a field that quietly does nothing.
+`filename`, `filter`, `deleteOriginalAssets`, `threshold`, `minRatio` and
+`relatedName` describe a file being written beside another, so they belong to
+`"asset"` and setting one on an `"import"` generator is an error rather than a
+field that quietly does nothing.
+
+Three of them decide whether the new file is worth having. `threshold` skips an
+asset too small to bother with, before the generator is asked at all. `minRatio`
+drops a result that is not enough smaller than what it read, since a file that
+saves nothing still costs a request. `relatedName` records the new file under
+that key in the original's `related` info — which is how a server asked for the
+original finds it — and declines an asset already carrying that key.
+
+Deleting takes the original file and nothing else. webpack deletes whatever an
+asset's `related` names along with it, so a source map, or the file a second
+generator wrote beside the same original, would go too; the original goes
+alone instead. Where the generated file took the original's own name there is
+nothing left to delete, and `relatedName` is not recorded when the asset that
+would carry it is being deleted.
+
+A generated file inherits nothing from the one it was read from: what the
+original's info says about its hashes, its module and where its source came
+from is true of that file and not of this one. The exception is `immutable`,
+and only where `filename` still derives from the original's name — `[name]`,
+`[base]` or `[file]` — since that is what carried the hash the promise rests
+on.
 
 **When** a generator runs is not among them, because it is not the config's to
 say: the implementation declares it through a `getStage` of its own, the way it
