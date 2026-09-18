@@ -1970,6 +1970,47 @@ describe("generate beside the minifier", () => {
     expect(getErrors(stats)).toEqual([]);
   });
 
+  it("should not rename a bundle where `minify` is an empty list", async () => {
+    /**
+     * @param {boolean} withPlugin whether to apply the plugin
+     * @returns {Promise<string[]>} the emitted JavaScript names
+     */
+    const namesFrom = async (withPlugin) => {
+      const compiler = getCompiler({
+        entry: path.resolve(__dirname, "./fixtures/images.js"),
+        output: {
+          path: path.resolve(__dirname, "./dist"),
+          filename: "[name].[fullhash].js",
+        },
+        module: { rules: IMAGE_RULES },
+      });
+
+      if (withPlugin) {
+        new MinimizerPlugin({
+          test: /.*/,
+          minify: [],
+          generate: {
+            implementation: (input) => ({
+              code: Buffer.from(Object.values(input)[0]),
+            }),
+            type: "asset",
+            filename: "[path][name].copy[ext]",
+          },
+        }).apply(compiler);
+      }
+
+      const stats = await compile(compiler);
+
+      return Object.keys(stats.compilation.assets)
+        .filter((name) => name.endsWith(".js") && !name.includes(".copy."))
+        .sort();
+    };
+
+    // Nothing minifies, so nothing rewrites the bundle, so its name is the one
+    // it would have carried without this plugin — `test` matching it or not.
+    expect(await namesFrom(true)).toEqual(await namesFrom(false));
+  });
+
   it("should minify nothing where `minify` is an empty list", async () => {
     const compiler = getCompiler({
       entry: path.resolve(__dirname, "./fixtures/images.js"),
@@ -2490,6 +2531,39 @@ describe("deleting the asset a file was written beside", () => {
       "two.js",
       "two.js.gz",
     ]);
+  });
+
+  it("should not point a file written under the original's name at itself", async () => {
+    const compiler = getCompiler({
+      entry: { one: path.resolve(__dirname, "./fixtures/entry.js") },
+    });
+
+    new MinimizerPlugin({
+      parallel: false,
+      test: /\.js$/i,
+      minify: [],
+      generate: {
+        implementation: (input) => ({
+          code: `/* generated */${Object.values(input)[0]}`,
+        }),
+        type: "asset",
+        filename: "[path][base]",
+        relatedName: "generated",
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+    const { info } = /** @type {import("webpack").Asset} */ (
+      stats.compilation.getAsset("one.js")
+    );
+
+    // Recording it would write the source back over what was just generated,
+    // and the file has nowhere to point but at itself.
+    expect(getErrors(stats)).toEqual([]);
+    expect(info.related).toBeUndefined();
+    expect(readAsset("one.js", compiler, stats)).toMatch(
+      /^\/\* generated \*\//,
+    );
   });
 
   it("should keep a file written under the original's own name", async () => {

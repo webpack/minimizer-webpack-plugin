@@ -919,6 +919,10 @@ saves nothing still costs a request. `relatedName` records the new file under
 that key in the original's `related` info — which is how a server asked for the
 original finds it — and declines an asset already carrying that key.
 
+A file written under the original's own name has replaced it, so there is
+nothing beside it to delete and nothing for `relatedName` to point at; a
+generator doing that re-encodes an asset in place.
+
 Deleting takes the original file and nothing else. webpack deletes whatever an
 asset's `related` names along with it, so a source map, or the file a second
 generator wrote beside the same original, would go too; the original goes

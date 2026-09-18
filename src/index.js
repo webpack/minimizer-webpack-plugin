@@ -1781,8 +1781,10 @@ class MinimizerPlugin {
     }
 
     // Recorded on the asset it was read from, which is how a server asked for
-    // that one finds this one.
-    if (generator.relatedName) {
+    // that one finds this one. A file written under that same name has replaced
+    // it, so there is nothing left to point anywhere, and writing the source
+    // back would undo what was just generated.
+    if (generator.relatedName && generatedName !== name) {
       compilation.updateAsset(name, source, {
         related: { [generator.relatedName]: generatedName },
       });
@@ -2365,6 +2367,12 @@ class MinimizerPlugin {
       });
 
       hooks.chunkHash.tap(pluginName, (chunk, hash) => {
+        // Nothing minifying rewrites nothing, so no name owes it a hash of its
+        // own.
+        if (this.minimizers().length === 0) {
+          return;
+        }
+
         const willBe = chunkAssetName(compilation, chunk);
 
         // A chunk this instance was never pointed at cannot vary with its
