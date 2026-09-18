@@ -996,6 +996,46 @@ what `stage` states rather than what applying two plugins in the right order
 happens to give. Each algorithm is run at its own maximum by default (`zlib`'s
 best level, brotli's best quality); name `compressionOptions` to say otherwise.
 
+#### Compressing with minifying, and without
+
+The example above does both: `minify` defaults to terser, so the bundle is
+minified and the compressed files are written from what minification produced.
+That is the shape to want — one pass of filtering, one cache, and `stage`
+ordering the two — and it needs nothing said about `minify` at all:
+
+```js
+new MinimizerPlugin({
+  test: /\.(js|css|html|svg)$/i,
+  generate: {
+    implementation: MinimizerPlugin.compress,
+    options: { algorithm: "gzip" },
+    type: "asset",
+    filename: "[path][base].gz",
+  },
+});
+```
+
+Compressing **only** — an instance that must not touch what it reads — says so
+with an empty list of minimizers. `test` is then yours to state too, since the
+`.js` default belongs to minifying:
+
+```js
+new MinimizerPlugin({
+  test: /.*/,
+  minify: [],
+  generate: {
+    implementation: MinimizerPlugin.compress,
+    options: { algorithm: "gzip" },
+    type: "asset",
+    filename: "[path][base].gz",
+  },
+});
+```
+
+Nothing is minified, no asset is marked `minimized`, and the bundle keeps the
+name it would have had without this plugin — an instance that rewrites nothing
+salts no hash.
+
 It is an ordinary minimizer too, so [`minify`](#minify) takes it the way it
 takes `terserMinify` or `swcMinify`. There it compresses the asset **in place**
 rather than beside it — the shape for a server that says what the encoding is
