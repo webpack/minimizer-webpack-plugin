@@ -1970,6 +1970,38 @@ describe("generate beside the minifier", () => {
     expect(getErrors(stats)).toEqual([]);
   });
 
+  it("should minify nothing where `minify` is an empty list", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/images.js"),
+      module: { rules: IMAGE_RULES },
+    });
+
+    new MinimizerPlugin({
+      test: /.*/,
+      minify: [],
+      generate: {
+        implementation: (input) => ({
+          code: Buffer.from(Object.values(input)[0]),
+        }),
+        type: "asset",
+        filename: "[path][name].copy[ext]",
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+    const bundle = /** @type {import("webpack").Asset} */ (
+      stats.compilation.getAsset("main.js")
+    );
+
+    // No minimizers is a list with none in it rather than a missing one, so
+    // the passes over them simply do nothing and the generators still run.
+    expect(readAsset("main.js", compiler, stats)).toContain("\n");
+    expect(bundle.info.minimized).toBeUndefined();
+    expect(Object.keys(stats.compilation.assets)).toContain("image.copy.png");
+    expect(getErrors(stats)).toEqual([]);
+    expect(getWarnings(stats)).toEqual([]);
+  });
+
   it("should not rename a bundle no minimizer of its own would touch", async () => {
     /**
      * @param {boolean} withPlugin whether to apply the plugin
