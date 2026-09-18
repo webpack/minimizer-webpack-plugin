@@ -211,7 +211,7 @@ const {
  * @property {MinimizerImplementation<EXPECTED_ANY>} implementation the generator itself
  * @property {MinimizerOptions<EXPECTED_ANY>=} options options for this generator, preferred over the deprecated `generatorOptions`
  * @property {("import" | "asset")=} type `import` re-encodes a module as it is built, so the import that asked for it is renamed with it; `asset` writes a new file beside one already emitted
- * @property {string=} filename name for the generated asset, as a webpack filename template. `asset` generators only
+ * @property {(string | ((pathData: EXPECTED_ANY) => string))=} filename name for the generated asset, as a webpack filename template or a function answering with one. `asset` generators only
  * @property {((name: string) => boolean)=} filter decides per asset whether to generate from it, on top of `test`/`include`/`exclude`
  * @property {(boolean | ((name: string) => boolean))=} deleteOriginalAssets removes the asset generated from, its own file alone — whatever its `related` names stays. Written as a function it is asked per asset. `asset` generators only
  * @property {number=} threshold generate only from assets larger than this, in bytes. `asset` generators only
@@ -237,8 +237,24 @@ const {
  */
 
 /**
+ * One minimizer, written as an object stating how to run it.
  * @template T
- * @typedef {T extends import("terser").MinifyOptions ? { minify?: MinimizerImplementation<T> | undefined, minimizerOptions?: MinimizerOptions<T> | undefined, terserOptions?: MinimizerOptions<T> | undefined } : { minify: MinimizerImplementation<T>, minimizerOptions?: MinimizerOptions<T> | undefined, terserOptions?: MinimizerOptions<T> | undefined }} DefinedDefaultMinimizerAndOptions
+ * @typedef {object} MinimizerDescriptor
+ * @property {MinimizerImplementation<T>} implementation the minimizer itself
+ * @property {MinimizerOptions<T>=} options options for this minimizer, preferred over the deprecated `minimizerOptions`
+ * @property {((name: string, info: AssetInfo) => boolean | undefined)=} filter which assets this minimizer is offered, overriding a `filter` on the function itself
+ */
+
+/**
+ * What `minify` may be written as: one minimizer, a list of them — empty for
+ * nothing to minify — or a descriptor.
+ * @template T
+ * @typedef {MinimizerImplementation<T> | (MinimizerImplementation<T> | MinimizerDescriptor<T>)[] | MinimizerDescriptor<T>} Minify
+ */
+
+/**
+ * @template T
+ * @typedef {T extends import("terser").MinifyOptions ? { minify?: Minify<T> | undefined, minimizerOptions?: MinimizerOptions<T> | undefined, terserOptions?: MinimizerOptions<T> | undefined } : { minify: Minify<T>, minimizerOptions?: MinimizerOptions<T> | undefined, terserOptions?: MinimizerOptions<T> | undefined }} DefinedDefaultMinimizerAndOptions
  */
 
 /**
@@ -1355,7 +1371,7 @@ class MinimizerPlugin {
    * @param {string | undefined} name the preset it is written under, where it has one
    * @param {EXPECTED_ANY} entry what was written there
    * @param {EXPECTED_ANY} declared what `generatorOptions` says for it
-   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | ((name: string) => boolean) | undefined, threshold: number | undefined, minRatio: number | undefined, relatedName: string | false | undefined }} the generator
+   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | ((pathData: EXPECTED_ANY) => string) | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | ((name: string) => boolean) | undefined, threshold: number | undefined, minRatio: number | undefined, relatedName: string | false | undefined }} the generator
    */
   describeGenerator(name, entry, declared) {
     const descriptor = isDescriptor(entry) ? entry : undefined;
@@ -2168,7 +2184,9 @@ class MinimizerPlugin {
     const written = Array.isArray(minify) ? minify : [minify];
 
     for (const [index, one] of written.entries()) {
-      const own = isDescriptor(one) ? one.options : undefined;
+      const own = isDescriptor(one)
+        ? /** @type {MinimizerDescriptor<EXPECTED_ANY>} */ (one).options
+        : undefined;
       const twice = Array.isArray(minify)
         ? getMinimizerOptionsAt(declared, index)
         : declared;

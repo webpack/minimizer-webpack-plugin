@@ -96,7 +96,7 @@ declare class MinimizerPlugin<T = import("terser").MinifyOptions> {
    * @param {string | undefined} name the preset it is written under, where it has one
    * @param {EXPECTED_ANY} entry what was written there
    * @param {EXPECTED_ANY} declared what `generatorOptions` says for it
-   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | ((name: string) => boolean) | undefined, threshold: number | undefined, minRatio: number | undefined, relatedName: string | false | undefined }} the generator
+   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | ((pathData: EXPECTED_ANY) => string) | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | ((name: string) => boolean) | undefined, threshold: number | undefined, minRatio: number | undefined, relatedName: string | false | undefined }} the generator
    */
   private describeGenerator;
   /**
@@ -315,6 +315,8 @@ declare namespace MinimizerPlugin {
     GeneratorDescriptor,
     Generate,
     BasePluginOptions,
+    MinimizerDescriptor,
+    Minify,
     DefinedDefaultMinimizerAndOptions,
     InternalPluginOptions,
   };
@@ -656,9 +658,9 @@ type GeneratorDescriptor = {
    */
   type?: ("import" | "asset") | undefined;
   /**
-   * name for the generated asset, as a webpack filename template. `asset` generators only
+   * name for the generated asset, as a webpack filename template or a function answering with one. `asset` generators only
    */
-  filename?: string | undefined;
+  filename?: (string | ((pathData: EXPECTED_ANY) => string)) | undefined;
   /**
    * decides per asset whether to generate from it, on top of `test`/`include`/`exclude`
    */
@@ -724,15 +726,40 @@ type BasePluginOptions = {
    */
   generatorOptions?: MinimizerOptions<EXPECTED_ANY> | undefined;
 };
+/**
+ * One minimizer, written as an object stating how to run it.
+ */
+type MinimizerDescriptor<T> = {
+  /**
+   * the minimizer itself
+   */
+  implementation: MinimizerImplementation<T>;
+  /**
+   * options for this minimizer, preferred over the deprecated `minimizerOptions`
+   */
+  options?: MinimizerOptions<T> | undefined;
+  /**
+   * which assets this minimizer is offered, overriding a `filter` on the function itself
+   */
+  filter?: ((name: string, info: AssetInfo) => boolean | undefined) | undefined;
+};
+/**
+ * What `minify` may be written as: one minimizer, a list of them — empty for
+ * nothing to minify — or a descriptor.
+ */
+type Minify<T> =
+  | MinimizerImplementation<T>
+  | (MinimizerImplementation<T> | MinimizerDescriptor<T>)[]
+  | MinimizerDescriptor<T>;
 type DefinedDefaultMinimizerAndOptions<T> =
   T extends import("terser").MinifyOptions
     ? {
-        minify?: MinimizerImplementation<T> | undefined;
+        minify?: Minify<T> | undefined;
         minimizerOptions?: MinimizerOptions<T> | undefined;
         terserOptions?: MinimizerOptions<T> | undefined;
       }
     : {
-        minify: MinimizerImplementation<T>;
+        minify: Minify<T>;
         minimizerOptions?: MinimizerOptions<T> | undefined;
         terserOptions?: MinimizerOptions<T> | undefined;
       };

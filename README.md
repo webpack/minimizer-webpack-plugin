@@ -340,6 +340,7 @@ interface minimizer {
 }
 
 type minify = minifyFn | (minifyFn | minimizer)[] | minimizer;
+// An empty array is nothing to minify.
 ```
 
 Default: `MinimizerPlugin.terserMinify`
@@ -712,7 +713,7 @@ interface generator {
   implementation: generateFn;
   options?: Record<string, any>;
   type?: "import" | "asset";
-  filename?: string;
+  filename?: string | ((pathData: any) => string);
   filter?: (name: string) => boolean;
   deleteOriginalAssets?: boolean | ((name: string) => boolean);
   threshold?: number;
@@ -818,8 +819,9 @@ new MinimizerPlugin({
       implementation: MinimizerPlugin.sharpGenerate,
       options: { encodeOptions: { webp: {} } },
       type: "asset",
-      // Optional. Without it the generator's own name for the result is used,
-      // which for `sharpGenerate` is the original with its extension replaced.
+      // Optional, a template or a function answering with one. Without it the
+      // generator's own name for the result is used, which for `sharpGenerate`
+      // is the original with its extension replaced.
       filename: "[path][name].webp",
       // Optional. Narrows what this generator reads, on top of `test`.
       filter: (name) => !name.includes("icons/"),

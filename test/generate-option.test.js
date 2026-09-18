@@ -2533,6 +2533,31 @@ describe("deleting the asset a file was written beside", () => {
     ]);
   });
 
+  it("should take a `filename` function for the name it writes", async () => {
+    const compiler = getCompiler({
+      entry: { one: path.resolve(__dirname, "./fixtures/entry.js") },
+    });
+
+    new MinimizerPlugin({
+      parallel: false,
+      test: /\.js$/i,
+      minify: [],
+      generate: {
+        implementation: (input) => ({ code: Object.values(input)[0] }),
+        type: "asset",
+        filename: (pathData) => `${pathData.filename}.gz`,
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(getErrors(stats)).toEqual([]);
+    expect(Object.keys(stats.compilation.assets).sort()).toEqual([
+      "one.js",
+      "one.js.gz",
+    ]);
+  });
+
   it("should not point a file written under the original's name at itself", async () => {
     const compiler = getCompiler({
       entry: { one: path.resolve(__dirname, "./fixtures/entry.js") },
