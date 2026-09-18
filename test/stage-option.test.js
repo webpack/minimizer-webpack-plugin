@@ -307,6 +307,46 @@ describe("where work runs", () => {
     expect(getErrors(stats)).toEqual([]);
     expect(getWarnings(stats)).toEqual([]);
   });
+
+  it("should share one tap between everything asking for the same stage", async () => {
+    const order = [];
+    const transfer = Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER;
+
+    new MinimizerPlugin({
+      parallel: false,
+      minify: [
+        asking(order, "first", transfer),
+        asking(order, "second", transfer),
+      ],
+      generate: {
+        a: {
+          implementation: asking(order, "a", transfer),
+          type: "asset",
+          filename: "[path][base].a",
+        },
+        b: {
+          implementation: asking(order, "b", transfer),
+          type: "asset",
+          filename: "[path][base].b",
+        },
+      },
+    }).apply(compiler);
+
+    const stages = tappedStages(compiler);
+    const stats = await compile(compiler);
+
+    // Two taps for four: one for the minimizers and one for the generators,
+    // which cannot share it — a generator reads what a minimizer wrote.
+    expect(stages).toEqual([transfer, transfer]);
+    expect(order).toEqual(["first", "second", "a", "b"]);
+    expect(Object.keys(stats.compilation.assets).sort()).toEqual([
+      "one.js",
+      "one.js.a",
+      "one.js.b",
+    ]);
+    expect(getErrors(stats)).toEqual([]);
+    expect(getWarnings(stats)).toEqual([]);
+  });
 });
 
 describe("a minimizer that asks for its own stage", () => {
