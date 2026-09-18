@@ -2351,6 +2351,35 @@ describe("deleting the asset a file was written beside", () => {
     expect(names).toContain("image.two.png");
     expect(names).not.toContain("image.png");
   });
+
+  it("should keep a file written under the original's own name", async () => {
+    const compiler = getCompiler({
+      entry: { one: path.resolve(__dirname, "./fixtures/entry.js") },
+    });
+
+    new MinimizerPlugin({
+      parallel: false,
+      test: /\.js$/i,
+      generate: {
+        implementation: (input) => ({
+          code: `/* generated */${Object.values(input)[0]}`,
+        }),
+        type: "asset",
+        filename: "[path][base]",
+        deleteOriginalAssets: true,
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    // Re-encoding a file in place names it what it was called, so there is no
+    // original left beside it to delete — only the file just written.
+    expect(getErrors(stats)).toEqual([]);
+    expect(Object.keys(stats.compilation.assets)).toEqual(["one.js"]);
+    expect(readAsset("one.js", compiler, stats)).toMatch(
+      /^\/\* generated \*\//,
+    );
+  });
 });
 
 describe("generate from an asset emitted late", () => {

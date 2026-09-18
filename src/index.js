@@ -1761,7 +1761,9 @@ class MinimizerPlugin {
     if (generator.deleteOriginalAssets) {
       // Deleting an asset takes everything its `related` names with it, so
       // recording this file there first would delete the file just written.
-      if (compilation.getAsset(name)) {
+      // A generator writing under the original's own name leaves nothing to
+      // delete either: that file is now the generated one.
+      if (generatedName !== name && compilation.getAsset(name)) {
         compilation.deleteAsset(name);
       }
 
