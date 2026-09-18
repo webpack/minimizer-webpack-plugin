@@ -286,8 +286,8 @@
               "instanceof": "Function"
             },
             "deleteOriginalAssets": {
-              "description": "Removes the asset generated from. `asset` generators only.",
-              "type": "boolean"
+              "description": "Removes the asset generated from, its own file alone — whatever its `related` names stays. Written as a function it is asked per asset. `asset` generators only.",
+              "anyOf": [{ "type": "boolean" }, { "instanceof": "Function" }]
             },
             "threshold": {
               "description": "Generate only from assets larger than this, in bytes. `asset` generators only.",
@@ -356,8 +356,11 @@
                     "instanceof": "Function"
                   },
                   "deleteOriginalAssets": {
-                    "description": "Removes the asset generated from. `asset` generators only.",
-                    "type": "boolean"
+                    "description": "Removes the asset generated from, its own file alone — whatever its `related` names stays. Written as a function it is asked per asset. `asset` generators only.",
+                    "anyOf": [
+                      { "type": "boolean" },
+                      { "instanceof": "Function" }
+                    ]
                   },
                   "threshold": {
                     "description": "Generate only from assets larger than this, in bytes. `asset` generators only.",

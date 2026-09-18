@@ -213,7 +213,7 @@ const {
  * @property {("import" | "asset")=} type `import` re-encodes a module as it is built, so the import that asked for it is renamed with it; `asset` writes a new file beside one already emitted
  * @property {string=} filename name for the generated asset, as a webpack filename template. `asset` generators only
  * @property {((name: string) => boolean)=} filter decides per asset whether to generate from it, on top of `test`/`include`/`exclude`
- * @property {boolean=} deleteOriginalAssets removes the asset generated from. `asset` generators only
+ * @property {(boolean | ((name: string) => boolean))=} deleteOriginalAssets removes the asset generated from, its own file alone — whatever its `related` names stays. Written as a function it is asked per asset. `asset` generators only
  * @property {number=} threshold generate only from assets larger than this, in bytes. `asset` generators only
  * @property {number=} minRatio keep the generated asset only when it is this much smaller than the one it was read from. `asset` generators only
  * @property {(string | false)=} relatedName the key the generated asset is recorded under in the original's `related` info. `asset` generators only
@@ -1355,7 +1355,7 @@ class MinimizerPlugin {
    * @param {string | undefined} name the preset it is written under, where it has one
    * @param {EXPECTED_ANY} entry what was written there
    * @param {EXPECTED_ANY} declared what `generatorOptions` says for it
-   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | undefined, threshold: number | undefined, minRatio: number | undefined, relatedName: string | false | undefined }} the generator
+   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | ((name: string) => boolean) | undefined, threshold: number | undefined, minRatio: number | undefined, relatedName: string | false | undefined }} the generator
    */
   describeGenerator(name, entry, declared) {
     const descriptor = isDescriptor(entry) ? entry : undefined;
@@ -1758,12 +1758,22 @@ class MinimizerPlugin {
       compilation.emitAsset(generatedName, generatedSource, generatedInfo);
     }
 
-    if (generator.deleteOriginalAssets) {
-      // Deleting an asset takes everything its `related` names with it, so
-      // recording this file there first would delete the file just written.
+    const deletes =
+      typeof generator.deleteOriginalAssets === "function"
+        ? generator.deleteOriginalAssets(name)
+        : generator.deleteOriginalAssets;
+
+    if (deletes) {
       // A generator writing under the original's own name leaves nothing to
-      // delete either: that file is now the generated one.
+      // delete: that file is now the generated one.
       if (generatedName !== name && compilation.getAsset(name)) {
+        // Deleting an asset takes everything its `related` names with it — a
+        // source map, another generator's file — so it goes alone.
+        compilation.updateAsset(name, source, (was) => {
+          const { related, ...rest } = was || {};
+
+          return rest;
+        });
         compilation.deleteAsset(name);
       }
 
