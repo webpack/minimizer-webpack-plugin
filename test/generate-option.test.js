@@ -2175,6 +2175,63 @@ describe("generate over a file that is already there", () => {
     expect(readAsset("image.copy.png", compiler, stats)).not.toBe("stale");
   });
 
+  it("should not keep what the name it wrote over promised", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/images.js"),
+      module: { rules: IMAGE_RULES },
+    });
+
+    /** Writes the name the generator is about to write, and promises for it. */
+    class AlreadyThere {
+      /**
+       * @param {import("webpack").Compiler} instance compiler
+       * @returns {void}
+       */
+      apply(instance) {
+        instance.hooks.compilation.tap("AlreadyThere", (compilation) => {
+          compilation.hooks.processAssets.tap(
+            {
+              name: "AlreadyThere",
+              stage:
+                compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
+            },
+            () => {
+              compilation.emitAsset(
+                "image.copy.png",
+                new compiler.webpack.sources.RawSource(Buffer.from("stale")),
+                { immutable: true, sourceFilename: "somewhere/else.png" },
+              );
+            },
+          );
+        });
+      }
+    }
+
+    new AlreadyThere().apply(compiler);
+    new MinimizerPlugin({
+      test: /^image\.png$/i,
+      generate: {
+        implementation: (input) => ({
+          code: Buffer.from(Object.values(input)[0]),
+        }),
+        type: "asset",
+        filename: "[path][name].copy[ext]",
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+    const { info } = /** @type {import("webpack").Asset} */ (
+      stats.compilation.getAsset("image.copy.png")
+    );
+
+    expect(getErrors(stats)).toEqual([]);
+    // What the generator says of the file it wrote, and nothing the name
+    // carried before it: webpack merges an info object into the old one.
+    expect(info.immutable).toBeUndefined();
+    expect(info.sourceFilename).toBeUndefined();
+    expect(info.generated).toBe(true);
+  });
+
   it("should record `related` on the original where it is kept", async () => {
     const compiler = getCompiler({
       entry: path.resolve(__dirname, "./fixtures/images.js"),

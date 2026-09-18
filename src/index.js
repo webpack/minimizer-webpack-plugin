@@ -1746,10 +1746,14 @@ class MinimizerPlugin {
       generatedInfo.immutable = true;
     }
 
-    // A rebuild writes over the file it wrote last time rather than a new one,
-    // and what is recorded below is owed either way.
+    // Handed over as a function, which replaces: an object is merged into what
+    // the name carried before, and this file inherits nothing.
     if (compilation.getAsset(generatedName)) {
-      compilation.updateAsset(generatedName, generatedSource, generatedInfo);
+      compilation.updateAsset(
+        generatedName,
+        generatedSource,
+        () => generatedInfo,
+      );
     } else {
       compilation.emitAsset(generatedName, generatedSource, generatedInfo);
     }
