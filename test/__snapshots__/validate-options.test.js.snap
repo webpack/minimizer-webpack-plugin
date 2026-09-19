@@ -127,13 +127,20 @@ exports[`validation validate 8`] = `
 exports[`validation validate 9`] = `
 "Invalid options object. Minimizer Plugin has been initialized using an options object that does not match the API schema.
  - options.minify should be one of these:
-   function | [function | object { implementation, options?, filter? }, ...] | object { implementation, options?, filter? }
-   -> Allows you to override default minify function. Written as an object it states how to run one minimizer, options included. An empty array is no minimizers at all, for an instance whose whole job is its \`generate\`.
+   function | non-empty string | object { path, export? } | [function | non-empty string | object { path, export? } | object { implementation, options?, filter? }, ...] | object { implementation, options?, filter? }
+   -> Allows you to override default minify function. Written as an object it states how to run one minimizer, options included. An empty array is no minimizers at all, for an instance whose whole job is its \`generate\`. A string or \`{ path, export }\` loads the minimizer by module path in workers (like sass-loader \`implementation\`).
    -> Read more at https://github.com/webpack/minimizer-webpack-plugin#number
    Details:
-    * options.minify should be an instance of function.
+    * options.minify should be one of these:
+      function | non-empty string | object { path, export? }
+      -> The minimizer itself: a function, a module path string (worker \`require\`s it), or \`{ path, export }\` for a named export.
+      Details:
+       * options.minify should be an instance of function.
+       * options.minify should be a non-empty string.
+       * options.minify should be an object:
+         object { path, export? }
     * options.minify should be an array:
-      [function | object { implementation, options?, filter? }, ...]
+      [function | non-empty string | object { path, export? } | object { implementation, options?, filter? }, ...]
     * options.minify should be an object:
       object { implementation, options?, filter? }"
 `;
@@ -240,13 +247,20 @@ exports[`validation validate 18`] = `
 exports[`validation validate 19`] = `
 "Invalid options object. Minimizer Plugin has been initialized using an options object that does not match the API schema.
  - options.minify should be one of these:
-   function | [function | object { implementation, options?, filter? }, ...] | object { implementation, options?, filter? }
-   -> Allows you to override default minify function. Written as an object it states how to run one minimizer, options included. An empty array is no minimizers at all, for an instance whose whole job is its \`generate\`.
+   function | non-empty string | object { path, export? } | [function | non-empty string | object { path, export? } | object { implementation, options?, filter? }, ...] | object { implementation, options?, filter? }
+   -> Allows you to override default minify function. Written as an object it states how to run one minimizer, options included. An empty array is no minimizers at all, for an instance whose whole job is its \`generate\`. A string or \`{ path, export }\` loads the minimizer by module path in workers (like sass-loader \`implementation\`).
    -> Read more at https://github.com/webpack/minimizer-webpack-plugin#number
    Details:
-    * options.minify should be an instance of function.
+    * options.minify should be one of these:
+      function | non-empty string | object { path, export? }
+      -> The minimizer itself: a function, a module path string (worker \`require\`s it), or \`{ path, export }\` for a named export.
+      Details:
+       * options.minify should be an instance of function.
+       * options.minify should be a non-empty string.
+       * options.minify should be an object:
+         object { path, export? }
     * options.minify should be an array:
-      [function | object { implementation, options?, filter? }, ...]
+      [function | non-empty string | object { path, export? } | object { implementation, options?, filter? }, ...]
     * options.minify should be an object:
       object { implementation, options?, filter? }"
 `;
