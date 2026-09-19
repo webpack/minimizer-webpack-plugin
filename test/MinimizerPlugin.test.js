@@ -24,7 +24,7 @@ import {
 
 jest.setTimeout(30000);
 
-const MinimizerPluginName = "TerserPlugin";
+const MinimizerPluginName = "MinimizerPlugin";
 
 expect.addSnapshotSerializer({
   test: (value) => {

@@ -56,6 +56,17 @@ Image minimizers:
 These only minify — they never change an image's format or name; see
 [Images](#images).
 
+Transport encodings:
+
+- `zlib` and anything shaped like it — `MinimizerPlugin.compress`. Compresses an
+  asset so a server can serve it under `Content-Encoding`. Takes `algorithm` — a
+  `zlib` function's name (`gzip`, `brotliCompress`, `deflate`, `zstdCompress`, …)
+  or one of your own — and `compressionOptions` for it, and needs no extra
+  dependency. Give it to [`minify`](#minify) to compress an asset **in place**,
+  or to [`generate`](#generate) as an `asset` generator to write the compressed
+  file **beside** the original; either way it puts itself after the minimizers,
+  through a `getStage` of its own.
+
 All of the non-default minimizers are declared as **optional** peer
 dependencies — install only the ones you actually use. One plugin instance
 covers several languages at once: give [`minify`](#minify) an array and each
@@ -329,13 +340,36 @@ interface minimizer {
 }
 
 type minify = minifyFn | (minifyFn | minimizer)[] | minimizer;
+// An empty array is nothing to minify.
 ```
 
 Default: `MinimizerPlugin.terserMinify`
 
 Which minimizer runs, and the options it runs with. By default the plugin uses
 [terser](https://github.com/terser/terser); overriding it is also how you test
-an unpublished version or a fork.
+an unpublished version or a fork. The default stands whether or not a
+[`generate`](#generate) was configured too, and so does [`test`](#test)'s: the
+JavaScript minifier and the names it reads are what this plugin is.
+
+Nothing minifying is an **empty array** rather than a missing value, for an
+instance whose whole job is its `generate`:
+
+```js
+new MinimizerPlugin({
+  test: /.*/,
+  minify: [],
+  generate: {
+    implementation: MinimizerPlugin.compress,
+    options: { algorithm: "gzip" },
+    type: "asset",
+    filename: "[path][base].gz",
+  },
+});
+```
+
+`false` is not accepted. A list with nothing in it needs no guard at any of the
+places that run the minimizers — each simply does nothing — while a second kind
+of value does.
 
 > **Warning**
 >
@@ -560,6 +594,22 @@ minify.getTypes = () => ["javascript"];
 // dispatched to declares it, since one that does not could not read the bytes.
 minify.supportsBinary = () => true;
 
+// Declare this when the minimizer has to run somewhere other than where
+// minification does — it is handed the `Compilation` class so it can name a
+// stage rather than a number. Each minimizer runs where it asks, chaining
+// through the asset a later one reads back; one asking for nothing runs where
+// minifying belongs.
+minify.getStage = (compilation) =>
+  compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER;
+
+// The name this function's work goes under: the asset it writes is marked
+// with it in the asset info, and stats print it. A minimizer declaring
+// nothing minified the asset, so `minimized`; a generator declaring nothing
+// wrote a new file, so `generated`. It is also what is not run twice — an
+// asset already marked with every name a function writes is declined, which
+// is how one minified by a child compilation is left alone.
+minify.getAssetFlag = () => "compressed";
+
 module.exports = {
   optimization: {
     minimize: true,
@@ -663,9 +713,12 @@ interface generator {
   implementation: generateFn;
   options?: Record<string, any>;
   type?: "import" | "asset";
-  filename?: string;
+  filename?: string | ((pathData: any) => string);
   filter?: (name: string) => boolean;
-  deleteOriginalAssets?: boolean;
+  deleteOriginalAssets?: boolean | ((name: string) => boolean);
+  threshold?: number;
+  minRatio?: number;
+  relatedName?: string | false;
 }
 
 type generate =
@@ -766,13 +819,23 @@ new MinimizerPlugin({
       implementation: MinimizerPlugin.sharpGenerate,
       options: { encodeOptions: { webp: {} } },
       type: "asset",
-      // Optional. Without it the generator's own name for the result is used,
-      // which for `sharpGenerate` is the original with its extension replaced.
+      // Optional, a template or a function answering with one. Without it the
+      // generator's own name for the result is used, which for `sharpGenerate`
+      // is the original with its extension replaced.
       filename: "[path][name].webp",
       // Optional. Narrows what this generator reads, on top of `test`.
       filter: (name) => !name.includes("icons/"),
       // Optional, `false` by default: the asset it read stays where it is.
+      // Written as a function it is asked per asset.
       deleteOriginalAssets: false,
+      // Optional. Skips an asset this small, before the generator is asked.
+      threshold: 10240,
+      // Optional. Drops the result unless it is this much smaller than what
+      // it read, as `generated size / original size`.
+      minRatio: 0.8,
+      // Optional. The key the new file is recorded under in the original's
+      // `related` info, which is how a server asked for one finds the other.
+      relatedName: "webp",
     },
   },
 });
@@ -781,14 +844,14 @@ new MinimizerPlugin({
 `type` decides which of the two things a generator does, and they are not
 interchangeable — they read different input, at different points in the build:
 
-|                                | `"import"` (the default)                   | `"asset"`                                               |
-| :----------------------------- | :----------------------------------------- | :------------------------------------------------------ |
-| Reads                          | a module, **as it builds**                 | an asset, **once it is emitted**                        |
-| Produces                       | that module's own bytes, renamed with them | a **new file beside** the one it read                   |
-| Picked by                      | `?as=<name>` on the import                 | `test` / `include` / `exclude`, then `filter`           |
-| Reaches a file nothing imports | no                                         | yes — copied assets included                            |
-| Fields it reads                | `implementation`, `options`                | those plus `filename`, `filter`, `deleteOriginalAssets` |
-| webpack                        | **5.111** or newer                         | any supported version                                   |
+|                                | `"import"` (the default)                   | `"asset"`                                                                                       |
+| :----------------------------- | :----------------------------------------- | :---------------------------------------------------------------------------------------------- |
+| Reads                          | a module, **as it builds**                 | an asset, **once it is emitted**                                                                |
+| Produces                       | that module's own bytes, renamed with them | a **new file beside** the one it read                                                           |
+| Picked by                      | `?as=<name>` on the import                 | `test` / `include` / `exclude`, then `filter`                                                   |
+| Reaches a file nothing imports | no                                         | yes — copied assets included                                                                    |
+| Fields it reads                | `implementation`, `options`                | those plus `filename`, `filter`, `deleteOriginalAssets`, `threshold`, `minRatio`, `relatedName` |
+| webpack                        | **5.111** or newer                         | any supported version                                                                           |
 
 **`"import"`** is the only point at which a rename can reach the bundle: the
 asset is named while its module is built, so every reference follows it. The
@@ -846,9 +909,173 @@ photo.jpg     still there, unless `deleteOriginalAssets`
 photo.webp    generated beside it
 ```
 
-`filename`, `filter` and `deleteOriginalAssets` describe a file being written
-beside another, so they belong to `"asset"` and setting one on an `"import"`
-generator is an error rather than a field that quietly does nothing.
+`filename`, `filter`, `deleteOriginalAssets`, `threshold`, `minRatio` and
+`relatedName` describe a file being written beside another, so they belong to
+`"asset"` and setting one on an `"import"` generator is an error rather than a
+field that quietly does nothing.
+
+Three of them decide whether the new file is worth having. `threshold` skips an
+asset too small to bother with, before the generator is asked at all. `minRatio`
+drops a result that is not enough smaller than what it read, since a file that
+saves nothing still costs a request. `relatedName` records the new file under
+that key in the original's `related` info — which is how a server asked for the
+original finds it — and declines an asset already carrying that key.
+
+A file written under the original's own name has replaced it, so there is
+nothing beside it to delete and nothing for `relatedName` to point at; a
+generator doing that re-encodes an asset in place.
+
+Deleting takes the original file and nothing else. webpack deletes whatever an
+asset's `related` names along with it, so a source map, or the file a second
+generator wrote beside the same original, would go too; the original goes
+alone instead. Where the generated file took the original's own name there is
+nothing left to delete, and `relatedName` is not recorded when the asset that
+would carry it is being deleted.
+
+A generated file inherits nothing from the one it was read from: what the
+original's info says about its hashes, its module and where its source came
+from is true of that file and not of this one. The exception is `immutable`,
+and only where `filename` still derives from the original's name — `[name]`,
+`[base]` or `[file]` — since that is what carried the hash the promise rests
+on.
+
+**When** a generator runs is not among them, because it is not the config's to
+say: the implementation declares it through a `getStage` of its own, the way it
+declares everything else about itself — see [`minify`](#minify). Compressing has
+to read the bytes a user downloads, so `MinimizerPlugin.compress` asks for
+`PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER` and runs after every minimizer has had
+its say; one that asks for nothing runs where minifying does. The **name its
+work goes under** is the implementation's too, through the same kind of helper:
+a generator declaring nothing wrote a new file, so `generated`, while `compress`
+says `compressed`, another encoding of the bytes being no smaller a version of
+them. Whatever the name, stats print it and the generator declines a file
+already carrying it, so nothing reads its own output back.
+
+`MinimizerPlugin.compress` ships with the plugin and is written against that.
+`algorithm` says which compression to run — a `zlib` function's name, or one of
+your own taking `(input, options, callback)` — and `compressionOptions` is what
+that algorithm is run with, the way `terserMinify` takes terser's own options.
+Here it is as an `asset` generator, which writes the compressed file beside the
+one it read, so both survive and the URL says which is which:
+
+```js
+const MinimizerPlugin = require("minimizer-webpack-plugin");
+
+module.exports = {
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new MinimizerPlugin({
+        test: /\.(js|css|html|svg)$/i,
+        generate: {
+          gzip: {
+            implementation: MinimizerPlugin.compress,
+            options: { algorithm: "gzip" },
+            type: "asset",
+            filename: "[path][base].gz",
+          },
+          brotli: {
+            implementation: MinimizerPlugin.compress,
+            options: {
+              algorithm: "brotliCompress",
+              compressionOptions: { params: {} },
+            },
+            type: "asset",
+            filename: "[path][base].br",
+          },
+        },
+      }),
+    ],
+  },
+};
+```
+
+Minifying and compressing are then one plugin over one pass of filtering and one
+cache, and the ordering they need — compress what minification produced — is
+what `stage` states rather than what applying two plugins in the right order
+happens to give. Each algorithm is run at its own maximum by default (`zlib`'s
+best level, brotli's best quality); name `compressionOptions` to say otherwise.
+
+#### Compressing with minifying, and without
+
+The example above does both: `minify` defaults to terser, so the bundle is
+minified and the compressed files are written from what minification produced.
+That is the shape to want — one pass of filtering, one cache, and `stage`
+ordering the two — and it needs nothing said about `minify` at all:
+
+```js
+new MinimizerPlugin({
+  test: /\.(js|css|html|svg)$/i,
+  generate: {
+    implementation: MinimizerPlugin.compress,
+    options: { algorithm: "gzip" },
+    type: "asset",
+    filename: "[path][base].gz",
+  },
+});
+```
+
+Compressing **only** — an instance that must not touch what it reads — says so
+with an empty list of minimizers. `test` is then yours to state too, since the
+`.js` default belongs to minifying:
+
+```js
+new MinimizerPlugin({
+  test: /.*/,
+  minify: [],
+  generate: {
+    implementation: MinimizerPlugin.compress,
+    options: { algorithm: "gzip" },
+    type: "asset",
+    filename: "[path][base].gz",
+  },
+});
+```
+
+Nothing is minified, no asset is marked `minimized`, and the bundle keeps the
+name it would have had without this plugin — an instance that rewrites nothing
+salts no hash.
+
+It is an ordinary minimizer too, so [`minify`](#minify) takes it the way it
+takes `terserMinify` or `swcMinify`. There it compresses the asset **in place**
+rather than beside it — the shape for a server that says what the encoding is
+through `Content-Encoding` while the URL stays as it was:
+
+```js
+const MinimizerPlugin = require("minimizer-webpack-plugin");
+
+module.exports = {
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new MinimizerPlugin({
+        test: /\.js$/i,
+        minify: MinimizerPlugin.compress,
+        minimizerOptions: { algorithm: "gzip" },
+      }),
+    ],
+  },
+};
+```
+
+An array runs its minimizers in order, each one reading what the last produced,
+so minifying and then compressing in place is one entry after another — and each
+states its own `options`. Each runs at the stage it asks for — terser before the
+hash is taken, `compress` after — so `[contenthash]` still names what
+minification produced:
+
+```js
+new MinimizerPlugin({
+  test: /\.js$/i,
+  minify: [
+    { implementation: MinimizerPlugin.terserMinify },
+    {
+      implementation: MinimizerPlugin.compress,
+      options: { algorithm: "brotliCompress" },
+    },
+  ],
+});
+```
 
 `ecma` is filled in from
 [`output.environment`](https://webpack.js.org/configuration/output/#outputenvironment)

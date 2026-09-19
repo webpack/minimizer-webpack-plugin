@@ -76,6 +76,52 @@ export namespace cleanCssMinify {
   function filter(name: string): boolean;
 }
 /**
+ * Compress an asset's bytes, so what a server sends under `Content-Encoding`
+ * is written beside the asset it came from. `algorithm` names which one — a
+ * function of `zlib`, or one of your own taking `(input, options, callback)` —
+ * and `compressionOptions` is what that algorithm is run with.
+ * @param {Input} input input
+ * @param {RawSourceMap=} sourceMap source map (ignored, compressed bytes carry none)
+ * @param {CustomOptions=} minimizerOptions options
+ * @returns {Promise<MinimizedResult>} minimized result
+ */
+export function compress(
+  input: Input,
+  sourceMap?: RawSourceMap | undefined,
+  minimizerOptions?: CustomOptions | undefined,
+): Promise<MinimizedResult>;
+export namespace compress {
+  /**
+   * @returns {string | undefined} the version the compressed bytes depend on
+   */
+  function getMinimizerVersion(): string | undefined;
+  /**
+   * Compressed bytes are what a user downloads, so this reads what every
+   * minimizer before it produced.
+   * @param {typeof import("webpack").Compilation} compilation the `Compilation` class
+   * @returns {number} the `processAssets` stage it runs in
+   */
+  function getStage(compilation: typeof import("webpack").Compilation): number;
+  /**
+   * Another encoding of the bytes is not a smaller version of them, so its work
+   * goes under `compressed` rather than `minimized` or `generated`.
+   * @returns {string} the name it marks an asset with
+   */
+  function getAssetFlag(): string;
+  /**
+   * @returns {boolean} true, compressed output is binary
+   */
+  function supportsBinary(): boolean;
+  /**
+   * @returns {boolean} false, the bytes have no way across to a worker
+   */
+  function supportsWorker(): boolean;
+  /**
+   * @returns {boolean} false
+   */
+  function supportsWorkerThreads(): boolean;
+}
+/**
  * Minify CSS using `cssnano` (via `postcss`).
  * @param {Input} input input
  * @param {RawSourceMap=} sourceMap source map

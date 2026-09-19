@@ -273,6 +273,45 @@ describe("embedded source", () => {
     );
   });
 
+  it("leaves the module hash alone where `minify` is an empty list", async () => {
+    /**
+     * @param {boolean} withPlugin whether to apply the plugin
+     * @returns {Promise<string[]>} the emitted names
+     */
+    const namesFrom = async (withPlugin) => {
+      const compiler = getCompiler({
+        entry: fixture("entry-css.js"),
+        target: "node",
+        output: {
+          path: path.resolve(__dirname, "./dist"),
+          filename: "[name].[contenthash].js",
+        },
+        experiments: { css: true },
+        module: {
+          rules: [
+            {
+              test: /\.css$/,
+              type: "css/auto",
+              parser: { exportType: "text" },
+            },
+          ],
+        },
+      });
+
+      if (withPlugin) {
+        new MinimizerPlugin({ test: /.*/, minify: [] }).apply(compiler);
+      }
+
+      const stats = await compile(compiler);
+
+      return Object.keys(stats.compilation.assets).sort();
+    };
+
+    // The embedded-source tap varies the module hash on the minimizers, and an
+    // instance with none of them rewrites nothing for it to vary on.
+    expect(await namesFrom(true)).toEqual(await namesFrom(false));
+  });
+
   it("dispatches by the language a minimizer declares, not by `test`", async () => {
     const compiler = getCompiler({
       entry: fixture("entry-css.js"),
@@ -320,7 +359,7 @@ describe("embedded source", () => {
     // Reported rather than thrown, and the source is embedded as it was
     // written — a build does not die because something nested did not parse.
     expect(getErrors(stats)).toHaveLength(1);
-    expect(getErrors(stats)[0]).toMatch(/Terser plugin\nbroken/);
+    expect(getErrors(stats)[0]).toMatch(/minimizer-webpack-plugin\nbroken/);
   });
 
   it("reports what a minimizer returned over embedded source", async () => {
@@ -343,7 +382,9 @@ describe("embedded source", () => {
     const stats = await compile(compiler);
 
     expect(getErrors(stats)).toHaveLength(1);
-    expect(getErrors(stats)[0]).toMatch(/Terser plugin\ncannot read this/);
+    expect(getErrors(stats)[0]).toMatch(
+      /minimizer-webpack-plugin\ncannot read this/,
+    );
     expect(getWarnings(stats)).toHaveLength(1);
     expect(getWarnings(stats)[0]).toMatch(/Warning: odd, that/);
   });
@@ -579,7 +620,9 @@ describe("embedded source", () => {
       // written exactly as it was. Read off the compilation rather than the
       // output: an errored build emits nothing.
       expect(getErrors(stats)).toHaveLength(1);
-      expect(getErrors(stats)[0]).toMatch(/Terser plugin\ncannot read this/);
+      expect(getErrors(stats)[0]).toMatch(
+        /minimizer-webpack-plugin\ncannot read this/,
+      );
       expect(
         stats.compilation.getAsset("document.html").source.source(),
       ).toContain(

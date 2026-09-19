@@ -17,7 +17,7 @@ exports[`minify option should carry the last good code forward when a step in th
 
 exports[`minify option should error when the minimizer returns only extracted comments (no code): errors 1`] = `
 [
-  "Error: main.js from Terser plugin
+  "Error: main.js from minimizer-webpack-plugin
 Minimizer doesn't return result",
 ]
 `;
@@ -26,7 +26,7 @@ exports[`minify option should error when the minimizer returns only extracted co
 
 exports[`minify option should error when the minimizer returns only warnings (no code): errors 1`] = `
 [
-  "Error: main.js from Terser plugin
+  "Error: main.js from minimizer-webpack-plugin
 Minimizer doesn't return result",
 ]
 `;
@@ -39,9 +39,9 @@ exports[`minify option should error when the minimizer returns only warnings (no
 
 exports[`minify option should merge warnings and errors from all minimizers in an array: errors 1`] = `
 [
-  "Error: main.js from Terser plugin
+  "Error: main.js from minimizer-webpack-plugin
 error from first",
-  "Error: main.js from Terser plugin
+  "Error: main.js from minimizer-webpack-plugin
 error from second",
 ]
 `;
@@ -55,7 +55,7 @@ exports[`minify option should merge warnings and errors from all minimizers in a
 
 exports[`minify option should output errors and warning: errors 1`] = `
 [
-  "Error: main.js from Terser plugin
+  "Error: main.js from minimizer-webpack-plugin
 error",
 ]
 `;
@@ -68,9 +68,9 @@ exports[`minify option should output errors and warning: warnings 1`] = `
 
 exports[`minify option should report an error when the \`extractComments\` option for \`swcMinify\` uses a function condition: errors 1`] = `
 [
-  "Error: 203.203.js from Terser plugin
+  "Error: 203.203.js from minimizer-webpack-plugin
 The 'extractComments' option for 'swcMinify' only supports booleans, "some", "all", string patterns, RegExp values without flags, or object conditions that resolve to those forms. Received: function.",
-  "Error: main.js from Terser plugin
+  "Error: main.js from minimizer-webpack-plugin
 The 'extractComments' option for 'swcMinify' only supports booleans, "some", "all", string patterns, RegExp values without flags, or object conditions that resolve to those forms. Received: function.",
 ]
 `;
@@ -154,7 +154,7 @@ exports[`minify option should snapshot with extracting comments: warnings 1`] = 
 
 exports[`minify option should throw an error when an error when the "parallel" option is "false": errors 1`] = `
 [
-  "Error: main.js from Terser plugin
+  "Error: main.js from minimizer-webpack-plugin
 Error",
 ]
 `;
@@ -163,7 +163,7 @@ exports[`minify option should throw an error when an error when the "parallel" o
 
 exports[`minify option should throw an error when an error when the "parallel" option is "true": errors 1`] = `
 [
-  "Error: main.js from Terser plugin
+  "Error: main.js from minimizer-webpack-plugin
 Error",
 ]
 `;
@@ -172,7 +172,7 @@ exports[`minify option should throw an error when an error when the "parallel" o
 
 exports[`minify option should throw an error when an error: errors 1`] = `
 [
-  "Error: main.js from Terser plugin
+  "Error: main.js from minimizer-webpack-plugin
 Error",
 ]
 `;
@@ -269,7 +269,7 @@ exports[`minify option should work using when the \`minify\` option is \`esbuild
 
 exports[`minify option should work using when the \`minify\` option is \`esbuildMinify\` and output errors: errors 1`] = `
 [
-  "Error: broken.js from Terser plugin
+  "Error: broken.js from minimizer-webpack-plugin
 Transform failed with 1 error:",
 ]
 `;
@@ -669,7 +669,7 @@ exports[`minify option should work using when the \`minify\` option is \`swcMini
 
 exports[`minify option should work using when the \`minify\` option is \`swcMinify\` and output errors: errors 1`] = `
 [
-  "Error: broken.js from Terser plugin
+  "Error: broken.js from minimizer-webpack-plugin
   x Unterminated template",
 ]
 `;
@@ -799,7 +799,7 @@ exports[`minify option should work using when the \`minify\` option is \`terserM
 
 exports[`minify option should work using when the \`minify\` option is \`terserMinify\` and output errors: errors 1`] = `
 [
-  "Error: broken.js from Terser plugin
+  "Error: broken.js from minimizer-webpack-plugin
 Unterminated template [broken.js:1,undefined]",
 ]
 `;
@@ -903,9 +903,9 @@ exports[`minify option should work using when the \`minify\` option is \`uglifyJ
 
 exports[`minify option should work using when the \`minify\` option is \`uglifyJsMinify\` and output errors: errors 1`] = `
 [
-  "Error: broken.js from Terser plugin
+  "Error: broken.js from minimizer-webpack-plugin
 Minimizer doesn't return result",
-  "Error: broken.js from Terser plugin
+  "Error: broken.js from minimizer-webpack-plugin
 Unterminated template literal [broken.js:1,undefined]",
 ]
 `;
@@ -1023,17 +1023,17 @@ exports[`minify option should work with "uglify-js" minimizer: warnings 1`] = `[
 
 exports[`minify option should work with custom minimize function and support warnings and errors: errors 1`] = `
 [
-  "Error: main.js from Terser plugin
+  "Error: main.js from minimizer-webpack-plugin
 Error 1",
-  "Error: main.js from Terser plugin
+  "Error: main.js from minimizer-webpack-plugin
 Error 2",
-  "Error: main.js from Terser plugin
+  "Error: main.js from minimizer-webpack-plugin
 Error 3",
-  "Error: main.js from Terser plugin
+  "Error: main.js from minimizer-webpack-plugin
 Error 4",
-  "Error: main.js from Terser plugin
+  "Error: main.js from minimizer-webpack-plugin
 Error 5",
-  "Error: main.js from Terser plugin
+  "Error: main.js from minimizer-webpack-plugin
 Error 6 [main.js:1,undefined]",
 ]
 `;

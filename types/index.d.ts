@@ -1,8 +1,8 @@
-export = TerserPlugin;
+export = MinimizerPlugin;
 /**
  * @template [T=import("terser").MinifyOptions]
  */
-declare class TerserPlugin<T = import("terser").MinifyOptions> {
+declare class MinimizerPlugin<T = import("terser").MinifyOptions> {
   /**
    * @private
    * @param {unknown} input Input to check
@@ -67,7 +67,7 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    * @param {Compiler} compiler compiler
    * @param {Compilation} compilation compilation
    * @param {Record<string, import("webpack").sources.Source>} assets assets
-   * @param {{ availableNumberOfCores: number }} optimizeOptions optimize options
+   * @param {{ availableNumberOfCores: number, only?: number[], cacheSuffix?: string, written: Map<string, Set<string>> }} optimizeOptions how many may run at once, which minimizers this pass runs, what keeps its cache apart from another pass over the same asset, and what an earlier pass of this plugin already wrote onto each asset
    * @returns {Promise<void>}
    */
   private optimize;
@@ -94,13 +94,13 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    * @param {string | undefined} name the preset it is written under, where it has one
    * @param {EXPECTED_ANY} entry what was written there
    * @param {EXPECTED_ANY} declared what `generatorOptions` says for it
-   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | undefined }} the generator
+   * @returns {{ name: string | undefined, implementation: EXPECTED_ANY, options: EXPECTED_ANY, type: string | undefined, filename: string | ((pathData: EXPECTED_ANY) => string) | undefined, filter: ((name: string) => boolean) | undefined, deleteOriginalAssets: boolean | ((name: string) => boolean) | undefined, threshold: number | undefined, minRatio: number | undefined, relatedName: string | false | undefined }} the generator
    */
   private describeGenerator;
   /**
    * Every generator `generate` holds, whichever shape it was written in.
    * @private
-   * @returns {ReturnType<TerserPlugin["describeGenerator"]>[]} them, in the order they were written
+   * @returns {ReturnType<MinimizerPlugin["describeGenerator"]>[]} them, in the order they were written
    */
   private generators;
   /**
@@ -123,10 +123,24 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    */
   private hasModuleGenerator;
   /**
+   * Every name the functions this plugin runs mark an asset with, which is
+   * what stats have to know how to print.
+   * @private
+   * @returns {Set<string>} the names
+   */
+  private assetFlags;
+  /**
+   * Every name this plugin's `asset` generators mark what they wrote with,
+   * which is how both passes tell a generated file from one to work on.
+   * @private
+   * @returns {string[]} the names
+   */
+  private generatedFlags;
+  /**
    * The generators that run over emitted assets rather than over a module as
    * it builds.
    * @private
-   * @returns {ReturnType<TerserPlugin["describeGenerator"]>[]} them, in the order they were written
+   * @returns {ReturnType<MinimizerPlugin["describeGenerator"]>[]} them, in the order they were written
    */
   private assetGenerators;
   /**
@@ -146,7 +160,7 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    * @param {Compilation} compilation compilation
    * @param {ReturnType<Compilation["getCache"]>} cache the generation cache
    * @param {Asset} asset the asset to generate from
-   * @param {ReturnType<TerserPlugin["assetGenerators"]>[0]} generator the generator to run
+   * @param {ReturnType<MinimizerPlugin["assetGenerators"]>[0]} generator the generator to run
    * @returns {Promise<void>}
    */
   private generateAsset;
@@ -157,9 +171,28 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    * @private
    * @param {Compiler} compiler compiler
    * @param {Compilation} compilation compilation
+   * @param {ReturnType<MinimizerPlugin["assetGenerators"]>} generators the generators running at this stage
+   * @param {Record<string, import("webpack").sources.Source>} assets the assets this pass was handed
    * @returns {Promise<void>}
    */
   private generateAssets;
+  /**
+   * Where work runs when nothing asks for anywhere else: after the bundle is
+   * rendered and before its hashes are taken, which is where minifying belongs.
+   * @private
+   * @param {Compiler} compiler compiler
+   * @returns {number} the stage
+   */
+  private defaultStage;
+  /**
+   * Which minimizers run at which `processAssets` stage, as indices into the
+   * configured ones. Each runs where its own `getStage` asks to, and they
+   * still chain — through the asset, which the later pass reads back.
+   * @private
+   * @param {Compiler} compiler compiler
+   * @returns {Map<number, number[]>} the indices, by stage
+   */
+  private minimizersByStage;
   /**
    * Minify one source a module embeds in another language's output — CSS or
    * HTML reaching the bundle inside a JavaScript string literal, an
@@ -217,7 +250,7 @@ declare class TerserPlugin<T = import("terser").MinifyOptions> {
    */
   apply(compiler: Compiler): void;
 }
-declare namespace TerserPlugin {
+declare namespace MinimizerPlugin {
   export {
     terserMinify,
     uglifyJsMinify,
@@ -241,6 +274,7 @@ declare namespace TerserPlugin {
     sharpMinify,
     sharpGenerate,
     svgoMinify,
+    compress,
     Schema,
     Compiler,
     Compilation,
@@ -278,7 +312,11 @@ declare namespace TerserPlugin {
     InternalOptions,
     MinimizerWorker,
     Parallel,
+    GeneratorDescriptor,
+    Generate,
     BasePluginOptions,
+    MinimizerDescriptor,
+    Minify,
     DefinedDefaultMinimizerAndOptions,
     InternalPluginOptions,
   };
@@ -305,6 +343,7 @@ import { napiRsImageMinify } from "./utils";
 import { sharpMinify } from "./utils";
 import { sharpGenerate } from "./utils";
 import { svgoMinify } from "./utils";
+import { compress } from "./utils";
 type Schema = import("schema-utils/declarations/validate").Schema;
 type Compiler = import("webpack").Compiler;
 type Compilation = import("webpack").Compilation;
@@ -533,6 +572,18 @@ type MinimizeFunctionHelpers = {
    */
   getEmbeddedTypes?:
     ((minimizerOptions?: EXPECTED_OBJECT) => string[] | undefined) | undefined;
+  /**
+   * which `processAssets` stage this minimizer has to run in, named off the `Compilation` it is handed — compressing reads the bytes a user downloads, so it asks for `PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER`. Each runs where it asks, chaining through the asset a later pass reads back, and one asking for nothing runs where minifying belongs — after the bundle is rendered and before its hashes are taken
+   */
+  getStage?:
+    | ((
+        compilation: typeof import("webpack").Compilation,
+      ) => number | undefined)
+    | undefined;
+  /**
+   * the name this function's work goes under in the asset's info, which is what the asset it wrote is marked with and what stats print. `compress` says `compressed`, another encoding of the bytes being no smaller a version of them; a minimizer saying nothing minified the asset, so `minimized`, and a generator saying nothing wrote a new file, so `generated`. It is also what is not run twice: an asset already marked with every name a function writes is declined, which is how a minified asset a child compilation handed up is left alone
+   */
+  getAssetFlag?: (() => string | undefined) | undefined;
 };
 /**
  * Module path form of `minimizer.implementation` (like sass-loader): the worker
@@ -599,6 +650,61 @@ type MinimizerWorker<T> = JestWorker & {
   minify: (options: InternalOptions<T>) => Promise<MinimizedResult>;
 };
 type Parallel = undefined | boolean | number;
+/**
+ * One generator, written as an object stating how to run it.
+ */
+type GeneratorDescriptor = {
+  /**
+   * the generator itself
+   */
+  implementation: MinimizerImplementation<EXPECTED_ANY>;
+  /**
+   * options for this generator, preferred over the deprecated `generatorOptions`
+   */
+  options?: MinimizerOptions<EXPECTED_ANY> | undefined;
+  /**
+   * `import` re-encodes a module as it is built, so the import that asked for it is renamed with it; `asset` writes a new file beside one already emitted
+   */
+  type?: ("import" | "asset") | undefined;
+  /**
+   * name for the generated asset, as a webpack filename template or a function answering with one. `asset` generators only
+   */
+  filename?: (string | ((pathData: EXPECTED_ANY) => string)) | undefined;
+  /**
+   * decides per asset whether to generate from it, on top of `test`/`include`/`exclude`
+   */
+  filter?: ((name: string) => boolean) | undefined;
+  /**
+   * removes the asset generated from, its own file alone — whatever its `related` names stays. Written as a function it is asked per asset. `asset` generators only
+   */
+  deleteOriginalAssets?: (boolean | ((name: string) => boolean)) | undefined;
+  /**
+   * generate only from assets larger than this, in bytes. `asset` generators only
+   */
+  threshold?: number | undefined;
+  /**
+   * keep the generated asset only when it is this much smaller than the one it was read from. `asset` generators only
+   */
+  minRatio?: number | undefined;
+  /**
+   * the key the generated asset is recorded under in the original's `related` info. `asset` generators only
+   */
+  relatedName?: (string | false) | undefined;
+};
+/**
+ * What `generate` may be written as: one generator, a list of them, a
+ * descriptor, or an object naming descriptors an asset asks for with `?as=`.
+ */
+type Generate =
+  | MinimizerImplementation<EXPECTED_ANY>
+  | MinimizerImplementation<EXPECTED_ANY>[]
+  | GeneratorDescriptor
+  | {
+      [preset: string]:
+        | MinimizerImplementation<EXPECTED_ANY>
+        | MinimizerImplementation<EXPECTED_ANY>[]
+        | GeneratorDescriptor;
+    };
 type BasePluginOptions = {
   /**
    * test rule
@@ -621,23 +727,48 @@ type BasePluginOptions = {
    */
   parallel?: Parallel | undefined;
   /**
-   * rewrites a module's own bytes as it is built, so a re-encoding can rename the asset
+   * rewrites a module's own bytes as it is built, so a re-encoding can rename the asset, or writes a new file beside one already emitted
    */
-  generate?: MinimizerImplementation<EXPECTED_ANY> | undefined;
+  generate?: Generate | undefined;
   /**
    * options for `generate`
    */
   generatorOptions?: MinimizerOptions<EXPECTED_ANY> | undefined;
 };
+/**
+ * One minimizer, written as an object stating how to run it.
+ */
+type MinimizerDescriptor<T> = {
+  /**
+   * the minimizer itself
+   */
+  implementation: MinimizerImplementation<T>;
+  /**
+   * options for this minimizer, preferred over the deprecated `minimizerOptions`
+   */
+  options?: MinimizerOptions<T> | undefined;
+  /**
+   * which assets this minimizer is offered, overriding a `filter` on the function itself
+   */
+  filter?: ((name: string, info: AssetInfo) => boolean | undefined) | undefined;
+};
+/**
+ * What `minify` may be written as: one minimizer, a list of them — empty for
+ * nothing to minify — or a descriptor.
+ */
+type Minify<T> =
+  | MinimizerImplementation<T>
+  | (MinimizerImplementation<T> | MinimizerDescriptor<T>)[]
+  | MinimizerDescriptor<T>;
 type DefinedDefaultMinimizerAndOptions<T> =
   T extends import("terser").MinifyOptions
     ? {
-        minify?: MinimizerImplementation<T> | undefined;
+        minify?: Minify<T> | undefined;
         minimizerOptions?: MinimizerOptions<T> | undefined;
         terserOptions?: MinimizerOptions<T> | undefined;
       }
     : {
-        minify: MinimizerImplementation<T>;
+        minify: Minify<T>;
         minimizerOptions?: MinimizerOptions<T> | undefined;
         terserOptions?: MinimizerOptions<T> | undefined;
       };

@@ -215,7 +215,7 @@
       ]
     },
     "minify": {
-      "description": "Allows you to override default minify function. Written as an object it states how to run one minimizer, options included. A string or `{ path, export }` loads the minimizer by module path in workers (like sass-loader `implementation`).",
+      "description": "Allows you to override default minify function. Written as an object it states how to run one minimizer, options included. An empty array is no minimizers at all, for an instance whose whole job is its `generate`. A string or `{ path, export }` loads the minimizer by module path in workers (like sass-loader `implementation`).",
       "link": "https://github.com/webpack/minimizer-webpack-plugin#number",
       "anyOf": [
         {
@@ -223,7 +223,6 @@
         },
         {
           "type": "array",
-          "minItems": 1,
           "items": {
             "anyOf": [
               {
@@ -306,17 +305,41 @@
               "enum": ["import", "asset"]
             },
             "filename": {
-              "description": "Name for the generated asset, as a webpack filename template. `asset` generators only; by default the generator's own name for it is used.",
-              "type": "string",
-              "minLength": 1
+              "description": "Name for the generated asset, as a webpack filename template, or a function answering with one. `asset` generators only; by default the generator's own name for it is used.",
+              "anyOf": [
+                { "type": "string", "minLength": 1 },
+                { "instanceof": "Function" }
+              ]
             },
             "filter": {
               "description": "Decides per asset whether to generate from it, on top of `test`/`include`/`exclude`.",
               "instanceof": "Function"
             },
             "deleteOriginalAssets": {
-              "description": "Removes the asset generated from. `asset` generators only.",
-              "type": "boolean"
+              "description": "Removes the asset generated from, its own file alone — whatever its `related` names stays. Written as a function it is asked per asset. `asset` generators only.",
+              "anyOf": [{ "type": "boolean" }, { "instanceof": "Function" }]
+            },
+            "threshold": {
+              "description": "Generate only from assets larger than this, in bytes. `asset` generators only.",
+              "type": "number",
+              "minimum": 0
+            },
+            "minRatio": {
+              "description": "Keep the generated asset only when it is this much smaller than the one it was read from, as `generated size / original size`. `asset` generators only.",
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "relatedName": {
+              "description": "The key the generated asset is recorded under in the original's `related` info, which is how a server finds it. `false` records nothing. `asset` generators only.",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "enum": [false]
+                }
+              ]
             }
           },
           "required": ["implementation"]
@@ -354,17 +377,44 @@
                     "enum": ["import", "asset"]
                   },
                   "filename": {
-                    "description": "Name for the generated asset, as a webpack filename template. `asset` generators only; by default the generator's own name for it is used.",
-                    "type": "string",
-                    "minLength": 1
+                    "description": "Name for the generated asset, as a webpack filename template, or a function answering with one. `asset` generators only; by default the generator's own name for it is used.",
+                    "anyOf": [
+                      { "type": "string", "minLength": 1 },
+                      { "instanceof": "Function" }
+                    ]
                   },
                   "filter": {
                     "description": "Decides per asset whether to generate from it, on top of `test`/`include`/`exclude`.",
                     "instanceof": "Function"
                   },
                   "deleteOriginalAssets": {
-                    "description": "Removes the asset generated from. `asset` generators only.",
-                    "type": "boolean"
+                    "description": "Removes the asset generated from, its own file alone — whatever its `related` names stays. Written as a function it is asked per asset. `asset` generators only.",
+                    "anyOf": [
+                      { "type": "boolean" },
+                      { "instanceof": "Function" }
+                    ]
+                  },
+                  "threshold": {
+                    "description": "Generate only from assets larger than this, in bytes. `asset` generators only.",
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "minRatio": {
+                    "description": "Keep the generated asset only when it is this much smaller than the one it was read from, as `generated size / original size`. `asset` generators only.",
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "relatedName": {
+                    "description": "The key the generated asset is recorded under in the original's `related` info, which is how a server finds it. `false` records nothing. `asset` generators only.",
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "enum": [false]
+                      }
+                    ]
                   }
                 },
                 "required": ["implementation"]

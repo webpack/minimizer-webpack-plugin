@@ -1,13 +1,13 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`validation should validate a minimizer added through \`optimization.minimizer\` 1`] = `
-"Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
+"Invalid options object. Minimizer Plugin has been initialized using an options object that does not match the API schema.
  - options has an unknown property 'unknown'. These properties are valid:
    object { test?, include?, exclude?, minimizerOptions?, terserOptions?, extractComments?, parallel?, minify?, generate?, generatorOptions? }"
 `;
 
 exports[`validation validate 1`] = `
-"Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
+"Invalid options object. Minimizer Plugin has been initialized using an options object that does not match the API schema.
  - options.test should be one of these:
    [RegExp | non-empty string, ...] | RegExp | non-empty string
    -> Filtering rules.
@@ -24,7 +24,7 @@ exports[`validation validate 1`] = `
 `;
 
 exports[`validation validate 2`] = `
-"Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
+"Invalid options object. Minimizer Plugin has been initialized using an options object that does not match the API schema.
  - options.test should be one of these:
    [RegExp | non-empty string, ...] | RegExp | non-empty string
    -> Filtering rules.
@@ -39,7 +39,7 @@ exports[`validation validate 2`] = `
 `;
 
 exports[`validation validate 3`] = `
-"Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
+"Invalid options object. Minimizer Plugin has been initialized using an options object that does not match the API schema.
  - options.include should be one of these:
    [RegExp | non-empty string, ...] | RegExp | non-empty string
    -> Filtering rules.
@@ -56,7 +56,7 @@ exports[`validation validate 3`] = `
 `;
 
 exports[`validation validate 4`] = `
-"Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
+"Invalid options object. Minimizer Plugin has been initialized using an options object that does not match the API schema.
  - options.include should be one of these:
    [RegExp | non-empty string, ...] | RegExp | non-empty string
    -> Filtering rules.
@@ -71,7 +71,7 @@ exports[`validation validate 4`] = `
 `;
 
 exports[`validation validate 5`] = `
-"Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
+"Invalid options object. Minimizer Plugin has been initialized using an options object that does not match the API schema.
  - options.exclude should be one of these:
    [RegExp | non-empty string, ...] | RegExp | non-empty string
    -> Filtering rules.
@@ -88,7 +88,7 @@ exports[`validation validate 5`] = `
 `;
 
 exports[`validation validate 6`] = `
-"Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
+"Invalid options object. Minimizer Plugin has been initialized using an options object that does not match the API schema.
  - options.exclude should be one of these:
    [RegExp | non-empty string, ...] | RegExp | non-empty string
    -> Filtering rules.
@@ -103,7 +103,7 @@ exports[`validation validate 6`] = `
 `;
 
 exports[`validation validate 7`] = `
-"Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
+"Invalid options object. Minimizer Plugin has been initialized using an options object that does not match the API schema.
  - options.parallel should be one of these:
    boolean | integer
    -> Use multi-process parallel running to improve the build speed.
@@ -114,7 +114,7 @@ exports[`validation validate 7`] = `
 `;
 
 exports[`validation validate 8`] = `
-"Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
+"Invalid options object. Minimizer Plugin has been initialized using an options object that does not match the API schema.
  - options.parallel should be one of these:
    boolean | integer
    -> Use multi-process parallel running to improve the build speed.
@@ -125,15 +125,10 @@ exports[`validation validate 8`] = `
 `;
 
 exports[`validation validate 9`] = `
-"Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
- - options.minify should be a non-empty array."
-`;
-
-exports[`validation validate 10`] = `
-"Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
+"Invalid options object. Minimizer Plugin has been initialized using an options object that does not match the API schema.
  - options.minify should be one of these:
-   function | non-empty string | object { path, export? } | [function | non-empty string | object { path, export? } | object { implementation, options?, filter? }, ...] (should not have fewer than 1 item) | object { implementation, options?, filter? }
-   -> Allows you to override default minify function. Written as an object it states how to run one minimizer, options included. A string or \`{ path, export }\` loads the minimizer by module path in workers (like sass-loader \`implementation\`).
+   function | non-empty string | object { path, export? } | [function | non-empty string | object { path, export? } | object { implementation, options?, filter? }, ...] | object { implementation, options?, filter? }
+   -> Allows you to override default minify function. Written as an object it states how to run one minimizer, options included. An empty array is no minimizers at all, for an instance whose whole job is its \`generate\`. A string or \`{ path, export }\` loads the minimizer by module path in workers (like sass-loader \`implementation\`).
    -> Read more at https://github.com/webpack/minimizer-webpack-plugin#number
    Details:
     * options.minify should be one of these:
@@ -145,18 +140,18 @@ exports[`validation validate 10`] = `
        * options.minify should be an object:
          object { path, export? }
     * options.minify should be an array:
-      [function | non-empty string | object { path, export? } | object { implementation, options?, filter? }, ...] (should not have fewer than 1 item)
+      [function | non-empty string | object { path, export? } | object { implementation, options?, filter? }, ...]
     * options.minify should be an object:
       object { implementation, options?, filter? }"
 `;
 
-exports[`validation validate 11`] = `
-"Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
+exports[`validation validate 10`] = `
+"Invalid options object. Minimizer Plugin has been initialized using an options object that does not match the API schema.
  - options.terserOptions should be a non-empty array."
 `;
 
-exports[`validation validate 12`] = `
-"Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
+exports[`validation validate 11`] = `
+"Invalid options object. Minimizer Plugin has been initialized using an options object that does not match the API schema.
  - options.terserOptions should be one of these:
    object { … } | [object { … }, ...] (should not have fewer than 1 item)
    -> Deprecated alias for \`minimizerOptions\`. Options for \`terser\` (by default) or custom \`minify\` function.
@@ -168,8 +163,8 @@ exports[`validation validate 12`] = `
       [object { … }, ...] (should not have fewer than 1 item)"
 `;
 
-exports[`validation validate 13`] = `
-"Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
+exports[`validation validate 12`] = `
+"Invalid options object. Minimizer Plugin has been initialized using an options object that does not match the API schema.
  - options.extractComments should be one of these:
    boolean | non-empty string | RegExp | function | object { condition?, filename?, banner? }
    -> Whether comments shall be extracted to a separate file.
@@ -186,8 +181,8 @@ exports[`validation validate 13`] = `
        * options.extractComments.condition should be an instance of function."
 `;
 
-exports[`validation validate 14`] = `
-"Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
+exports[`validation validate 13`] = `
+"Invalid options object. Minimizer Plugin has been initialized using an options object that does not match the API schema.
  - options.extractComments should be one of these:
    boolean | non-empty string | RegExp | function | object { condition?, filename?, banner? }
    -> Whether comments shall be extracted to a separate file.
@@ -202,8 +197,8 @@ exports[`validation validate 14`] = `
        * options.extractComments.filename should be an instance of function."
 `;
 
-exports[`validation validate 15`] = `
-"Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
+exports[`validation validate 14`] = `
+"Invalid options object. Minimizer Plugin has been initialized using an options object that does not match the API schema.
  - options.extractComments should be one of these:
    boolean | non-empty string | RegExp | function | object { condition?, filename?, banner? }
    -> Whether comments shall be extracted to a separate file.
@@ -219,25 +214,25 @@ exports[`validation validate 15`] = `
        * options.extractComments.banner should be an instance of function."
 `;
 
-exports[`validation validate 16`] = `
-"Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
+exports[`validation validate 15`] = `
+"Invalid options object. Minimizer Plugin has been initialized using an options object that does not match the API schema.
  - options.extractComments has an unknown property 'unknown'. These properties are valid:
    object { condition?, filename?, banner? }"
 `;
 
-exports[`validation validate 17`] = `
-"Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
+exports[`validation validate 16`] = `
+"Invalid options object. Minimizer Plugin has been initialized using an options object that does not match the API schema.
  - options has an unknown property 'unknown'. These properties are valid:
    object { test?, include?, exclude?, minimizerOptions?, terserOptions?, extractComments?, parallel?, minify?, generate?, generatorOptions? }"
 `;
 
-exports[`validation validate 18`] = `
-"Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
+exports[`validation validate 17`] = `
+"Invalid options object. Minimizer Plugin has been initialized using an options object that does not match the API schema.
  - options.minimizerOptions should be a non-empty array."
 `;
 
-exports[`validation validate 19`] = `
-"Invalid options object. Terser Plugin has been initialized using an options object that does not match the API schema.
+exports[`validation validate 18`] = `
+"Invalid options object. Minimizer Plugin has been initialized using an options object that does not match the API schema.
  - options.minimizerOptions should be one of these:
    object { … } | [object { … }, ...] (should not have fewer than 1 item)
    -> Deprecated way of giving a \`minify\` minimizer its options, to be removed in the next major release. Prefer a minimizer's own \`options\`.
@@ -247,4 +242,25 @@ exports[`validation validate 19`] = `
       object { … }
     * options.minimizerOptions should be an array:
       [object { … }, ...] (should not have fewer than 1 item)"
+`;
+
+exports[`validation validate 19`] = `
+"Invalid options object. Minimizer Plugin has been initialized using an options object that does not match the API schema.
+ - options.minify should be one of these:
+   function | non-empty string | object { path, export? } | [function | non-empty string | object { path, export? } | object { implementation, options?, filter? }, ...] | object { implementation, options?, filter? }
+   -> Allows you to override default minify function. Written as an object it states how to run one minimizer, options included. An empty array is no minimizers at all, for an instance whose whole job is its \`generate\`. A string or \`{ path, export }\` loads the minimizer by module path in workers (like sass-loader \`implementation\`).
+   -> Read more at https://github.com/webpack/minimizer-webpack-plugin#number
+   Details:
+    * options.minify should be one of these:
+      function | non-empty string | object { path, export? }
+      -> The minimizer itself: a function, a module path string (worker \`require\`s it), or \`{ path, export }\` for a named export.
+      Details:
+       * options.minify should be an instance of function.
+       * options.minify should be a non-empty string.
+       * options.minify should be an object:
+         object { path, export? }
+    * options.minify should be an array:
+      [function | non-empty string | object { path, export? } | object { implementation, options?, filter? }, ...]
+    * options.minify should be an object:
+      object { implementation, options?, filter? }"
 `;

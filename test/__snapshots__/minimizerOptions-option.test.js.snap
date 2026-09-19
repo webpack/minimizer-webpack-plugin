@@ -752,7 +752,7 @@ exports[`terserOptions option should match snapshot for the "toplevel" option wi
 
 exports[`terserOptions option should match snapshot for the "unknown" option: errors 1`] = `
 [
-  "Error: main.js from Terser plugin
+  "Error: main.js from minimizer-webpack-plugin
 \`unknown\` is not a supported option",
 ]
 `;
