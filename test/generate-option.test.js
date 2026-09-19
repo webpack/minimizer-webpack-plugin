@@ -2591,6 +2591,49 @@ describe("deleting the asset a file was written beside", () => {
     );
   });
 
+  it("should not delete what another generator wrote over the original", async () => {
+    const compiler = getCompiler({
+      entry: { one: path.resolve(__dirname, "./fixtures/entry.js") },
+    });
+
+    /**
+     * @param {string} mark what its output opens with
+     * @param {EXPECTED_ANY} extra what else to say about it
+     * @returns {EXPECTED_ANY} one generator
+     */
+    const marking = (mark, extra) => ({
+      implementation: (
+        /** @type {{ [file: string]: string | Buffer }} */ input,
+      ) => ({ code: `/* ${mark} */${Object.values(input)[0]}` }),
+      type: "asset",
+      ...extra,
+    });
+
+    new MinimizerPlugin({
+      parallel: false,
+      test: /\.js$/i,
+      minify: [],
+      generate: {
+        inPlace: marking("in place", { filename: "[path][base]" }),
+        beside: marking("beside", {
+          filename: "[path][base].gz",
+          deleteOriginalAssets: true,
+        }),
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    // The generators run together, so the one deleting may reach the original
+    // after another has written over it — and what it holds is not what it read.
+    expect(getErrors(stats)).toEqual([]);
+    expect(Object.keys(stats.compilation.assets).sort()).toEqual([
+      "one.js",
+      "one.js.gz",
+    ]);
+    expect(readAsset("one.js", compiler, stats)).toMatch(/^\/\* in place \*\//);
+  });
+
   it("should keep a file written under the original's own name", async () => {
     const compiler = getCompiler({
       entry: { one: path.resolve(__dirname, "./fixtures/entry.js") },

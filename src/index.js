@@ -1780,9 +1780,13 @@ class MinimizerPlugin {
         : generator.deleteOriginalAssets;
 
     if (deletes) {
+      const still = compilation.getAsset(name);
+
       // A generator writing under the original's own name leaves nothing to
-      // delete: that file is now the generated one.
-      if (generatedName !== name && compilation.getAsset(name)) {
+      // delete: that file is now the generated one. Another generator of this
+      // pass may have written over it too, which is the same thing — what the
+      // name holds is no longer what this one read.
+      if (generatedName !== name && still && still.source === source) {
         // Deleting an asset takes everything its `related` names with it — a
         // source map, another generator's file — so it goes alone.
         compilation.updateAsset(name, source, (was) => {
