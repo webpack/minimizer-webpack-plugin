@@ -404,6 +404,28 @@ default one, and the tables in
 [webpack's own minimizers](#webpacks-own-minimizers) for `cssMinify` and
 `htmlMinify`.
 
+`implementation` may also name a **module path** rather than hold the function
+itself — a string, or `{ path, export }` for a named export, the way
+`sass-loader` takes its `implementation`. A worker then `require`s the
+minimizer, instead of being handed its source to rebuild with `new Function`,
+which is what the default terser does:
+
+```js
+new MinimizerPlugin({
+  minify: {
+    // Or the string on its own, where the module exports the function itself.
+    implementation: {
+      path: require.resolve("./my-minifier"),
+      export: "minify",
+    },
+  },
+});
+```
+
+The saving is per task, so it needs every minimizer of that task to be nameable:
+one written as a function anywhere in the list leaves the whole task on the
+source path, since that function has no other way across.
+
 `filter(name, info)` states which assets this minimizer is offered — return
 `false` to decline one, and anything else (`undefined` included) to accept. It
 answers for a `filter` property on the minimizer function itself, which is what

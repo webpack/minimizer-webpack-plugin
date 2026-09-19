@@ -138,6 +138,24 @@ describe("parallel option", () => {
     ]);
   });
 
+  it("should use transform where one of several is an inline function", async () => {
+    new MinimizerPlugin({
+      parallel: true,
+      minify: [
+        path.resolve(__dirname, "./fixtures/minify-default-export.js"),
+        async (input, map, options, extractComments) =>
+          terserMinify(input, map, options, extractComments),
+      ],
+    }).apply(compiler);
+
+    await compile(compiler);
+
+    // A worker requires what it is given a path to, and rebuilds what it is
+    // given a function from — one of each leaves the whole task on the second.
+    expect(workerTransform).toHaveBeenCalled();
+    expect(workerMinify).not.toHaveBeenCalled();
+  });
+
   it("should minify by path when extractComments is a RegExp", async () => {
     new MinimizerPlugin({
       parallel: true,
