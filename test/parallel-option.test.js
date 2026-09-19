@@ -156,6 +156,36 @@ describe("parallel option", () => {
     expect(workerMinify).not.toHaveBeenCalled();
   });
 
+  it("should use transform when `extractComments` is a function", async () => {
+    new MinimizerPlugin({
+      parallel: true,
+      extractComments: (astNode, comment) => comment.value.includes("@license"),
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    // The payload reaches a required minimizer as it is, and a structured
+    // clone throws on a function rather than dropping it.
+    expect(workerTransform).toHaveBeenCalled();
+    expect(workerMinify).not.toHaveBeenCalled();
+    expect(getErrors(stats)).toEqual([]);
+  });
+
+  it("should use transform when a minimizer's own options hold a function", async () => {
+    new MinimizerPlugin({
+      parallel: true,
+      minimizerOptions: {
+        format: { comments: (astNode, comment) => comment.value.length > 0 },
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(workerTransform).toHaveBeenCalled();
+    expect(workerMinify).not.toHaveBeenCalled();
+    expect(getErrors(stats)).toEqual([]);
+  });
+
   it("should minify by path when extractComments is a RegExp", async () => {
     new MinimizerPlugin({
       parallel: true,

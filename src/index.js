@@ -222,9 +222,16 @@ const {
  */
 
 /**
+ * A generator is the function itself: nothing `require`s one in a worker, and
+ * the schema takes no module path for it.
+ * @template T
+ * @typedef {BasicMinimizerImplementation<T> & MinimizeFunctionHelpers} GeneratorImplementation
+ */
+
+/**
  * One generator, written as an object stating how to run it.
  * @typedef {object} GeneratorDescriptor
- * @property {MinimizerImplementation<EXPECTED_ANY>} implementation the generator itself
+ * @property {GeneratorImplementation<EXPECTED_ANY>} implementation the generator itself
  * @property {MinimizerOptions<EXPECTED_ANY>=} options options for this generator, preferred over the deprecated `generatorOptions`
  * @property {("import" | "asset")=} type `import` re-encodes a module as it is built, so the import that asked for it is renamed with it; `asset` writes a new file beside one already emitted
  * @property {(string | ((pathData: EXPECTED_ANY) => string))=} filename name for the generated asset, as a webpack filename template or a function answering with one. `asset` generators only
@@ -238,7 +245,7 @@ const {
 /**
  * What `generate` may be written as: one generator, a list of them, a
  * descriptor, or an object naming descriptors an asset asks for with `?as=`.
- * @typedef {MinimizerImplementation<EXPECTED_ANY> | MinimizerImplementation<EXPECTED_ANY>[] | GeneratorDescriptor | { [preset: string]: MinimizerImplementation<EXPECTED_ANY> | MinimizerImplementation<EXPECTED_ANY>[] | GeneratorDescriptor }} Generate
+ * @typedef {GeneratorImplementation<EXPECTED_ANY> | GeneratorImplementation<EXPECTED_ANY>[] | GeneratorDescriptor | { [preset: string]: GeneratorImplementation<EXPECTED_ANY> | GeneratorImplementation<EXPECTED_ANY>[] | GeneratorDescriptor }} Generate
  */
 
 /**

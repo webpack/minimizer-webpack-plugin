@@ -69,6 +69,30 @@ function loadImplementation(implementation) {
 }
 
 /**
+ * Whether a value holds a function anywhere inside it. A worker reached by
+ * module path is handed the payload as it is, and a structured clone throws on
+ * one rather than dropping it.
+ * @param {unknown} value what a worker would be handed
+ * @param {Set<unknown>=} seen values already walked
+ * @returns {boolean} true when a function is in there
+ */
+function holdsFunction(value, seen = new Set()) {
+  if (typeof value === "function") {
+    return true;
+  }
+
+  if (!value || typeof value !== "object" || seen.has(value)) {
+    return false;
+  }
+
+  seen.add(value);
+
+  return Object.values(/** @type {Record<string, unknown>} */ (value)).some(
+    (one) => holdsFunction(one, seen),
+  );
+}
+
+/**
  * True when every `minimizer.implementation` is a module path (`string` or
  * `{ path, export }`). Inline minify functions keep `transform`. When
  * `embedded` is present, *every* configured implementation must be a path —
@@ -94,8 +118,21 @@ function canMinifyByPath(options) {
     return false;
   }
 
+  // `extractComments` and a minimizer's own options both take functions, and
+  // those only ever reached a worker as source.
+  if (
+    holdsFunction(options.extractComments) ||
+    holdsFunction(options.minimizer.options)
+  ) {
+    return false;
+  }
+
   if (!options.embedded) {
     return true;
+  }
+
+  if (holdsFunction(options.embedded.options)) {
+    return false;
   }
 
   const embedded = Array.isArray(options.embedded.implementation)

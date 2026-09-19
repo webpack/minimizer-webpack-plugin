@@ -312,6 +312,7 @@ declare namespace MinimizerPlugin {
     InternalOptions,
     MinimizerWorker,
     Parallel,
+    GeneratorImplementation,
     GeneratorDescriptor,
     Generate,
     BasePluginOptions,
@@ -651,13 +652,19 @@ type MinimizerWorker<T> = JestWorker & {
 };
 type Parallel = undefined | boolean | number;
 /**
+ * A generator is the function itself: nothing `require`s one in a worker, and
+ * the schema takes no module path for it.
+ */
+type GeneratorImplementation<T> = BasicMinimizerImplementation<T> &
+  MinimizeFunctionHelpers;
+/**
  * One generator, written as an object stating how to run it.
  */
 type GeneratorDescriptor = {
   /**
    * the generator itself
    */
-  implementation: MinimizerImplementation<EXPECTED_ANY>;
+  implementation: GeneratorImplementation<EXPECTED_ANY>;
   /**
    * options for this generator, preferred over the deprecated `generatorOptions`
    */
@@ -696,13 +703,13 @@ type GeneratorDescriptor = {
  * descriptor, or an object naming descriptors an asset asks for with `?as=`.
  */
 type Generate =
-  | MinimizerImplementation<EXPECTED_ANY>
-  | MinimizerImplementation<EXPECTED_ANY>[]
+  | GeneratorImplementation<EXPECTED_ANY>
+  | GeneratorImplementation<EXPECTED_ANY>[]
   | GeneratorDescriptor
   | {
       [preset: string]:
-        | MinimizerImplementation<EXPECTED_ANY>
-        | MinimizerImplementation<EXPECTED_ANY>[]
+        | GeneratorImplementation<EXPECTED_ANY>
+        | GeneratorImplementation<EXPECTED_ANY>[]
         | GeneratorDescriptor;
     };
 type BasePluginOptions = {
