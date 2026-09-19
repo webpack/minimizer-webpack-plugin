@@ -72,23 +72,21 @@ declare class MinimizerPlugin<T = import("terser").MinifyOptions> {
    */
   private optimize;
   /**
-   * Every configured minimizer, in order. The `minify` option takes one or an
-   * array; embedded source is dispatched across all of them either way.
+   * One slot per configured minimizer: the option value for workers (path /
+   * function) and the loaded function for helpers (`getTypes`, `filter`, …).
    * @private
-   * @returns {(BasicMinimizerImplementation<EXPECTED_ANY> & MinimizeFunctionHelpers)[]} the minimizers
+   * @returns {{ implementation: MinimizerImplementationValue<EXPECTED_ANY>, fn: BasicMinimizerImplementation<EXPECTED_ANY> & MinimizeFunctionHelpers }[]} loaded slots
    */
-  private minimizers;
+  private getMinimizerSlots;
   /**
-   * Every configured minimizer and its options, for dispatching source one
-   * language embeds in another. The asset's own entry holds only what its
-   * filename matched, and a language's minimizer need not be among them — a
-   * `.css` asset embedding an `<svg>` reaches an SVG minifier that claims no
-   * asset at all.
+   * Build the embedded minimizer payload from already-loaded slots (path or
+   * function kept as configured; `fn` supplies claims / offers).
    * @private
    * @param {number[]} matched indices of the minimizers this input's own entry holds
+   * @param {{ implementation: unknown, fn: BasicMinimizerImplementation<EXPECTED_ANY> & MinimizeFunctionHelpers }[]} slots loaded minimizer slots
    * @returns {{ implementation: MinimizerImplementation<T>, options: MinimizerOptions<T>, claims: string[][], offers: string[][], at: number[] } | undefined} every configured minimizer, or undefined when nothing nested could be reached
    */
-  private embeddedMinimizer;
+  private embeddedFromSlots;
   /**
    * One generator, however it was written: as the generator itself or as an
    * object stating how to run it.
@@ -308,10 +306,13 @@ declare namespace MinimizerPlugin {
     MinimizerOptions,
     BasicMinimizerImplementation,
     MinimizeFunctionHelpers,
+    ImplementationModuleRef,
+    MinimizerImplementationValue,
     MinimizerImplementation,
     InternalOptions,
     MinimizerWorker,
     Parallel,
+    GeneratorImplementation,
     GeneratorDescriptor,
     Generate,
     BasePluginOptions,
@@ -585,12 +586,21 @@ type MinimizeFunctionHelpers = {
    */
   getAssetFlag?: (() => string | undefined) | undefined;
 };
+/**
+ * Module path form of `minimizer.implementation` (like sass-loader): the worker
+ * `require`s it instead of evaluating serialized function source via `new Function`.
+ */
+type ImplementationModuleRef = {
+  path: string;
+  export?: string;
+};
+type MinimizerImplementationValue<T> =
+  | (BasicMinimizerImplementation<T> & MinimizeFunctionHelpers)
+  | string
+  | ImplementationModuleRef;
 type MinimizerImplementation<T> = T extends EXPECTED_ANY[]
-  ? {
-      [P in keyof T]: BasicMinimizerImplementation<T[P]> &
-        MinimizeFunctionHelpers;
-    }
-  : BasicMinimizerImplementation<T> & MinimizeFunctionHelpers;
+  ? { [P in keyof T]: MinimizerImplementationValue<T[P]> }
+  : MinimizerImplementationValue<T>;
 type InternalOptions<T> = {
   /**
    * name
@@ -616,7 +626,7 @@ type InternalOptions<T> = {
     options: MinimizerOptions<T>;
   };
   /**
-   * every configured minimizer, for source one language embeds in another: it carries no filename, so `minimizer` — which holds only what this asset's name matched — is not the set to dispatch it across. `claims` is the languages each minifies and `offers` the languages each can hand out, both as data and both parallel to `implementation`, since a minify function reaches a worker as source and carries none of its properties; `at` says which of them `minimizer` holds. Absent when no nested language is reachable at all
+   * every configured minimizer, for source one language embeds in another: it carries no filename, so `minimizer` — which holds only what this asset's name matched — is not the set to dispatch it across. `claims` / `offers` travel as data parallel to `implementation` so the legacy serialize path still knows what each entry minifies and can nest (a function shipped as source loses its helpers; a module path `require` restores them, but the arrays stay so both paths share one shape). `at` says which of them `minimizer` holds. Absent when no nested language is reachable at all
    */
   embedded?:
     | {
@@ -642,13 +652,19 @@ type MinimizerWorker<T> = JestWorker & {
 };
 type Parallel = undefined | boolean | number;
 /**
+ * A generator is the function itself: nothing `require`s one in a worker, and
+ * the schema takes no module path for it.
+ */
+type GeneratorImplementation<T> = BasicMinimizerImplementation<T> &
+  MinimizeFunctionHelpers;
+/**
  * One generator, written as an object stating how to run it.
  */
 type GeneratorDescriptor = {
   /**
    * the generator itself
    */
-  implementation: MinimizerImplementation<EXPECTED_ANY>;
+  implementation: GeneratorImplementation<EXPECTED_ANY>;
   /**
    * options for this generator, preferred over the deprecated `generatorOptions`
    */
@@ -687,13 +703,13 @@ type GeneratorDescriptor = {
  * descriptor, or an object naming descriptors an asset asks for with `?as=`.
  */
 type Generate =
-  | MinimizerImplementation<EXPECTED_ANY>
-  | MinimizerImplementation<EXPECTED_ANY>[]
+  | GeneratorImplementation<EXPECTED_ANY>
+  | GeneratorImplementation<EXPECTED_ANY>[]
   | GeneratorDescriptor
   | {
       [preset: string]:
-        | MinimizerImplementation<EXPECTED_ANY>
-        | MinimizerImplementation<EXPECTED_ANY>[]
+        | GeneratorImplementation<EXPECTED_ANY>
+        | GeneratorImplementation<EXPECTED_ANY>[]
         | GeneratorDescriptor;
     };
 type BasePluginOptions = {

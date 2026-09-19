@@ -353,3 +353,13 @@ exports[`worker should match snapshot with options.inputSourceMap 1`] = `
   "warnings": [],
 }
 `;
+
+exports[`worker should minify via implementation path without serialize/new Function 1`] = `
+{
+  "code": "var foo=1;",
+  "errors": [],
+  "extractedComments": [],
+  "map": undefined,
+  "warnings": [],
+}
+`;

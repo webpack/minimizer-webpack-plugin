@@ -2,6 +2,11 @@
 /** @typedef {import("./index.js").CustomOptions} CustomOptions */
 /** @typedef {import("./index.js").RawSourceMap} RawSourceMap */
 /** @typedef {import("./index.js").EXPECTED_ANY} EXPECTED_ANY */
+/** @typedef {import("./index.js").MinimizeFunctionHelpers} MinimizeFunctionHelpers */
+/**
+ * A concrete minify function, including optional worker-path helpers.
+ * @typedef {import("./index.js").BasicMinimizerImplementation<CustomOptions> & MinimizeFunctionHelpers} MinimizerFn
+ */
 /**
  * @template T
  * @typedef {import("./index.js").MinimizerOptions<T>} MinimizerOptions
@@ -299,6 +304,8 @@ function composeSourceMaps(currentMap, prevMap, name) {
 }
 /* eslint-enable prefer-destructuring, no-eq-null, eqeqeq */
 
+const { loadImplementation } = require("./implementation");
+
 /**
  * @template T
  * @param {import("./index.js").InternalOptions<T>} options options
@@ -463,7 +470,7 @@ async function minify(options) {
   for (let i = 0; i < implementations.length; i++) {
     const currentImplementation =
       /** @type {import("./index.js").BasicMinimizerImplementation<T> & import("./index.js").MinimizeFunctionHelpers} */
-      (implementations[i]);
+      (loadImplementation(implementations[i]));
     const baseOptions =
       /** @type {import("./index.js").MinimizerOptions<T> & { module?: boolean, ecma?: number | string }} */
       (optionsAt(i));
@@ -561,6 +568,9 @@ async function minify(options) {
  * @returns {Promise<MinimizedResult>} minified result
  */
 async function transform(options) {
+  // Legacy worker path: the whole task (including minify function source) is a
+  // string evaluated here. Prefer `minify` when every `implementation` is a
+  // module path (`string` / `{ path, export }`) so the worker can `require` it.
   // 'use strict' => this === undefined (Clean Scope)
   // Safer for possible security issues, albeit not critical at all here
 
@@ -585,4 +595,7 @@ async function transform(options) {
   return minify(evaluatedOptions);
 }
 
-module.exports = { minify, transform };
+module.exports = {
+  minify,
+  transform,
+};

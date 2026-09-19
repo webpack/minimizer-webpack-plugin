@@ -3,8 +3,9 @@ import path from "path";
 
 import { Worker } from "jest-worker";
 
+import { canMinifyByPath } from "../src/implementation.js";
 import MinimizerPlugin from "../src/index";
-import { transform } from "../src/minify.js";
+import { minify as minifyWorker, transform } from "../src/minify.js";
 import serialize from "../src/serialize-javascript.js";
 import { terserMinify } from "../src/utils.js";
 
@@ -31,6 +32,7 @@ jest.mock("os", () => {
 
 // Based on https://github.com/facebook/jest/blob/edde20f75665c2b1e3c8937f758902b5cf28a7b4/packages/jest-runner/src/__tests__/test_runner.test.js
 let workerTransform;
+let workerMinify;
 let workerEnd;
 
 const ENABLE_WORKER_THREADS =
@@ -42,6 +44,9 @@ jest.mock("jest-worker", () => ({
   Worker: jest.fn().mockImplementation((workerPath) => ({
     transform: (workerTransform = jest.fn((data) =>
       require(workerPath).transform(data),
+    )),
+    minify: (workerMinify = jest.fn((data) =>
+      require(workerPath).minify(data),
     )),
     end: (workerEnd = jest.fn()),
     getStderr: jest.fn(),
@@ -85,14 +90,112 @@ describe("parallel option", () => {
       enableWorkerThreads: ENABLE_WORKER_THREADS,
       numWorkers: getParallelism() - 1,
     });
-    expect(workerTransform).toHaveBeenCalledTimes(
+    expect(workerMinify).toHaveBeenCalledTimes(
       Object.keys(stats.compilation.assets).length,
     );
+    expect(workerTransform).not.toHaveBeenCalled();
+    expect(workerMinify.mock.calls[0][0].minimizer.implementation).toEqual([
+      {
+        path: require.resolve("../src/utils.js"),
+        export: "terserMinify",
+      },
+    ]);
     expect(workerEnd).toHaveBeenCalledTimes(1);
 
     expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
     expect(getErrors(stats)).toMatchSnapshot("errors");
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should use transform when implementation is an inline function", async () => {
+    const impl = async (input, map, options, extractComments) =>
+      terserMinify(input, map, options, extractComments);
+
+    new MinimizerPlugin({ parallel: true, minify: impl }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(Worker).toHaveBeenCalledTimes(1);
+    expect(workerTransform).toHaveBeenCalledTimes(
+      Object.keys(stats.compilation.assets).length,
+    );
+    expect(workerMinify).not.toHaveBeenCalled();
+    expect(workerEnd).toHaveBeenCalledTimes(1);
+  });
+
+  it("should minify by path when implementation is a module path string", async () => {
+    new MinimizerPlugin({
+      parallel: true,
+      minify: path.resolve(__dirname, "./fixtures/minify-default-export.js"),
+    }).apply(compiler);
+
+    await compile(compiler);
+
+    expect(workerMinify).toHaveBeenCalled();
+    expect(workerTransform).not.toHaveBeenCalled();
+    expect(workerMinify.mock.calls[0][0].minimizer.implementation).toEqual([
+      path.resolve(__dirname, "./fixtures/minify-default-export.js"),
+    ]);
+  });
+
+  it("should use transform where one of several is an inline function", async () => {
+    new MinimizerPlugin({
+      parallel: true,
+      minify: [
+        path.resolve(__dirname, "./fixtures/minify-default-export.js"),
+        async (input, map, options, extractComments) =>
+          terserMinify(input, map, options, extractComments),
+      ],
+    }).apply(compiler);
+
+    await compile(compiler);
+
+    // A worker requires what it is given a path to, and rebuilds what it is
+    // given a function from — one of each leaves the whole task on the second.
+    expect(workerTransform).toHaveBeenCalled();
+    expect(workerMinify).not.toHaveBeenCalled();
+  });
+
+  it("should use transform when `extractComments` is a function", async () => {
+    new MinimizerPlugin({
+      parallel: true,
+      extractComments: (astNode, comment) => comment.value.includes("@license"),
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    // The payload reaches a required minimizer as it is, and a structured
+    // clone throws on a function rather than dropping it.
+    expect(workerTransform).toHaveBeenCalled();
+    expect(workerMinify).not.toHaveBeenCalled();
+    expect(getErrors(stats)).toEqual([]);
+  });
+
+  it("should use transform when a minimizer's own options hold a function", async () => {
+    new MinimizerPlugin({
+      parallel: true,
+      minimizerOptions: {
+        format: { comments: (astNode, comment) => comment.value.length > 0 },
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(workerTransform).toHaveBeenCalled();
+    expect(workerMinify).not.toHaveBeenCalled();
+    expect(getErrors(stats)).toEqual([]);
+  });
+
+  it("should minify by path when extractComments is a RegExp", async () => {
+    new MinimizerPlugin({
+      parallel: true,
+      extractComments: /license/i,
+    }).apply(compiler);
+
+    await compile(compiler);
+
+    expect(workerMinify).toHaveBeenCalled();
+    expect(workerTransform).not.toHaveBeenCalled();
   });
 
   it('should match snapshot for the "false" value', async () => {
@@ -117,7 +220,7 @@ describe("parallel option", () => {
       enableWorkerThreads: ENABLE_WORKER_THREADS,
       numWorkers: getParallelism() - 1,
     });
-    expect(workerTransform).toHaveBeenCalledTimes(
+    expect(workerMinify).toHaveBeenCalledTimes(
       Object.keys(stats.compilation.assets).length,
     );
     expect(workerEnd).toHaveBeenCalledTimes(1);
@@ -137,7 +240,7 @@ describe("parallel option", () => {
       enableWorkerThreads: ENABLE_WORKER_THREADS,
       numWorkers: getParallelism() - 1,
     });
-    expect(workerTransform).toHaveBeenCalledTimes(
+    expect(workerMinify).toHaveBeenCalledTimes(
       Object.keys(stats.compilation.assets).length,
     );
     expect(workerEnd).toHaveBeenCalledTimes(1);
@@ -157,7 +260,7 @@ describe("parallel option", () => {
       enableWorkerThreads: ENABLE_WORKER_THREADS,
       numWorkers: 2,
     });
-    expect(workerTransform).toHaveBeenCalledTimes(
+    expect(workerMinify).toHaveBeenCalledTimes(
       Object.keys(stats.compilation.assets).length,
     );
     expect(workerEnd).toHaveBeenCalledTimes(1);
@@ -181,7 +284,7 @@ describe("parallel option", () => {
       enableWorkerThreads: ENABLE_WORKER_THREADS,
       numWorkers: Math.min(1, os.cpus().length - 1),
     });
-    expect(workerTransform).toHaveBeenCalledTimes(
+    expect(workerMinify).toHaveBeenCalledTimes(
       Object.keys(stats.compilation.assets).length,
     );
     expect(workerEnd).toHaveBeenCalledTimes(1);
@@ -209,7 +312,7 @@ describe("parallel option", () => {
       enableWorkerThreads: ENABLE_WORKER_THREADS,
       numWorkers: Math.min(Object.keys(entries).length, os.cpus().length - 1),
     });
-    expect(workerTransform).toHaveBeenCalledTimes(
+    expect(workerMinify).toHaveBeenCalledTimes(
       Object.keys(stats.compilation.assets).length,
     );
     expect(workerEnd).toHaveBeenCalledTimes(1);
@@ -237,7 +340,7 @@ describe("parallel option", () => {
       enableWorkerThreads: ENABLE_WORKER_THREADS,
       numWorkers: Math.min(Object.keys(entries).length, os.cpus().length - 1),
     });
-    expect(workerTransform).toHaveBeenCalledTimes(
+    expect(workerMinify).toHaveBeenCalledTimes(
       Object.keys(stats.compilation.assets).length,
     );
     expect(workerEnd).toHaveBeenCalledTimes(1);
@@ -276,7 +379,7 @@ describe("parallel option", () => {
       enableWorkerThreads: ENABLE_WORKER_THREADS,
       numWorkers: Math.min(Object.keys(entries).length, os.cpus().length - 1),
     });
-    expect(workerTransform).toHaveBeenCalledTimes(
+    expect(workerMinify).toHaveBeenCalledTimes(
       Object.keys(stats.compilation.assets).length,
     );
     expect(workerEnd).toHaveBeenCalledTimes(1);
@@ -307,6 +410,27 @@ describe("parallel option", () => {
 });
 
 describe("worker", () => {
+  it("should minify via implementation path without serialize/new Function", async () => {
+    const options = {
+      name: "test1.js",
+      input: "var foo = 1;/* hello */",
+      minimizer: {
+        implementation: {
+          path: require.resolve("../src/utils.js"),
+          export: "terserMinify",
+        },
+      },
+      extractComments: false,
+    };
+
+    expect(canMinifyByPath(options)).toBe(true);
+
+    const workerResult = await minifyWorker(options);
+
+    expect(workerResult.code).toContain("foo");
+    expect(workerResult).toMatchSnapshot();
+  });
+
   it('should match snapshot when options.extractComments is "false"', async () => {
     const options = {
       name: "test1.js",
