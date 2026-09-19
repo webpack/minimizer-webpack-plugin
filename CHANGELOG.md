@@ -1,5 +1,21 @@
 # Changelog
 
+## 5.11.0
+
+### Minor Changes
+
+- let a minimizer or generator say which `processAssets` stage it runs in and what name its work goes under in an asset's info, through a `getStage` and a `getAssetFlag` on the function — the way it declares everything else — and ship `MinimizerPlugin.compress`, which takes the `algorithm` to run and the `compressionOptions` to run it with, works under `compressed` rather than `minimized` or `generated`, and goes to `minify` to compress an asset in place or to `generate` to write the compressed file beside it (by [@alexander-akait](https://github.com/alexander-akait) in [#737](https://github.com/webpack/minimizer-webpack-plugin/pull/737))
+
+- Add `threshold`, `minRatio` and `relatedName` to an `asset` generator, let `deleteOriginalAssets` be a function and take the original file alone, take a `filename` function, read `minify: []` as nothing to minify rather than `false`, and type what `minify` has long accepted. (by [@alexander-akait](https://github.com/alexander-akait) in [#742](https://github.com/webpack/minimizer-webpack-plugin/pull/742))
+
+- Rename the exported class to `MinimizerPlugin` and say so in diagnostics. (by [@alexander-akait](https://github.com/alexander-akait) in [#739](https://github.com/webpack/minimizer-webpack-plugin/pull/739))
+
+### Patch Changes
+
+- Fix an `asset` generator corrupting binary, re-emitting unchanged files, and writing a file it errored on. (by [@alexander-akait](https://github.com/alexander-akait) in [#740](https://github.com/webpack/minimizer-webpack-plugin/pull/740))
+
+- cover that a pass at a second stage adds no worker pool to the one before it. (by [@alexander-akait](https://github.com/alexander-akait) in [#741](https://github.com/webpack/minimizer-webpack-plugin/pull/741))
+
 ## 5.10.1
 
 ### Patch Changes
