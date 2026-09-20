@@ -156,6 +156,43 @@ describe("parallel option", () => {
     expect(workerMinify).not.toHaveBeenCalled();
   });
 
+  it("should cache a path minimizer apart from another path", async () => {
+    /**
+     * @param {string} fixture the minimizer's module
+     * @returns {Promise<string[]>} the cache identifiers it asked for
+     */
+    const identifiersFrom = async (fixture) => {
+      const own = getCompiler({
+        entry: { one: path.resolve(__dirname, "./fixtures/entry.js") },
+      });
+      const asked = [];
+
+      own.cache.hooks.get.tap({ name: "ReadCacheKeys", stage: -100 }, (id) => {
+        if (id.includes("TerserWebpackPlugin")) {
+          asked.push(id);
+        }
+      });
+      new MinimizerPlugin({
+        parallel: true,
+        minify: path.resolve(__dirname, fixture),
+      }).apply(own);
+
+      await compile(own);
+
+      return asked;
+    };
+
+    const first = await identifiersFrom("./fixtures/minify-default-export.js");
+    const second = await identifiersFrom(
+      "./fixtures/minify-default-property.js",
+    );
+
+    // Neither module reports a version, so the path is all that tells them
+    // apart — a warm cache would otherwise answer for whichever ran first.
+    expect(first.length).toBeGreaterThan(0);
+    expect(second).not.toEqual(first);
+  });
+
   it("should use transform when `extractComments` is a function", async () => {
     new MinimizerPlugin({
       parallel: true,

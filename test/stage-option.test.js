@@ -517,6 +517,51 @@ describe("a minimizer that asks for its own stage", () => {
     expect(getErrors(stats)).toEqual([]);
   });
 
+  it("should run a minimizer named by module path where it asks", async () => {
+    /**
+     * @param {EXPECTED_ANY} minify what to minify with
+     * @returns {Promise<{ names: string[], printed: string }>} what it emitted
+     */
+    const emittedBy = async (minify) => {
+      const own = getCompiler({
+        entry: { one: path.resolve(__dirname, "./fixtures/entry.js") },
+        output: {
+          path: path.resolve(__dirname, "./dist"),
+          filename: "[name].[contenthash].js",
+        },
+      });
+
+      new MinimizerPlugin({
+        test: /\.js$/i,
+        parallel: false,
+        minify,
+        minimizerOptions: { algorithm: "gzip" },
+      }).apply(own);
+
+      const stats = await compile(own);
+
+      return {
+        names: Object.keys(stats.compilation.assets).sort(),
+        printed: stats.toString({ relatedAssets: true }),
+      };
+    };
+
+    const byFunction = await emittedBy(MinimizerPlugin.compress);
+    // The helpers saying where it runs and what it marks are on the loaded
+    // function, not on this reference.
+    const byPath = await emittedBy({
+      path: require.resolve("../src/utils.js"),
+      export: "compress",
+    });
+
+    // `compress` asks to run after the hash is taken, so the name is of what
+    // was compressed rather than of the compressed bytes — either way of
+    // naming it.
+    expect(byPath.names).toEqual(byFunction.names);
+    expect(byPath.printed).toContain("[compressed]");
+    expect(byPath.printed).not.toContain("[minimized]");
+  });
+
   it("should put `compress` after the minimizers on its own", async () => {
     const order = [];
 

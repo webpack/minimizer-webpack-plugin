@@ -659,7 +659,7 @@ class MinimizerPlugin {
    * @param {Compiler} compiler compiler
    * @param {Compilation} compilation compilation
    * @param {Record<string, import("webpack").sources.Source>} assets assets
-   * @param {{ availableNumberOfCores: number, only?: number[], cacheSuffix?: string, written: Map<string, Set<string>> }} optimizeOptions how many may run at once, which minimizers this pass runs, what keeps its cache apart from another pass over the same asset, and what an earlier pass of this plugin already wrote onto each asset
+   * @param {{ availableNumberOfCores: number, only?: number[], cacheSuffix?: string, written: Map<string, Set<string>> }} optimizeOptions how many may run at once, which minimizers this pass runs, what keeps its cache apart from another pass over the same asset and from a run under different minimizers, and what an earlier pass of this plugin already wrote onto each asset
    * @returns {Promise<void>}
    */
   async optimize(compiler, compilation, assets, optimizeOptions) {
@@ -1537,11 +1537,10 @@ class MinimizerPlugin {
   assetFlags() {
     const flags = new Set();
 
-    for (const flag of declaredFlags(
-      this.options.minimizer.implementation,
-      "minimized",
-    )) {
-      flags.add(flag);
+    for (const { fn } of this.getMinimizerSlots()) {
+      for (const flag of declaredFlags(fn, "minimized")) {
+        flags.add(flag);
+      }
     }
 
     // Only the generators that write a file: an `import` one rewrites a module
@@ -1915,16 +1914,15 @@ class MinimizerPlugin {
    * @returns {Map<number, number[]>} the indices, by stage
    */
   minimizersByStage(compiler) {
-    const { implementation } = this.options.minimizer;
-    const each = Array.isArray(implementation)
-      ? implementation
-      : [implementation];
+    // The loaded functions rather than what was configured: a module reference
+    // carries none of the helpers that say where its minimizer runs.
+    const each = this.getMinimizerSlots();
     const fallback = this.defaultStage(compiler);
     /** @type {Map<number, number[]>} */
     const byStage = new Map();
 
     for (let i = 0; i < each.length; i++) {
-      const asked = declaredStage(compiler, each[i]);
+      const asked = declaredStage(compiler, each[i].fn);
       const at = typeof asked === "number" ? asked : fallback;
       const already = byStage.get(at);
 
@@ -2419,20 +2417,22 @@ class MinimizerPlugin {
       const getVersion = (impl) => {
         // Path refs need a load; functions already carry helpers. Preset maps
         // and other shapes are not a single minimizer — keep the prior "0.0.0".
+        const ref = getImplementationModuleRef(impl);
         const fn =
           typeof impl === "function"
             ? impl
-            : getImplementationModuleRef(impl)
+            : ref
               ? loadImplementation(impl)
               : undefined;
+        const version =
+          fn && typeof fn.getMinimizerVersion !== "undefined"
+            ? fn.getMinimizerVersion() || "0.0.0"
+            : "0.0.0";
 
-        if (!fn) {
-          return "0.0.0";
-        }
-
-        return typeof fn.getMinimizerVersion !== "undefined"
-          ? fn.getMinimizerVersion() || "0.0.0"
-          : "0.0.0";
+        // Which module it is, not only what version it reports: two paths that
+        // report none are otherwise one identity, and a warm cache would answer
+        // for whichever ran first.
+        return ref ? `${version}|${ref.path}|${ref.export || ""}` : version;
       };
       const data = getSerializeJavascript()({
         minimizer: Array.isArray(this.options.minimizer.implementation)
@@ -2443,6 +2443,11 @@ class MinimizerPlugin {
             ),
         options: this.options.minimizer.options,
       });
+      const identity = crypto
+        .createHash("sha256")
+        .update(data)
+        .digest("hex")
+        .slice(0, 16);
 
       hooks.chunkHash.tap(pluginName, (chunk, hash) => {
         // Nothing minifying rewrites nothing, so no name owes it a hash of its
@@ -2563,7 +2568,10 @@ class MinimizerPlugin {
               written,
               // Only where a second pass exists to be confused with: one pass
               // keeps the cache keys every earlier release wrote.
-              cacheSuffix: minimizersByStage.size > 1 ? `|${at}` : "",
+              // The minimizers and their options answer for what is cached
+              // under an asset's name, which otherwise varies only with its
+              // source.
+              cacheSuffix: `${minimizersByStage.size > 1 ? `|${at}` : ""}|${identity}`,
             }),
         );
       }
