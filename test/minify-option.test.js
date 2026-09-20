@@ -1864,4 +1864,32 @@ describe("minify option written as an object", () => {
       }),
     ).toThrow(/`minify` sets its own `options`/);
   });
+
+  it("should emit the same file wherever the minimizer's module sits", async () => {
+    /**
+     * @param {string} fixture the minimizer's module
+     * @returns {Promise<string[]>} the names it emitted
+     */
+    const namesFrom = async (fixture) => {
+      const compiler = getCompiler({
+        entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+        output: {
+          path: path.resolve(__dirname, "./dist-terser"),
+          filename: "[name].[fullhash].js",
+        },
+      });
+
+      new MinimizerPlugin({
+        minify: path.resolve(__dirname, fixture),
+      }).apply(compiler);
+
+      return Object.keys((await compile(compiler)).compilation.assets);
+    };
+
+    // Both modules minify identically, so only where they sit differs — and
+    // where a module sits is where the checkout is, not what the build emits.
+    expect(
+      await namesFrom("./fixtures/minify-default-export.js"),
+    ).toStrictEqual(await namesFrom("./fixtures/minify-default-property.js"));
+  });
 });

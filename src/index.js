@@ -2424,15 +2424,18 @@ class MinimizerPlugin {
             : ref
               ? loadImplementation(impl)
               : undefined;
-        const version =
-          fn && typeof fn.getMinimizerVersion !== "undefined"
-            ? fn.getMinimizerVersion() || "0.0.0"
-            : "0.0.0";
+        return fn && typeof fn.getMinimizerVersion !== "undefined"
+          ? fn.getMinimizerVersion() || "0.0.0"
+          : "0.0.0";
+      };
+      /**
+       * @param {MinimizerImplementationValue<EXPECTED_ANY>} impl implementation
+       * @returns {string} which module it is, where one names it
+       */
+      const getModuleRef = (impl) => {
+        const ref = getImplementationModuleRef(impl);
 
-        // Which module it is, not only what version it reports: two paths that
-        // report none are otherwise one identity, and a warm cache would answer
-        // for whichever ran first.
-        return ref ? `${version}|${ref.path}|${ref.export || ""}` : version;
+        return ref ? `${ref.path}|${ref.export || ""}` : "";
       };
       const data = getSerializeJavascript()({
         minimizer: Array.isArray(this.options.minimizer.implementation)
@@ -2443,9 +2446,21 @@ class MinimizerPlugin {
             ),
         options: this.options.minimizer.options,
       });
+      // What an asset is cached under, never what it hashes to: where a
+      // module sits is where the checkout is, not what the build emits.
       const identity = crypto
         .createHash("sha256")
         .update(data)
+        .update(
+          getSerializeJavascript()(
+            Array.isArray(this.options.minimizer.implementation)
+              ? this.options.minimizer.implementation.map(getModuleRef)
+              : getModuleRef(
+                  /** @type {MinimizerImplementationValue<EXPECTED_ANY>} */
+                  (this.options.minimizer.implementation),
+                ),
+          ),
+        )
         .digest("hex")
         .slice(0, 16);
 
