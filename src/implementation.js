@@ -87,6 +87,18 @@ function holdsFunction(value, seen = new Set()) {
 
   seen.add(value);
 
+  // A structured clone carries a `Map` or a `Set` but not what it holds, and
+  // neither answers to `Object.values`.
+  if (value instanceof Map) {
+    return [...value].some(
+      ([key, one]) => holdsFunction(key, seen) || holdsFunction(one, seen),
+    );
+  }
+
+  if (value instanceof Set) {
+    return [...value].some((one) => holdsFunction(one, seen));
+  }
+
   return Object.values(/** @type {Record<string, unknown>} */ (value)).some(
     (one) => holdsFunction(one, seen),
   );

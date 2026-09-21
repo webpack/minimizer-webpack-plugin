@@ -1,6 +1,8 @@
 import fs from "fs";
 import path from "path";
 
+import del from "del";
+
 import MinimizerPlugin from "../src";
 import {
   cleanCssMinify,
@@ -1866,13 +1868,25 @@ describe("minify option written as an object", () => {
   });
 
   it("should emit the same file wherever the minimizer's module sits", async () => {
+    const roots = path.resolve(__dirname, "./helpers/dist/checkouts");
+    const minimizer =
+      "module.exports = (input) => ({ code: Object.values(input)[0] });\n";
+    const entry = 'export default "one";\n';
+
     /**
-     * @param {string} fixture the minimizer's module
+     * @param {string} root a checkout of the same two files
      * @returns {Promise<string[]>} the names it emitted
      */
-    const namesFrom = async (fixture) => {
+    const namesFrom = async (root) => {
+      const context = path.join(roots, root, "src");
+
+      fs.mkdirSync(context, { recursive: true });
+      fs.writeFileSync(path.join(roots, root, "mini.js"), minimizer);
+      fs.writeFileSync(path.join(context, "entry.js"), entry);
+
       const compiler = getCompiler({
-        entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+        context,
+        entry: "./entry.js",
         output: {
           path: path.resolve(__dirname, "./dist-terser"),
           filename: "[name].[fullhash].js",
@@ -1880,16 +1894,16 @@ describe("minify option written as an object", () => {
       });
 
       new MinimizerPlugin({
-        minify: path.resolve(__dirname, fixture),
+        minify: path.join(roots, root, "mini.js"),
       }).apply(compiler);
 
       return Object.keys((await compile(compiler)).compilation.assets);
     };
 
-    // Both modules minify identically, so only where they sit differs — and
-    // where a module sits is where the checkout is, not what the build emits.
-    expect(
-      await namesFrom("./fixtures/minify-default-export.js"),
-    ).toStrictEqual(await namesFrom("./fixtures/minify-default-property.js"));
+    // The same minimizer, in the same place relative to the build, under two
+    // different roots: what is emitted cannot vary with where the checkout is.
+    expect(await namesFrom("one")).toStrictEqual(await namesFrom("two"));
+
+    await del(roots);
   });
 });

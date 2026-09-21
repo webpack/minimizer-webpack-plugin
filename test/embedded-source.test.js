@@ -448,6 +448,62 @@ describe("embedded source", () => {
     await del(cacheDirectory);
   });
 
+  it("does not answer an embedded source from a cache another module filled", async () => {
+    const cacheDirectory = path.resolve(
+      __dirname,
+      "helpers/dist/embedded-module-cache",
+    );
+
+    await del(cacheDirectory);
+
+    /**
+     * @param {string} name the CSS minimizer's module, under `fixtures/embedded`
+     * @returns {Promise<string>} the stylesheet as it was embedded
+     */
+    const buildWith = async (name) => {
+      const compiler = getCompiler({
+        entry: fixture("entry-length.js"),
+        target: "node",
+        cache: { type: "filesystem", cacheDirectory },
+        experiments: { css: true },
+        module: {
+          rules: [
+            {
+              test: /\.css$/,
+              type: "css/auto",
+              parser: { exportType: "text" },
+            },
+          ],
+        },
+      });
+
+      defaultPlugin({
+        minify: [MinimizerPlugin.terserMinify, fixture(name)],
+        minimizerOptions: [{}, {}],
+      }).apply(compiler);
+
+      const stats = await compile(compiler);
+
+      expect(getErrors(stats)).toEqual([]);
+
+      const embedded = exported(compiler, stats);
+
+      await new Promise((resolve) => {
+        compiler.close(() => resolve());
+      });
+
+      return embedded;
+    };
+
+    // Neither module reports a version and their options match, so where each
+    // one sits is all that tells the two entries apart.
+    expect(await buildWith("css-says-one.js")).toBe(".a{--said:one}");
+    expect(await buildWith("css-says-two.js")).toBe(".a{--said:two}");
+    expect(await buildWith("css-says-one.js")).toBe(".a{--said:one}");
+
+    await del(cacheDirectory);
+  });
+
   it("keeps the map a source carried into what it is embedded as", async () => {
     const compiler = getCompiler({
       entry: fixture("entry-mapped.js"),

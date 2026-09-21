@@ -131,6 +131,39 @@ describe("canMinifyByPath", () => {
     ).toBe(false);
   });
 
+  it("should reject a function a `Map` option holds", () => {
+    expect(
+      canMinifyByPath({
+        minimizer: {
+          implementation: pathImpl,
+          options: { rules: new Map([["one", () => true]]) },
+        },
+      }),
+    ).toBe(false);
+  });
+
+  it("should reject a function a `Set` option holds", () => {
+    expect(
+      canMinifyByPath({
+        minimizer: {
+          implementation: pathImpl,
+          options: { rules: new Set([() => true]) },
+        },
+      }),
+    ).toBe(false);
+  });
+
+  it("should allow a `Map` option holding no function", () => {
+    expect(
+      canMinifyByPath({
+        minimizer: {
+          implementation: pathImpl,
+          options: { rules: new Map([["one", "two"]]) },
+        },
+      }),
+    ).toBe(true);
+  });
+
   it("should allow embedded when every implementation is a path", () => {
     expect(
       canMinifyByPath({
