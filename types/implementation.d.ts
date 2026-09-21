@@ -39,3 +39,12 @@ export function getImplementationModuleRef(
  * @returns {MinimizerFn} the minify function
  */
 export function loadImplementation(implementation: unknown): MinimizerFn;
+/**
+ * The file `loadImplementation` would `require`, which is what tells two
+ * references apart: a bare specifier and a file of that name are not one module.
+ * @param {unknown} implementation a minify function, module path, or path ref
+ * @returns {string | undefined} its resolved module, or nothing where no module is named
+ */
+export function resolveImplementationModule(
+  implementation: unknown,
+): string | undefined;

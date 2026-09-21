@@ -1875,9 +1875,10 @@ describe("minify option written as an object", () => {
 
     /**
      * @param {string} root a checkout of the same two files
+     * @param {string} named how the minimizer's module is spelled
      * @returns {Promise<string[]>} the names it emitted
      */
-    const namesFrom = async (root) => {
+    const namesFrom = async (root, named = "mini.js") => {
       const context = path.join(roots, root, "src");
 
       fs.mkdirSync(context, { recursive: true });
@@ -1894,7 +1895,7 @@ describe("minify option written as an object", () => {
       });
 
       new MinimizerPlugin({
-        minify: path.join(roots, root, "mini.js"),
+        minify: path.join(roots, root, named),
       }).apply(compiler);
 
       return Object.keys((await compile(compiler)).compilation.assets);
@@ -1903,6 +1904,12 @@ describe("minify option written as an object", () => {
     // The same minimizer, in the same place relative to the build, under two
     // different roots: what is emitted cannot vary with where the checkout is.
     expect(await namesFrom("one")).toStrictEqual(await namesFrom("two"));
+
+    // And one module named two ways is still one module, which only the file
+    // `require` would reach says.
+    expect(await namesFrom("one", "mini")).toStrictEqual(
+      await namesFrom("one", "mini.js"),
+    );
 
     await del(roots);
   });

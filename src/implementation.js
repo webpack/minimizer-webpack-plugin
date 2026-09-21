@@ -154,8 +154,21 @@ function canMinifyByPath(options) {
   return embedded.every(hasPath);
 }
 
+/**
+ * The file `loadImplementation` would `require`, which is what tells two
+ * references apart: a bare specifier and a file of that name are not one module.
+ * @param {unknown} implementation a minify function, module path, or path ref
+ * @returns {string | undefined} its resolved module, or nothing where no module is named
+ */
+function resolveImplementationModule(implementation) {
+  const ref = getImplementationModuleRef(implementation);
+
+  return ref ? require.resolve(ref.path) : undefined;
+}
+
 module.exports = {
   canMinifyByPath,
   getImplementationModuleRef,
   loadImplementation,
+  resolveImplementationModule,
 };

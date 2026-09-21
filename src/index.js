@@ -6,6 +6,7 @@ const {
   canMinifyByPath,
   getImplementationModuleRef,
   loadImplementation,
+  resolveImplementationModule,
 } = require("./implementation");
 const { minify } = require("./minify");
 const {
@@ -2437,7 +2438,10 @@ class MinimizerPlugin {
         // paths reporting no version are otherwise one identity, and an
         // absolute one would answer differently in another checkout.
         const where = path
-          .relative(compiler.context, ref.path)
+          .relative(
+            compiler.context,
+            resolveImplementationModule(impl) || ref.path,
+          )
           .replace(/\\/g, "/");
 
         return `${version}|${where}|${ref.export || ""}`;
