@@ -545,7 +545,9 @@ async function minify(options) {
       // the final map points back to the original sources. Bytes carry none.
       lastMap = Buffer.isBuffer(result.code)
         ? undefined
-        : composeSourceMaps(result.map, currentMap, name);
+        : implementations.length === 1
+          ? result.map
+          : composeSourceMaps(result.map, currentMap, name);
     }
   }
 
