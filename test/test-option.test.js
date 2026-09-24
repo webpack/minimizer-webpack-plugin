@@ -139,21 +139,65 @@ describe("test option", () => {
             : "[name].js#[fullhash]",
         assetModuleFilename: "[name][ext][query][fragment]",
       },
+      plugins: [
+        {
+          // Emitted as a copy would be: no `javascriptModule`, so the name decides.
+          apply(childCompiler) {
+            childCompiler.hooks.thisCompilation.tap("Copy", (compilation) => {
+              compilation.hooks.processAssets.tap(
+                {
+                  name: "Copy",
+                  stage:
+                    childCompiler.webpack.Compilation
+                      .PROCESS_ASSETS_STAGE_ADDITIONAL,
+                },
+                () => {
+                  const { RawSource } = childCompiler.webpack.sources;
+
+                  for (const name of ["copy.mjs#m", "copy.cjs#c"]) {
+                    compilation.emitAsset(
+                      name,
+                      new RawSource("var foo = 12;\nconsole.log(foo);\n"),
+                    );
+                  }
+                },
+              );
+            });
+          },
+        },
+      ],
     });
 
+    // What `.mjs` / `.cjs` read as, which the name decides past the fragment.
+    const moduleByName = new Map();
+    const terserMinify = (input, sourceMap, minimizerOptions) => {
+      for (const name of Object.keys(input)) {
+        moduleByName.set(name.replace(/#.*$/, ""), minimizerOptions.module);
+      }
+
+      return MinimizerPlugin.terserMinify(input, sourceMap, minimizerOptions);
+    };
+    Object.assign(terserMinify, MinimizerPlugin.terserMinify);
+
     new MinimizerPlugin({
+      parallel: false,
       test: /\.(?:[cm]?js|json)$/i,
-      minify: [MinimizerPlugin.terserMinify, MinimizerPlugin.jsonMinify],
+      minify: [terserMinify, MinimizerPlugin.jsonMinify],
     }).apply(compiler);
 
     const stats = await compile(compiler);
     const assets = readsAssets(compiler, stats);
     const names = Object.keys(assets);
 
+    expect(moduleByName.get("copy.mjs")).toBe(true);
+    expect(moduleByName.get("copy.cjs")).toBe(false);
+
     expect(names).toEqual(
       expect.arrayContaining([
         expect.stringMatching(/^js\.js#[0-9a-f]+$/),
         expect.stringMatching(/^mjs\.mjs#[0-9a-f]+$/),
+        "copy.mjs#m",
+        "copy.cjs#c",
         "file.json#data",
       ]),
     );
