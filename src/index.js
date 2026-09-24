@@ -1110,13 +1110,18 @@ class MinimizerPlugin {
             let query = "";
             let filename = name;
 
-            // A fragment is no part of the file on disk, so neither `filename` nor
-            // a name built from it may carry one; a query keeps what follows it.
+            // A fragment is no part of the file on disk, so neither `filename`,
+            // `query` nor a name built from them may carry one.
             const suffixSplit = filename.search(/[?#]/);
 
             if (suffixSplit >= 0) {
               if (filename[suffixSplit] === "?") {
-                query = filename.slice(suffixSplit);
+                const fragmentSplit = filename.indexOf("#", suffixSplit);
+
+                query = filename.slice(
+                  suffixSplit,
+                  fragmentSplit >= 0 ? fragmentSplit : undefined,
+                );
               }
 
               filename = filename.slice(0, suffixSplit);
