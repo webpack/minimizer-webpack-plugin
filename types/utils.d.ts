@@ -26,6 +26,7 @@ export type ExtractedComments = string[];
 export type QueryValues = {
   [name: string]: EXPECTED_ANY;
 };
+export const BLOCK_CONTENTS: "block-contents";
 /**
  * Which production of a language an embedded body is written in, as `as` names
  * it. A `style=""` is `css` with `as: "block-contents"`; JavaScript's are these
@@ -42,6 +43,14 @@ export const MODULE_SCRIPT: "module";
  * @returns {string} the script it is the body of
  */
 export function asFunction(body: string): string;
+/**
+ * The rule a body handed out as a block's contents belongs to, since no
+ * stylesheet production reads a bare declaration list. The newline ends a bad
+ * string the body may close with.
+ * @param {string} body the block's contents
+ * @returns {string} the stylesheet it is the contents of
+ */
+export function asRule(body: string): string;
 /**
  * Minify CSS using `clean-css`.
  * @param {Input} input input
@@ -622,6 +631,13 @@ export function readPreset(name: string): string | undefined;
  * @returns {string} the renamed asset
  */
 export function replaceExtension(name: string, extension: string): string;
+/**
+ * The block's contents inside the rule a minimizer answered with: empty where
+ * it dropped the rule as holding nothing, `undefined` for any other answer.
+ * @param {string | undefined} answered what the minimizer answered
+ * @returns {string | undefined} the contents, or undefined
+ */
+export function ruleBody(answered: string | undefined): string | undefined;
 /**
  * Re-encode an image as another format with `sharp`, renaming it to match.
  *

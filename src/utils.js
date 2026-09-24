@@ -22,6 +22,7 @@ const path = require("path");
 const CLASSIC_SCRIPT = "script";
 const MODULE_SCRIPT = "module";
 const EVENT_HANDLER = "event-handler";
+const BLOCK_CONTENTS = "block-contents";
 
 /**
  * The function a body handed out as an event handler belongs to. Named past any
@@ -59,6 +60,35 @@ function functionBody(answered) {
     /^function\s+[^\s(]+\s*\(\s*\)\s*$/.test(written.slice(0, opened))
     ? written.slice(opened + 1, -1).trim()
     : undefined;
+}
+
+/**
+ * The rule a body handed out as a block's contents belongs to, since no
+ * stylesheet production reads a bare declaration list. The newline ends a bad
+ * string the body may close with.
+ * @param {string} body the block's contents
+ * @returns {string} the stylesheet it is the contents of
+ */
+function asRule(body) {
+  return `a{${body}\n}`;
+}
+
+/**
+ * The block's contents inside the rule a minimizer answered with: empty where
+ * it dropped the rule as holding nothing, `undefined` for any other answer.
+ * @param {string | undefined} answered what the minimizer answered
+ * @returns {string | undefined} the contents, or undefined
+ */
+function ruleBody(answered) {
+  if (typeof answered !== "string") return undefined;
+
+  const written = answered.trim();
+
+  if (written === "") return "";
+
+  const match = /^a\s*\{([^{}]*)\}$/.exec(written);
+
+  return match ? match[1].trim() : undefined;
 }
 
 /**
@@ -1682,13 +1712,29 @@ async function cssoMinify(input, sourceMap, minimizerOptions) {
     return { errors: [/** @type {Error} */ (err)] };
   }
 
+  // Self-require rather than the bindings above: a minify function reaches a
+  // worker as its source, where this module's own scope is gone.
+  const { BLOCK_CONTENTS, asRule, ruleBody } =
+    // eslint-disable-next-line import/no-self-import
+    require("./utils.js");
+
+  const { as, ...cssoOptions } = minimizerOptions || {};
+  const contents = as === BLOCK_CONTENTS;
   const [[filename, source]] = Object.entries(input);
   const code = Buffer.isBuffer(source) ? source.toString() : source;
-  const result = csso.minify(code, {
+  const result = csso.minify(contents ? asRule(code) : code, {
     filename,
     sourceMap: Boolean(sourceMap),
-    ...minimizerOptions,
+    ...cssoOptions,
   });
+
+  if (contents) {
+    const body = ruleBody(result.css);
+
+    // A wrap moves every position, so the map describes a stylesheet that is
+    // not what comes back.
+    return { code: body === undefined ? code : body };
+  }
 
   return {
     code: result.css,
@@ -1740,13 +1786,33 @@ async function cleanCssMinify(input, sourceMap, minimizerOptions) {
     return { errors: [/** @type {Error} */ (err)] };
   }
 
+  // Self-require rather than the bindings above: a minify function reaches a
+  // worker as its source, where this module's own scope is gone.
+  const { BLOCK_CONTENTS, asRule, ruleBody } =
+    // eslint-disable-next-line import/no-self-import
+    require("./utils.js");
+
+  const { as, ...cleanCssOptions } = minimizerOptions || {};
+  const contents = as === BLOCK_CONTENTS;
   const [[name, source]] = Object.entries(input);
   const code = Buffer.isBuffer(source) ? source.toString() : source;
   const result = await new CleanCSS({
     sourceMap: Boolean(sourceMap),
-    ...minimizerOptions,
+    ...cleanCssOptions,
     returnPromise: true,
-  }).minify({ [name]: { styles: code } });
+  }).minify({ [name]: { styles: contents ? asRule(code) : code } });
+
+  if (contents) {
+    const body = ruleBody(result.styles);
+
+    // A wrap moves every position, so the map describes a stylesheet that is
+    // not what comes back.
+    return {
+      code: body === undefined ? code : body,
+      warnings: result.warnings,
+    };
+  }
+
   const generatedSourceMap = result.sourceMap
     ? /** @type {RawSourceMap} */ (
         /** @type {{ toJSON(): RawSourceMap }} */ (
@@ -1809,15 +1875,16 @@ cleanCssMinify.filter = (name) => CSS_FILE_RE.test(name);
  */
 async function esbuildMinifyCss(input, sourceMap, minimizerOptions) {
   /**
-   * @param {import("esbuild").TransformOptions & { ecma?: string | number, module?: boolean }=} esbuildOptions esbuild options
+   * @param {import("esbuild").TransformOptions & { ecma?: string | number, module?: boolean, as?: string }=} esbuildOptions esbuild options
    * @returns {import("esbuild").TransformOptions} built esbuild options
    */
   const buildEsbuildOptions = (esbuildOptions = {}) => {
     // `module` and `ecma` are JavaScript-only concepts; the dispatcher
-    // injects them for every minimizer, but esbuild's CSS transform
-    // rejects unknown options.
+    // injects them for every minimizer, and `as` is the body's rather than
+    // esbuild's, but esbuild's CSS transform rejects unknown options.
     delete esbuildOptions.ecma;
     delete esbuildOptions.module;
+    delete esbuildOptions.as;
 
     // Need deep copy objects to avoid https://github.com/terser/terser/issues/366
     return {
@@ -1837,11 +1904,22 @@ async function esbuildMinifyCss(input, sourceMap, minimizerOptions) {
     return { errors: [/** @type {Error} */ (err)] };
   }
 
+  // Self-require rather than the bindings above: a minify function reaches a
+  // worker as its source, where this module's own scope is gone.
+  const { BLOCK_CONTENTS, asRule, ruleBody } =
+    // eslint-disable-next-line import/no-self-import
+    require("./utils.js");
+
+  const contents =
+    typeof minimizerOptions !== "undefined" &&
+    minimizerOptions.as === BLOCK_CONTENTS;
+
   // Copy `esbuild` options
   const esbuildOptions = buildEsbuildOptions(minimizerOptions);
 
-  // Let `esbuild` generate a SourceMap
-  if (sourceMap) {
+  // Let `esbuild` generate a SourceMap; a wrap moves every position, so the
+  // map would describe a stylesheet that is not what comes back.
+  if (sourceMap && !contents) {
     esbuildOptions.sourcemap = true;
     esbuildOptions.sourcesContent = false;
   }
@@ -1851,10 +1929,14 @@ async function esbuildMinifyCss(input, sourceMap, minimizerOptions) {
 
   esbuildOptions.sourcefile = filename;
 
-  const result = await esbuild.transform(code, esbuildOptions);
+  const result = await esbuild.transform(
+    contents ? asRule(code) : code,
+    esbuildOptions,
+  );
+  const body = contents ? ruleBody(result.code) : undefined;
 
   return {
-    code: result.code,
+    code: contents ? (body === undefined ? code : body) : result.code,
     map: result.map ? JSON.parse(result.map) : undefined,
     warnings:
       result.warnings.length > 0
@@ -1935,32 +2017,48 @@ async function lightningCssMinify(input, sourceMap, minimizerOptions) {
     return { errors: [/** @type {Error} */ (err)] };
   }
 
+  // Self-require rather than the bindings above: a minify function reaches a
+  // worker as its source, where this module's own scope is gone.
+  const { BLOCK_CONTENTS, asRule, ruleBody } =
+    // eslint-disable-next-line import/no-self-import
+    require("./utils.js");
+
+  const contents =
+    typeof minimizerOptions !== "undefined" &&
+    minimizerOptions.as === BLOCK_CONTENTS;
   const [[filename, source]] = Object.entries(input);
   const code = Buffer.isBuffer(source) ? source.toString() : source;
   /**
-   * @param {Partial<import("lightningcss").TransformOptions<import("lightningcss").CustomAtRules>>=} lightningCssOptions lightning css options
+   * @param {Partial<import("lightningcss").TransformOptions<import("lightningcss").CustomAtRules>> & { as?: string }=} lightningCssOptions lightning css options
    * @returns {import("lightningcss").TransformOptions<import("lightningcss").CustomAtRules>} built lightning css options
    */
-  const buildLightningCssOptions = (lightningCssOptions = {}) =>
+  const buildLightningCssOptions = ({ as, ...lightningCssOptions } = {}) =>
     // Need deep copy objects to avoid https://github.com/terser/terser/issues/366
     ({
       minify: true,
       ...lightningCssOptions,
       sourceMap: false,
       filename,
-      code: new Uint8Array(Buffer.from(code)),
+      code: new Uint8Array(Buffer.from(contents ? asRule(code) : code)),
     });
 
   // Copy `lightningCss` options
   const lightningCssOptions = buildLightningCssOptions(minimizerOptions);
 
   // Let `lightningcss` generate a SourceMap. The dispatcher in
-  // `minify.js` chains the previous step's map onto this one.
-  if (sourceMap) {
+  // `minify.js` chains the previous step's map onto this one. A wrap moves
+  // every position, so the map would describe what does not come back.
+  if (sourceMap && !contents) {
     lightningCssOptions.sourceMap = true;
   }
 
   const result = lightningCss.transform(lightningCssOptions);
+
+  if (contents) {
+    const body = ruleBody(result.code.toString());
+
+    return { code: body === undefined ? code : body };
+  }
 
   return {
     code: result.code.toString(),
@@ -2027,28 +2125,46 @@ async function swcMinifyCss(input, sourceMap, minimizerOptions) {
     return { errors: [/** @type {Error} */ (err)] };
   }
 
+  // Self-require rather than the bindings above: a minify function reaches a
+  // worker as its source, where this module's own scope is gone.
+  const { BLOCK_CONTENTS, asRule, ruleBody } =
+    // eslint-disable-next-line import/no-self-import
+    require("./utils.js");
+
+  const contents =
+    typeof minimizerOptions !== "undefined" &&
+    minimizerOptions.as === BLOCK_CONTENTS;
   const [[filename, source]] = Object.entries(input);
   const code = Buffer.isBuffer(source) ? source.toString() : source;
   /**
-   * @param {Partial<import("@swc/css").MinifyOptions>=} swcOptions swc options
+   * @param {Partial<import("@swc/css").MinifyOptions> & { as?: string }=} swcOptions swc options
    * @returns {import("@swc/css").MinifyOptions} built swc options
    */
-  const buildSwcOptions = (swcOptions = {}) =>
+  const buildSwcOptions = ({ as, ...swcOptions } = {}) =>
     // Need deep copy objects to avoid https://github.com/terser/terser/issues/366
     ({ ...swcOptions, filename });
 
   // Copy `swc` options
   const swcOptions = buildSwcOptions(minimizerOptions);
 
-  // Let `swc` generate a SourceMap
-  if (sourceMap) {
+  // Let `swc` generate a SourceMap; a wrap moves every position, so the map
+  // would describe a stylesheet that is not what comes back.
+  if (sourceMap && !contents) {
     swcOptions.sourceMap = true;
   }
 
-  const result = await swc.minify(Buffer.from(code), swcOptions);
+  const result = await swc.minify(
+    Buffer.from(contents ? asRule(code) : code),
+    swcOptions,
+  );
+  const body = contents ? ruleBody(result.code.toString()) : undefined;
 
   return {
-    code: result.code.toString(),
+    code: contents
+      ? body === undefined
+        ? code
+        : body
+      : result.code.toString(),
     map: result.map ? JSON.parse(result.map.toString()) : undefined,
     errors: result.errors
       ? result.errors.map(swcCssDiagnosticToError)
@@ -3796,10 +3912,12 @@ compress.supportsWorker = () => false;
 compress.supportsWorkerThreads = () => false;
 
 module.exports = {
+  BLOCK_CONTENTS,
   CLASSIC_SCRIPT,
   EVENT_HANDLER,
   MODULE_SCRIPT,
   asFunction,
+  asRule,
   cleanCssMinify,
   compress,
   cssnanoMinify,
@@ -3825,6 +3943,7 @@ module.exports = {
   packageVersion,
   readPreset,
   replaceExtension,
+  ruleBody,
   sharpGenerate,
   sharpMinify,
   svgoMinify,

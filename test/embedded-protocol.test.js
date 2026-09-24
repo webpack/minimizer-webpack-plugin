@@ -1,7 +1,7 @@
 import path from "path";
 
 import MinimizerPlugin from "../src";
-import { asFunction, functionBody } from "../src/utils";
+import { asFunction, asRule, functionBody, ruleBody } from "../src/utils";
 
 import {
   compile,
@@ -333,6 +333,40 @@ async function brokenHandlerMinify(input, sourceMap, minimizerOptions) {
     ...answerDiagnostics([rendered]),
   };
 }
+
+/**
+ * A declaration list, what an HTML `style=""` holds: no stylesheet production
+ * reads it, so a minimizer handed it as one drops or mangles it.
+ */
+const STYLE_ATTRIBUTE_BODY = "  color :  red ;  margin : 0px  ";
+
+/**
+ * A document minifier handing out one `style=""` body as the block's contents.
+ * @param {{ [file: string]: string }} input a single `{ filename: code }` entry
+ * @param {undefined} sourceMap unused
+ * @param {{ renderEmbeddedSource: (source: string, info: { type: string, as?: string }) => Promise<EXPECTED_ANY> }} minimizerOptions minimizer options
+ * @returns {Promise<EXPECTED_ANY>} the body as its minimizer wrote it
+ */
+async function styleAttributeMinify(input, sourceMap, minimizerOptions) {
+  const rendered = await askRenderer(
+    minimizerOptions.renderEmbeddedSource,
+    STYLE_ATTRIBUTE_BODY,
+    "css",
+    "block-contents",
+  );
+  const text = answerText(rendered);
+
+  return {
+    code: typeof text === "string" ? text : STYLE_ATTRIBUTE_BODY,
+    ...answerDiagnostics([rendered]),
+  };
+}
+
+styleAttributeMinify.getTypes = () => ["page"];
+styleAttributeMinify.getEmbeddedTypes = () => ["css"];
+styleAttributeMinify.supportsWorker = () => false;
+styleAttributeMinify.supportsWorkerThreads = () => false;
+styleAttributeMinify.filter = (name) => /\.page$/i.test(name);
 
 brokenHandlerMinify.getTypes = () => ["page"];
 brokenHandlerMinify.getEmbeddedTypes = () => ["javascript"];
@@ -823,5 +857,47 @@ describe("a handler body a minimizer does not answer with the function", () => {
     expect(stats.compilation.getAsset("host.page").source.source()).toBe(
       BROKEN_HANDLER_BODY,
     );
+  });
+});
+
+describe("a body handed out as a block's contents", () => {
+  it.each([
+    ["cssnanoMinify", MinimizerPlugin.cssnanoMinify],
+    ["cssoMinify", MinimizerPlugin.cssoMinify],
+    ["cleanCssMinify", MinimizerPlugin.cleanCssMinify],
+    ["esbuildMinifyCss", MinimizerPlugin.esbuildMinifyCss],
+    ["lightningCssMinify", MinimizerPlugin.lightningCssMinify],
+    ["swcMinifyCss", MinimizerPlugin.swcMinifyCss],
+  ])(
+    "is minified as the rule it belongs to by `%s`",
+    async (name, minifier) => {
+      const compiler = getPageCompiler([styleAttributeMinify, minifier]);
+      const stats = await compile(compiler);
+
+      expect(getErrors(stats)).toEqual([]);
+      expect(readAsset("host.page", compiler, stats)).toMatchSnapshot();
+    },
+  );
+});
+
+describe("the rule a block's contents are minified inside", () => {
+  it("makes the contents a whole stylesheet an engine can read", () => {
+    // The newline ends a bad string the contents may close with.
+    expect(asRule("color:red")).toBe("a{color:red\n}");
+  });
+
+  it("reads the contents back out of what a minimizer answered", () => {
+    expect(ruleBody("a{color:red}")).toBe("color:red");
+    expect(ruleBody("a {\n  color: red;\n}\n")).toBe("color: red;");
+    // A minimizer drops a rule left with no declarations.
+    expect(ruleBody("")).toBe("");
+  });
+
+  it("declines an answer that is not that one rule", () => {
+    expect(ruleBody("color:red")).toBeUndefined();
+    expect(ruleBody("a{color:red}b{color:blue}")).toBeUndefined();
+    expect(ruleBody("b{color:red}")).toBeUndefined();
+    expect(ruleBody("@media print{a{color:red}}")).toBeUndefined();
+    expect(ruleBody(undefined)).toBeUndefined();
   });
 });
