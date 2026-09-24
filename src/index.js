@@ -1110,11 +1110,16 @@ class MinimizerPlugin {
             let query = "";
             let filename = name;
 
-            const querySplit = filename.indexOf("?");
+            // A fragment is no part of the file on disk, so neither `filename` nor
+            // a name built from it may carry one; a query keeps what follows it.
+            const suffixSplit = filename.search(/[?#]/);
 
-            if (querySplit >= 0) {
-              query = filename.slice(querySplit);
-              filename = filename.slice(0, querySplit);
+            if (suffixSplit >= 0) {
+              if (filename[suffixSplit] === "?") {
+                query = filename.slice(suffixSplit);
+              }
+
+              filename = filename.slice(0, suffixSplit);
             }
 
             const lastSlashIndex = filename.lastIndexOf("/");

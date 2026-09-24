@@ -692,4 +692,39 @@ describe("extractComments option", () => {
     expect(getErrors(stats)).toMatchSnapshot("errors");
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
+
+  it.each([
+    ["the default filename", undefined],
+    ["a function filename", createFilenameFn()],
+  ])(
+    "should keep a fragment out of the extracted comments file with %s",
+    async (_, filename) => {
+      compiler = getCompiler({
+        entry: path.resolve(__dirname, "./fixtures/comments.js"),
+        output: {
+          path: path.resolve(__dirname, "./dist"),
+          filename: "[name].js#[fullhash]",
+          chunkFilename: "[id].js#[fullhash]",
+        },
+      });
+
+      new MinimizerPlugin({
+        extractComments: filename ? { filename } : true,
+      }).apply(compiler);
+
+      const stats = await compile(compiler);
+      const names = Object.keys(stats.compilation.assets);
+
+      // Written as `main.js.LICENSE.txt`, not onto `main.js` with the bundle.
+      expect(names).toEqual(
+        expect.arrayContaining(["main.js.LICENSE.txt", "203.js.LICENSE.txt"]),
+      );
+      expect(names.filter((name) => name.includes("LICENSE"))).toHaveLength(2);
+      expect(readAsset("main.js#x", compiler, stats)).toMatch(
+        /^\/\*! For license information please see main\.js\.LICENSE\.txt \*\//,
+      );
+      expect(getErrors(stats)).toEqual([]);
+      expect(getWarnings(stats)).toEqual([]);
+    },
+  );
 });
