@@ -864,23 +864,45 @@ describe("a handler body a minimizer does not answer with the function", () => {
   });
 });
 
+// csso and clean-css are plain JavaScript and run on every row; the rest need
+// what `RUN_CSS_TESTS` says. Asserted rather than snapshotted, since a
+// snapshot in a skipped block is reported obsolete (see `jest.config.js`).
+const PORTABLE_CSS_MINIMIZERS = [
+  ["cssoMinify", MinimizerPlugin.cssoMinify],
+  ["cleanCssMinify", MinimizerPlugin.cleanCssMinify],
+];
+const MODERN_CSS_MINIMIZERS = [
+  ["cssnanoMinify", MinimizerPlugin.cssnanoMinify],
+  ["esbuildMinifyCss", MinimizerPlugin.esbuildMinifyCss],
+  ["lightningCssMinify", MinimizerPlugin.lightningCssMinify],
+  ["swcMinifyCss", MinimizerPlugin.swcMinifyCss],
+];
+
+/**
+ * @param {EXPECTED_ANY} minifier a CSS minify function
+ * @returns {Promise<void>} resolves once the page is checked
+ */
+const expectStyleAttributeMinified = async (minifier) => {
+  const compiler = getPageCompiler([styleAttributeMinify, minifier]);
+  const stats = await compile(compiler);
+
+  expect(getErrors(stats)).toEqual([]);
+  expect(readAsset("host.page", compiler, stats)).toBe("color:red;margin:0");
+};
+
 describe("a body handed out as a block's contents", () => {
+  it.each(PORTABLE_CSS_MINIMIZERS)(
+    "is minified as the rule it belongs to by `%s`",
+    async (name, minifier) => {
+      await expectStyleAttributeMinified(minifier);
+    },
+  );
+
   describeIf(RUN_CSS_TESTS)("where the CSS minimizers run", () => {
-    it.each([
-      ["cssnanoMinify", MinimizerPlugin.cssnanoMinify],
-      ["cssoMinify", MinimizerPlugin.cssoMinify],
-      ["cleanCssMinify", MinimizerPlugin.cleanCssMinify],
-      ["esbuildMinifyCss", MinimizerPlugin.esbuildMinifyCss],
-      ["lightningCssMinify", MinimizerPlugin.lightningCssMinify],
-      ["swcMinifyCss", MinimizerPlugin.swcMinifyCss],
-    ])(
+    it.each(MODERN_CSS_MINIMIZERS)(
       "is minified as the rule it belongs to by `%s`",
       async (name, minifier) => {
-        const compiler = getPageCompiler([styleAttributeMinify, minifier]);
-        const stats = await compile(compiler);
-
-        expect(getErrors(stats)).toEqual([]);
-        expect(readAsset("host.page", compiler, stats)).toMatchSnapshot();
+        await expectStyleAttributeMinified(minifier);
       },
     );
   });
@@ -922,18 +944,46 @@ describe("the rule a block's contents are minified inside", () => {
   });
 });
 
+/**
+ * @param {EXPECTED_ANY} minifier a CSS minify function
+ * @param {Record<string, boolean>} mapOptions how it spells asking for a map
+ * @returns {Promise<void>} resolves once the answer is checked
+ */
+const expectNoMapForWrappedBody = async (minifier, mapOptions) => {
+  // The wrap moves every position, so a map asked for by the options too
+  // would describe a stylesheet that is not what comes back.
+  const result = await minifier(
+    { "style.css": "  color :  red  " },
+    { version: 3, sources: [], names: [], mappings: "" },
+    { as: "block-contents", ...mapOptions },
+  );
+
+  expect(result.code).toBe("color:red");
+  expect(result.map).toBeUndefined();
+};
+
 describe("a CSS minimizer handed a block's contents directly", () => {
+  it("minifies a string holding a brace", async () => {
+    const result = await MinimizerPlugin.cssoMinify(
+      { "style.css": '  content :  "{"  ' },
+      undefined,
+      { as: "block-contents" },
+    );
+
+    expect(result.code).toBe('content:"{"');
+  });
+
+  it.each([
+    ["cssoMinify", MinimizerPlugin.cssoMinify, { sourceMap: true }],
+    ["cleanCssMinify", MinimizerPlugin.cleanCssMinify, { sourceMap: true }],
+  ])(
+    "returns no map for the rule `%s` minified it inside",
+    async (name, minifier, mapOptions) => {
+      await expectNoMapForWrappedBody(minifier, mapOptions);
+    },
+  );
+
   describeIf(RUN_CSS_TESTS)("where the CSS minimizers run", () => {
-    it("minifies a string holding a brace", async () => {
-      const result = await MinimizerPlugin.cssoMinify(
-        { "style.css": '  content :  "{"  ' },
-        undefined,
-        { as: "block-contents" },
-      );
-
-      expect(result.code).toBe('content:"{"');
-    });
-
     it("leaves the options it was handed as they were", async () => {
       const options = { as: "block-contents" };
       const input = { "style.css": "  color :  red  " };
@@ -955,8 +1005,6 @@ describe("a CSS minimizer handed a block's contents directly", () => {
     });
 
     it.each([
-      ["cssoMinify", MinimizerPlugin.cssoMinify, { sourceMap: true }],
-      ["cleanCssMinify", MinimizerPlugin.cleanCssMinify, { sourceMap: true }],
       [
         "esbuildMinifyCss",
         MinimizerPlugin.esbuildMinifyCss,
@@ -971,16 +1019,7 @@ describe("a CSS minimizer handed a block's contents directly", () => {
     ])(
       "returns no map for the rule `%s` minified it inside",
       async (name, minifier, mapOptions) => {
-        // The wrap moves every position, so a map asked for by the options too
-        // would describe a stylesheet that is not what comes back.
-        const result = await minifier(
-          { "style.css": "  color :  red  " },
-          { version: 3, sources: [], names: [], mappings: "" },
-          { as: "block-contents", ...mapOptions },
-        );
-
-        expect(result.code).toBe("color:red");
-        expect(result.map).toBeUndefined();
+        await expectNoMapForWrappedBody(minifier, mapOptions);
       },
     );
   });
