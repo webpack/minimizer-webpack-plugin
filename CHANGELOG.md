@@ -1,5 +1,17 @@
 # Changelog
 
+## 5.12.0
+
+### Minor Changes
+
+- Take a minimizer as a module path or `{ path, export }`, which a worker requires rather than rebuilding it from its source. (by [@alexander-akait](https://github.com/alexander-akait) in [#744](https://github.com/webpack/minimizer-webpack-plugin/pull/744))
+
+### Patch Changes
+
+- Minify a `style=""` body as a rule's contents with every CSS minimizer, rather than dropping or rejecting it. (by [@alexander-akait](https://github.com/alexander-akait) in [#748](https://github.com/webpack/minimizer-webpack-plugin/pull/748))
+
+- Minify assets whose names carry a `#fragment`, such as `[name].js#[contenthash]` or an asset module named `[hash][ext][query][fragment]`. (by [@alexander-akait](https://github.com/alexander-akait) in [#747](https://github.com/webpack/minimizer-webpack-plugin/pull/747))
+
 ## 5.11.0
 
 ### Minor Changes
