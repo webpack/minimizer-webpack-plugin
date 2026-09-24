@@ -1,16 +1,16 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`a body handed out as a block's contents is minified as the rule it belongs to by \`cleanCssMinify\` 1`] = `"color:red;margin:0"`;
+exports[`a body handed out as a block's contents where the CSS minimizers run is minified as the rule it belongs to by \`cleanCssMinify\` 1`] = `"color:red;margin:0"`;
 
-exports[`a body handed out as a block's contents is minified as the rule it belongs to by \`cssnanoMinify\` 1`] = `"color:red;margin:0"`;
+exports[`a body handed out as a block's contents where the CSS minimizers run is minified as the rule it belongs to by \`cssnanoMinify\` 1`] = `"color:red;margin:0"`;
 
-exports[`a body handed out as a block's contents is minified as the rule it belongs to by \`cssoMinify\` 1`] = `"color:red;margin:0"`;
+exports[`a body handed out as a block's contents where the CSS minimizers run is minified as the rule it belongs to by \`cssoMinify\` 1`] = `"color:red;margin:0"`;
 
-exports[`a body handed out as a block's contents is minified as the rule it belongs to by \`esbuildMinifyCss\` 1`] = `"color:red;margin:0"`;
+exports[`a body handed out as a block's contents where the CSS minimizers run is minified as the rule it belongs to by \`esbuildMinifyCss\` 1`] = `"color:red;margin:0"`;
 
-exports[`a body handed out as a block's contents is minified as the rule it belongs to by \`lightningCssMinify\` 1`] = `"color:red;margin:0"`;
+exports[`a body handed out as a block's contents where the CSS minimizers run is minified as the rule it belongs to by \`lightningCssMinify\` 1`] = `"color:red;margin:0"`;
 
-exports[`a body handed out as a block's contents is minified as the rule it belongs to by \`swcMinifyCss\` 1`] = `"color:red;margin:0"`;
+exports[`a body handed out as a block's contents where the CSS minimizers run is minified as the rule it belongs to by \`swcMinifyCss\` 1`] = `"color:red;margin:0"`;
 
 exports[`a body handed out as a classic script is read as one by \`esbuildMinify\` 1`] = `
 "var o={a:1};with(o)window.ran=a;

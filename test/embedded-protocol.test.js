@@ -10,6 +10,10 @@ import {
   getWarnings,
   readAsset,
 } from "./helpers";
+import { RUN_CSS_TESTS } from "./helpers/env";
+
+// The CSS minimizers need what `RUN_CSS_TESTS` says, like `css-minify-option`.
+const describeIf = (condition) => (condition ? describe : describe.skip);
 
 // The `renderEmbeddedSource` dispatch on its own: a minimizer hands out what it
 // nests, each body goes to whichever minimizer claims its language, and the
@@ -861,23 +865,25 @@ describe("a handler body a minimizer does not answer with the function", () => {
 });
 
 describe("a body handed out as a block's contents", () => {
-  it.each([
-    ["cssnanoMinify", MinimizerPlugin.cssnanoMinify],
-    ["cssoMinify", MinimizerPlugin.cssoMinify],
-    ["cleanCssMinify", MinimizerPlugin.cleanCssMinify],
-    ["esbuildMinifyCss", MinimizerPlugin.esbuildMinifyCss],
-    ["lightningCssMinify", MinimizerPlugin.lightningCssMinify],
-    ["swcMinifyCss", MinimizerPlugin.swcMinifyCss],
-  ])(
-    "is minified as the rule it belongs to by `%s`",
-    async (name, minifier) => {
-      const compiler = getPageCompiler([styleAttributeMinify, minifier]);
-      const stats = await compile(compiler);
+  describeIf(RUN_CSS_TESTS)("where the CSS minimizers run", () => {
+    it.each([
+      ["cssnanoMinify", MinimizerPlugin.cssnanoMinify],
+      ["cssoMinify", MinimizerPlugin.cssoMinify],
+      ["cleanCssMinify", MinimizerPlugin.cleanCssMinify],
+      ["esbuildMinifyCss", MinimizerPlugin.esbuildMinifyCss],
+      ["lightningCssMinify", MinimizerPlugin.lightningCssMinify],
+      ["swcMinifyCss", MinimizerPlugin.swcMinifyCss],
+    ])(
+      "is minified as the rule it belongs to by `%s`",
+      async (name, minifier) => {
+        const compiler = getPageCompiler([styleAttributeMinify, minifier]);
+        const stats = await compile(compiler);
 
-      expect(getErrors(stats)).toEqual([]);
-      expect(readAsset("host.page", compiler, stats)).toMatchSnapshot();
-    },
-  );
+        expect(getErrors(stats)).toEqual([]);
+        expect(readAsset("host.page", compiler, stats)).toMatchSnapshot();
+      },
+    );
+  });
 });
 
 describe("the rule a block's contents are minified inside", () => {
@@ -912,59 +918,65 @@ describe("the rule a block's contents are minified inside", () => {
 });
 
 describe("a CSS minimizer handed a block's contents directly", () => {
-  it("minifies a string holding a brace", async () => {
-    const result = await MinimizerPlugin.cssoMinify(
-      { "style.css": '  content :  "{"  ' },
-      undefined,
-      { as: "block-contents" },
-    );
-
-    expect(result.code).toBe('content:"{"');
-  });
-
-  it("leaves the options it was handed as they were", async () => {
-    const options = { as: "block-contents" };
-    const input = { "style.css": "  color :  red  " };
-
-    const first = await MinimizerPlugin.esbuildMinifyCss(
-      input,
-      undefined,
-      options,
-    );
-    const second = await MinimizerPlugin.esbuildMinifyCss(
-      input,
-      undefined,
-      options,
-    );
-
-    expect(options).toEqual({ as: "block-contents" });
-    expect(first.code).toBe("color:red");
-    expect(second.code).toBe("color:red");
-  });
-
-  it.each([
-    ["cssoMinify", MinimizerPlugin.cssoMinify, { sourceMap: true }],
-    ["cleanCssMinify", MinimizerPlugin.cleanCssMinify, { sourceMap: true }],
-    ["esbuildMinifyCss", MinimizerPlugin.esbuildMinifyCss, { sourcemap: true }],
-    [
-      "lightningCssMinify",
-      MinimizerPlugin.lightningCssMinify,
-      { sourceMap: true },
-    ],
-    ["swcMinifyCss", MinimizerPlugin.swcMinifyCss, { sourceMap: true }],
-  ])(
-    "returns no map for the rule `%s` minified it inside",
-    async (name, minifier, mapOptions) => {
-      // The wrap moves every position, so a map asked for by the options too
-      // would describe a stylesheet that is not what comes back.
-      const result = await minifier(
-        { "style.css": "  color :  red  " },
-        { version: 3, sources: [], names: [], mappings: "" },
-        { as: "block-contents", ...mapOptions },
+  describeIf(RUN_CSS_TESTS)("where the CSS minimizers run", () => {
+    it("minifies a string holding a brace", async () => {
+      const result = await MinimizerPlugin.cssoMinify(
+        { "style.css": '  content :  "{"  ' },
+        undefined,
+        { as: "block-contents" },
       );
 
-      expect(result.code).toBe("color:red");
-      expect(result.map).toBeUndefined();
-    },
-  );
+      expect(result.code).toBe('content:"{"');
+    });
+
+    it("leaves the options it was handed as they were", async () => {
+      const options = { as: "block-contents" };
+      const input = { "style.css": "  color :  red  " };
+
+      const first = await MinimizerPlugin.esbuildMinifyCss(
+        input,
+        undefined,
+        options,
+      );
+      const second = await MinimizerPlugin.esbuildMinifyCss(
+        input,
+        undefined,
+        options,
+      );
+
+      expect(options).toEqual({ as: "block-contents" });
+      expect(first.code).toBe("color:red");
+      expect(second.code).toBe("color:red");
+    });
+
+    it.each([
+      ["cssoMinify", MinimizerPlugin.cssoMinify, { sourceMap: true }],
+      ["cleanCssMinify", MinimizerPlugin.cleanCssMinify, { sourceMap: true }],
+      [
+        "esbuildMinifyCss",
+        MinimizerPlugin.esbuildMinifyCss,
+        { sourcemap: true },
+      ],
+      [
+        "lightningCssMinify",
+        MinimizerPlugin.lightningCssMinify,
+        { sourceMap: true },
+      ],
+      ["swcMinifyCss", MinimizerPlugin.swcMinifyCss, { sourceMap: true }],
+    ])(
+      "returns no map for the rule `%s` minified it inside",
+      async (name, minifier, mapOptions) => {
+        // The wrap moves every position, so a map asked for by the options too
+        // would describe a stylesheet that is not what comes back.
+        const result = await minifier(
+          { "style.css": "  color :  red  " },
+          { version: 3, sources: [], names: [], mappings: "" },
+          { as: "block-contents", ...mapOptions },
+        );
+
+        expect(result.code).toBe("color:red");
+        expect(result.map).toBeUndefined();
+      },
+    );
+  });
 });
