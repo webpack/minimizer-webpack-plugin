@@ -904,6 +904,8 @@ describe("the rule a block's contents are minified inside", () => {
     expect(ruleBody("a{content:'}'}")).toBe("content:'}'");
     expect(ruleBody('a{content:"\\"}"}')).toBe('content:"\\"}"');
     expect(ruleBody("a{/* } */color:red}")).toBe("/* } */color:red");
+    // An escaped brace is part of an identifier, not a block's edge.
+    expect(ruleBody("a{--x\\}:1}")).toBe("--x\\}:1");
   });
 
   it("declines an answer that is not that one rule", () => {
@@ -914,6 +916,9 @@ describe("the rule a block's contents are minified inside", () => {
     expect(ruleBody(undefined)).toBeUndefined();
     expect(ruleBody('a{content:"{"}b{color:blue}')).toBeUndefined();
     expect(ruleBody("a{color:red")).toBeUndefined();
+    // A string or a comment left open reaches past the brace closing the rule.
+    expect(ruleBody('a{content:"}')).toBeUndefined();
+    expect(ruleBody("a{color:red/*}")).toBeUndefined();
   });
 });
 

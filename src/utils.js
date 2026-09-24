@@ -110,7 +110,7 @@ function ruleBody(answered) {
     } else if (char === "/" && written[i + 1] === "*") {
       const closed = written.indexOf("*/", i + 2);
 
-      if (closed === -1 || closed + 2 > end) return undefined;
+      if (closed === -1) return undefined;
 
       i = closed + 1;
     }
