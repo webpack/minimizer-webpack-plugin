@@ -92,14 +92,19 @@ function ruleBody(answered) {
 
   const end = written.length - 1;
 
+  let depth = 0;
+
   // A brace a string or a comment holds is text rather than a block's edge, and
   // one left open would reach past the brace closing the rule.
   for (let i = opened[0].length; i < end; i++) {
     const char = written[i];
 
-    if (char === "{" || char === "}") return undefined;
-
-    if (char === "\\") {
+    if (char === "{") {
+      depth++;
+    } else if (char === "}") {
+      // Below zero is this rule closing before the answer ends.
+      if (--depth < 0) return undefined;
+    } else if (char === "\\") {
       i++;
     } else if (char === '"' || char === "'") {
       for (i++; i < end && written[i] !== char; i++) {
@@ -116,7 +121,7 @@ function ruleBody(answered) {
     }
   }
 
-  return written.slice(opened[0].length, end).trim();
+  return depth === 0 ? written.slice(opened[0].length, end).trim() : undefined;
 }
 
 /**

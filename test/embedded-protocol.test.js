@@ -928,11 +928,15 @@ describe("the rule a block's contents are minified inside", () => {
     expect(ruleBody("a{/* } */color:red}")).toBe("/* } */color:red");
     // An escaped brace is part of an identifier, not a block's edge.
     expect(ruleBody("a{--x\\}:1}")).toBe("--x\\}:1");
+    // A custom property's value may hold a block of its own.
+    expect(ruleBody("a{--x:{a:b};color:red}")).toBe("--x:{a:b};color:red");
   });
 
   it("declines an answer that is not that one rule", () => {
     expect(ruleBody("color:red")).toBeUndefined();
     expect(ruleBody("a{color:red}b{color:blue}")).toBeUndefined();
+    expect(ruleBody("a{--x:{a:b}}b{color:blue}")).toBeUndefined();
+    expect(ruleBody("a{--x:{a:b}")).toBeUndefined();
     expect(ruleBody("b{color:red}")).toBeUndefined();
     expect(ruleBody("@media print{a{color:red}}")).toBeUndefined();
     expect(ruleBody(undefined)).toBeUndefined();
