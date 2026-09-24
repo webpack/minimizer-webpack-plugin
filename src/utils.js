@@ -86,9 +86,37 @@ function ruleBody(answered) {
 
   if (written === "") return "";
 
-  const match = /^a\s*\{([^{}]*)\}$/.exec(written);
+  const opened = /^a\s*\{/.exec(written);
 
-  return match ? match[1].trim() : undefined;
+  if (!opened || !written.endsWith("}")) return undefined;
+
+  const end = written.length - 1;
+
+  // A brace a string or a comment holds is text rather than a block's edge, and
+  // one left open would reach past the brace closing the rule.
+  for (let i = opened[0].length; i < end; i++) {
+    const char = written[i];
+
+    if (char === "{" || char === "}") return undefined;
+
+    if (char === "\\") {
+      i++;
+    } else if (char === '"' || char === "'") {
+      for (i++; i < end && written[i] !== char; i++) {
+        if (written[i] === "\\") i++;
+      }
+
+      if (i >= end) return undefined;
+    } else if (char === "/" && written[i + 1] === "*") {
+      const closed = written.indexOf("*/", i + 2);
+
+      if (closed === -1 || closed + 2 > end) return undefined;
+
+      i = closed + 1;
+    }
+  }
+
+  return written.slice(opened[0].length, end).trim();
 }
 
 /**
@@ -1878,23 +1906,23 @@ async function esbuildMinifyCss(input, sourceMap, minimizerOptions) {
    * @param {import("esbuild").TransformOptions & { ecma?: string | number, module?: boolean, as?: string }=} esbuildOptions esbuild options
    * @returns {import("esbuild").TransformOptions} built esbuild options
    */
-  const buildEsbuildOptions = (esbuildOptions = {}) => {
+  const buildEsbuildOptions = ({
     // `module` and `ecma` are JavaScript-only concepts; the dispatcher
     // injects them for every minimizer, and `as` is the body's rather than
     // esbuild's, but esbuild's CSS transform rejects unknown options.
-    delete esbuildOptions.ecma;
-    delete esbuildOptions.module;
-    delete esbuildOptions.as;
-
+    ecma,
+    module,
+    as,
+    ...esbuildOptions
+  } = {}) =>
     // Need deep copy objects to avoid https://github.com/terser/terser/issues/366
-    return {
+    ({
       loader: "css",
       minify: true,
       legalComments: "inline",
       ...esbuildOptions,
       sourcemap: false,
-    };
-  };
+    });
 
   let esbuild;
 
@@ -2148,8 +2176,11 @@ async function swcMinifyCss(input, sourceMap, minimizerOptions) {
   const swcOptions = buildSwcOptions(minimizerOptions);
 
   // Let `swc` generate a SourceMap; a wrap moves every position, so the map
-  // would describe a stylesheet that is not what comes back.
-  if (sourceMap && !contents) {
+  // would describe a stylesheet that is not what comes back, whatever the
+  // options asked for.
+  if (contents) {
+    swcOptions.sourceMap = false;
+  } else if (sourceMap) {
     swcOptions.sourceMap = true;
   }
 

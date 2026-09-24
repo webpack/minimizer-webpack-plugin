@@ -893,11 +893,78 @@ describe("the rule a block's contents are minified inside", () => {
     expect(ruleBody("")).toBe("");
   });
 
+  it("reads past a brace a string or a comment holds", () => {
+    expect(ruleBody('a{content:"{"}')).toBe('content:"{"');
+    expect(ruleBody("a{content:'}'}")).toBe("content:'}'");
+    expect(ruleBody('a{content:"\\"}"}')).toBe('content:"\\"}"');
+    expect(ruleBody("a{/* } */color:red}")).toBe("/* } */color:red");
+  });
+
   it("declines an answer that is not that one rule", () => {
     expect(ruleBody("color:red")).toBeUndefined();
     expect(ruleBody("a{color:red}b{color:blue}")).toBeUndefined();
     expect(ruleBody("b{color:red}")).toBeUndefined();
     expect(ruleBody("@media print{a{color:red}}")).toBeUndefined();
     expect(ruleBody(undefined)).toBeUndefined();
+    expect(ruleBody('a{content:"{"}b{color:blue}')).toBeUndefined();
+    expect(ruleBody("a{color:red")).toBeUndefined();
   });
+});
+
+describe("a CSS minimizer handed a block's contents directly", () => {
+  it("minifies a string holding a brace", async () => {
+    const result = await MinimizerPlugin.cssoMinify(
+      { "style.css": '  content :  "{"  ' },
+      undefined,
+      { as: "block-contents" },
+    );
+
+    expect(result.code).toBe('content:"{"');
+  });
+
+  it("leaves the options it was handed as they were", async () => {
+    const options = { as: "block-contents" };
+    const input = { "style.css": "  color :  red  " };
+
+    const first = await MinimizerPlugin.esbuildMinifyCss(
+      input,
+      undefined,
+      options,
+    );
+    const second = await MinimizerPlugin.esbuildMinifyCss(
+      input,
+      undefined,
+      options,
+    );
+
+    expect(options).toEqual({ as: "block-contents" });
+    expect(first.code).toBe("color:red");
+    expect(second.code).toBe("color:red");
+  });
+
+  it.each([
+    ["cssoMinify", MinimizerPlugin.cssoMinify, { sourceMap: true }],
+    ["cleanCssMinify", MinimizerPlugin.cleanCssMinify, { sourceMap: true }],
+    ["esbuildMinifyCss", MinimizerPlugin.esbuildMinifyCss, { sourcemap: true }],
+    [
+      "lightningCssMinify",
+      MinimizerPlugin.lightningCssMinify,
+      { sourceMap: true },
+    ],
+    ["swcMinifyCss", MinimizerPlugin.swcMinifyCss, { sourceMap: true }],
+  ])(
+    "returns no map for the rule `%s` minified it inside",
+    async (name, minifier, mapOptions) => {
+      // The wrap moves every position, so a map asked for by the options too
+      // would describe a stylesheet that is not what comes back.
+      const result = await minifier(
+        { "style.css": "  color :  red  " },
+        { version: 3, sources: [], names: [], mappings: "" },
+        { as: "block-contents", ...mapOptions },
+      );
+
+      expect(result.code).toBe("color:red");
+      expect(result.map).toBeUndefined();
+    },
+  );
 });
