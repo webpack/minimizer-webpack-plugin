@@ -118,13 +118,14 @@ function getMinimizerOptionsAt(minimizerOptions, index) {
     : minimizerOptions;
 }
 
-const JS_FILE_RE = /\.[cm]?js(\?.*)?$/i;
-const JSON_FILE_RE = /\.json(\?.*)?$/i;
-const HTML_FILE_RE = /\.html?(\?.*)?$/i;
-const CSS_FILE_RE = /\.css(\?.*)?$/i;
-const SVG_FILE_RE = /\.svg(\?.*)?$/i;
+const JS_FILE_RE = /^[^?#]*\.[cm]?js(?:[?#].*)?$/i;
+const JSON_FILE_RE = /^[^?#]*\.json(?:[?#].*)?$/i;
+const HTML_FILE_RE = /^[^?#]*\.html?(?:[?#].*)?$/i;
+const CSS_FILE_RE = /^[^?#]*\.css(?:[?#].*)?$/i;
+const SVG_FILE_RE = /^[^?#]*\.svg(?:[?#].*)?$/i;
 // What `imageminMinify` is offered; its plugins decide what they act on.
-const IMAGE_FILE_RE = /\.(?:avif|gif|jpe?g|jxl|png|svg|tiff?|webp)(\?.*)?$/i;
+const IMAGE_FILE_RE =
+  /^[^?#]*\.(?:avif|gif|jpe?g|jxl|png|svg|tiff?|webp)(?:[?#].*)?$/i;
 
 /** @type {undefined | ((specifier: string) => Promise<EXPECTED_ANY>)} */
 let dynamicImport;
@@ -2079,21 +2080,16 @@ swcMinifyCss.getTypes = () => ["css"];
 swcMinifyCss.filter = (name) => CSS_FILE_RE.test(name);
 
 /**
- * The extension a name carries, lowercased and without the dot or any query.
+ * The extension a name carries, lowercased and without the dot, query or fragment.
  * @param {string} name asset name
  * @returns {string} the extension, or "" when it has none
  */
 function extensionOf(name) {
-  const withoutQuery = name.replace(/\?.*$/, "");
-  const dotIndex = withoutQuery.lastIndexOf(".");
-  const slashIndex = Math.max(
-    withoutQuery.lastIndexOf("/"),
-    withoutQuery.lastIndexOf("\\"),
-  );
+  const bare = name.replace(/[?#].*$/, "");
+  const dotIndex = bare.lastIndexOf(".");
+  const slashIndex = Math.max(bare.lastIndexOf("/"), bare.lastIndexOf("\\"));
 
-  return dotIndex > slashIndex
-    ? withoutQuery.slice(dotIndex + 1).toLowerCase()
-    : "";
+  return dotIndex > slashIndex ? bare.slice(dotIndex + 1).toLowerCase() : "";
 }
 
 /**

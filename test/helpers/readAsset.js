@@ -13,7 +13,7 @@ export default (asset, compiler, stats) => {
   let data = "";
   let targetFile = asset;
 
-  const queryStringIdx = targetFile.indexOf("?");
+  const queryStringIdx = targetFile.search(/[?#]/);
 
   if (queryStringIdx >= 0) {
     targetFile = targetFile.slice(0, queryStringIdx);

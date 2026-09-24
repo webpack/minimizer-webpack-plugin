@@ -373,4 +373,41 @@ describe("css minify option", () => {
     expect(getErrors(stats)).toMatchSnapshot("errors");
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
+
+  it("should minify CSS and HTML assets whose names carry a fragment", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/fragment-assets.js"),
+      output: {
+        path: path.resolve(__dirname, "./dist"),
+        filename: "[name].js",
+        assetModuleFilename: "[name][ext][query][fragment]",
+      },
+    });
+
+    new MinimizerPlugin({
+      test: /\.(?:css|html)$/i,
+      minify: [
+        MinimizerPlugin.cssnanoMinify,
+        MinimizerPlugin.htmlMinifierTerser,
+      ],
+      minimizerOptions: [
+        {},
+        { collapseWhitespace: true, removeComments: true },
+      ],
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+    const assets = readsAssets(compiler, stats);
+
+    for (const name of ["file.css#dark", "file.html#top"]) {
+      expect(stats.compilation.getAsset(name).info.minimized).toBe(true);
+    }
+
+    expect(assets["file.css#dark"]).toBe(
+      ".foo{color:red;background:blue}.bar{margin:10px;padding:10px}",
+    );
+    expect(assets["file.html#top"]).not.toMatch(/\n|<!--/);
+    expect(getErrors(stats)).toEqual([]);
+    expect(getWarnings(stats)).toEqual([]);
+  });
 });

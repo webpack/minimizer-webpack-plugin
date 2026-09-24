@@ -445,7 +445,9 @@ class MinimizerPlugin {
             })
           );
     const test =
-      typeof declaredTest !== "undefined" ? declaredTest : /\.[cm]?js(\?.*)?$/i;
+      typeof declaredTest !== "undefined"
+        ? declaredTest
+        : /^[^?#]*\.[cm]?js(?:[?#].*)?$/i;
 
     // `terserOptions` is a deprecated alias of `minimizerOptions`; prefer the
     // new name when both are provided.
@@ -987,9 +989,9 @@ class MinimizerPlugin {
 
           if (typeof info.javascriptModule !== "undefined") {
             options.module = info.javascriptModule;
-          } else if (/\.mjs(\?.*)?$/i.test(name)) {
+          } else if (/^[^?#]*\.mjs(?:[?#].*)?$/i.test(name)) {
             options.module = true;
-          } else if (/\.cjs(\?.*)?$/i.test(name)) {
+          } else if (/^[^?#]*\.cjs(?:[?#].*)?$/i.test(name)) {
             options.module = false;
           }
 
