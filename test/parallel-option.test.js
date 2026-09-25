@@ -40,6 +40,15 @@ const ENABLE_WORKER_THREADS =
     ? process.env.ENABLE_WORKER_THREADS === "true"
     : true;
 
+const WORKER_THREADS_AVAILABLE = (() => {
+  try {
+    require("worker_threads");
+    return true;
+  } catch (_error) {
+    return false;
+  }
+})();
+
 jest.mock("jest-worker", () => ({
   Worker: jest.fn().mockImplementation((workerPath) => ({
     transform: (workerTransform = jest.fn((data) =>
@@ -233,6 +242,20 @@ describe("parallel option", () => {
 
     expect(workerMinify).toHaveBeenCalled();
     expect(workerTransform).not.toHaveBeenCalled();
+  });
+
+  it("should use transform for a RegExp when worker threads are unavailable", async () => {
+    if (WORKER_THREADS_AVAILABLE) return;
+
+    new MinimizerPlugin({
+      parallel: true,
+      extractComments: /license/i,
+    }).apply(compiler);
+
+    await compile(compiler);
+
+    expect(workerTransform).toHaveBeenCalled();
+    expect(workerMinify).not.toHaveBeenCalled();
   });
 
   it('should match snapshot for the "false" value', async () => {
