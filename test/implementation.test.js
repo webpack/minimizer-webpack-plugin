@@ -164,6 +164,34 @@ describe("canMinifyByPath", () => {
     ).toBe(true);
   });
 
+  it("should reject a RegExp option when the worker cannot transfer it", () => {
+    expect(
+      canMinifyByPath(
+        {
+          minimizer: {
+            implementation: pathImpl,
+            options: { comments: /license/i },
+          },
+        },
+        { enableWorkerThreads: false },
+      ),
+    ).toBe(false);
+  });
+
+  it("should allow a RegExp option when the worker can transfer it", () => {
+    expect(
+      canMinifyByPath(
+        {
+          minimizer: {
+            implementation: pathImpl,
+            options: { comments: /license/i },
+          },
+        },
+        { enableWorkerThreads: true },
+      ),
+    ).toBe(true);
+  });
+
   it("should allow embedded when every implementation is a path", () => {
     expect(
       canMinifyByPath({

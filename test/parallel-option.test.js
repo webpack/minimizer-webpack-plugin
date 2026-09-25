@@ -40,6 +40,18 @@ const ENABLE_WORKER_THREADS =
     ? process.env.ENABLE_WORKER_THREADS === "true"
     : true;
 
+const WORKER_THREADS_AVAILABLE = (() => {
+  try {
+    require("worker_threads");
+    return true;
+  } catch (_error) {
+    return false;
+  }
+})();
+
+const CAN_USE_WORKER_THREADS =
+  ENABLE_WORKER_THREADS && WORKER_THREADS_AVAILABLE;
+
 jest.mock("jest-worker", () => ({
   Worker: jest.fn().mockImplementation((workerPath) => ({
     transform: (workerTransform = jest.fn((data) =>
@@ -231,8 +243,13 @@ describe("parallel option", () => {
 
     await compile(compiler);
 
-    expect(workerMinify).toHaveBeenCalled();
-    expect(workerTransform).not.toHaveBeenCalled();
+    if (CAN_USE_WORKER_THREADS) {
+      expect(workerMinify).toHaveBeenCalled();
+      expect(workerTransform).not.toHaveBeenCalled();
+    } else {
+      expect(workerTransform).toHaveBeenCalled();
+      expect(workerMinify).not.toHaveBeenCalled();
+    }
   });
 
   it('should match snapshot for the "false" value', async () => {

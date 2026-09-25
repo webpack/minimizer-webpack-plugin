@@ -15,10 +15,16 @@ export type MinimizerFn =
  * whole asset task, even if that asset's own matched minimizers are paths.
  * @template T
  * @param {import("./index.js").InternalOptions<T>} options options
+ * @param {{ enableWorkerThreads?: boolean }=} capabilities worker capabilities
  * @returns {boolean} whether `worker.minify` can run without `transform`
  */
 export function canMinifyByPath<T>(
   options: import("./index.js").InternalOptions<T>,
+  capabilities?:
+    | {
+        enableWorkerThreads?: boolean;
+      }
+    | undefined,
 ): boolean;
 /** @typedef {import("./index.js").MinimizedResult} MinimizedResult */
 /** @typedef {import("./index.js").CustomOptions} CustomOptions */

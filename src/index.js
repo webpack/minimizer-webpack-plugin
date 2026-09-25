@@ -44,6 +44,23 @@ const {
   uglifyJsMinify,
 } = require("./utils");
 
+/** @type {boolean | undefined} */
+let _canUseWorkerThreads;
+
+const canUseWorkerThreads = () => {
+  if (_canUseWorkerThreads !== undefined) {
+    return _canUseWorkerThreads;
+  }
+  try {
+    // eslint-disable-next-line n/no-unsupported-features/node-builtins -- feature detection for Node 10
+    require("worker_threads");
+    _canUseWorkerThreads = true;
+  } catch (_error) {
+    _canUseWorkerThreads = false;
+  }
+  return _canUseWorkerThreads;
+};
+
 /** @typedef {import("schema-utils/declarations/validate").Schema} Schema */
 /** @typedef {import("webpack").Compiler} Compiler */
 /** @typedef {import("webpack").Compilation} Compilation */
@@ -846,6 +863,7 @@ class MinimizerPlugin {
         typeof fn.supportsWorkerThreads === "undefined" ||
         fn.supportsWorkerThreads() !== false,
     );
+    const workerThreadsAvailable = canUseWorkerThreads();
     const needCreateWorker =
       optimizeOptions.availableNumberOfCores > 0 &&
       workerCapable.includes(true);
@@ -908,7 +926,11 @@ class MinimizerPlugin {
       // module paths — including every entry on `embedded`, not just the
       // asset's matched subset. A mixed path + inline-function config keeps
       // the whole asset on `transform`.
-      if (canMinifyByPath(options)) {
+      if (
+        canMinifyByPath(options, {
+          enableWorkerThreads: enableWorkerThreads && workerThreadsAvailable,
+        })
+      ) {
         return getWorker().minify(options);
       }
 
