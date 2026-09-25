@@ -857,14 +857,13 @@ class MinimizerPlugin {
       ({ fn }) =>
         typeof fn.supportsBinary === "function" && fn.supportsBinary(),
     );
-    const enableWorkerThreads =
-      canUseWorkerThreads() &&
-      minimizerSlots.every(
-        ({ fn }, i) =>
-          !workerCapable[i] ||
-          typeof fn.supportsWorkerThreads === "undefined" ||
-          fn.supportsWorkerThreads() !== false,
-      );
+    const enableWorkerThreads = minimizerSlots.every(
+      ({ fn }, i) =>
+        !workerCapable[i] ||
+        typeof fn.supportsWorkerThreads === "undefined" ||
+        fn.supportsWorkerThreads() !== false,
+    );
+    const workerThreadsAvailable = canUseWorkerThreads();
     const needCreateWorker =
       optimizeOptions.availableNumberOfCores > 0 &&
       workerCapable.includes(true);
@@ -929,7 +928,7 @@ class MinimizerPlugin {
       // the whole asset on `transform`.
       if (
         canMinifyByPath(options, {
-          enableWorkerThreads,
+          enableWorkerThreads: enableWorkerThreads && workerThreadsAvailable,
         })
       ) {
         return getWorker().minify(options);
