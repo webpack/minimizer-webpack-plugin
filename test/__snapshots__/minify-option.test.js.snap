@@ -1066,3 +1066,7 @@ exports[`minify option should work: assets 1`] = `
 exports[`minify option should work: errors 1`] = `[]`;
 
 exports[`minify option should work: warnings 1`] = `[]`;
+
+exports[`minify option should write the banner as the minimizer's \`formatBanner\` says: errors 1`] = `[]`;
+
+exports[`minify option should write the banner as the minimizer's \`formatBanner\` says: warnings 1`] = `[]`;

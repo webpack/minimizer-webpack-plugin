@@ -1410,7 +1410,11 @@ The banner text that points to the extracted file and will be added at the top o
 
 It can be `false` (no banner), a `String`, or a `function<(string) -> String>` that will be called with the filename where the extracted comments have been stored.
 
-The banner will be wrapped in a comment.
+The banner will be wrapped in a comment: `/*! … */` by default, or whatever the `minify` function's `formatBanner` helper returns. An HTML minimizer needs one, since a `/*!` line is text in a document:
+
+```js
+minify.formatBanner = (banner) => `<!-- ${banner} -->`;
+```
 
 **webpack.config.js**
 

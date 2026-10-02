@@ -33,6 +33,7 @@ import {
   getCompiler,
   getErrors,
   getWarnings,
+  readAsset,
   readsAssets,
 } from "./helpers";
 
@@ -225,6 +226,32 @@ describe("minify option", () => {
     const stats = await compile(compiler);
 
     expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should write the banner as the minimizer's `formatBanner` says", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+    });
+
+    const minify = async (input) => ({
+      code: `<p>${Object.keys(input)[0]}</p>`,
+      extractedComments: ["<!-- @license MIT -->"],
+    });
+
+    minify.formatBanner = (banner) => `<!-- ${banner} -->`;
+
+    new MinimizerPlugin({ parallel: false, minify }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readAsset("main.js", compiler, stats)).toBe(
+      "<!-- For license information please see main.js.LICENSE.txt -->\n<p>main.js</p>",
+    );
+    expect(readAsset("main.js.LICENSE.txt", compiler, stats)).toBe(
+      "<!-- @license MIT -->\n",
+    );
     expect(getErrors(stats)).toMatchSnapshot("errors");
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
