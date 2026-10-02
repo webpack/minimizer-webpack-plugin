@@ -1416,6 +1416,12 @@ The banner will be wrapped in a comment: `/*! … */` by default, or whatever th
 minify.formatBanner = (banner) => `<!-- ${banner} -->`;
 ```
 
+The banner goes at the top of the asset; a `getBannerPosition` helper returning `"end"` appends it instead, which keeps a document's doctype first:
+
+```js
+minify.getBannerPosition = () => "end";
+```
+
 **webpack.config.js**
 
 ```js

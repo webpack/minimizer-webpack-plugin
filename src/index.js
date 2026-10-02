@@ -198,7 +198,8 @@ const canUseWorkerThreads = () => {
  * @property {() => string[] | undefined=} getTypes the languages this minimizer minifies, e.g. `["css"]`. Source that carries no filename — what a module embeds in another language's output — is dispatched by this rather than by `test` / `filter`, and a minimizer that declares nothing is never handed any
  * @property {(minimizerOptions?: EXPECTED_OBJECT) => string[] | undefined=} getEmbeddedTypes the languages this minimizer can hand out from inside what it minifies, through the `renderEmbeddedSource` option. Empty (or absent) means it nests nothing a caller can reach, and the option is not passed
  * @property {(compilation: typeof import("webpack").Compilation) => number | undefined=} getStage which `processAssets` stage this minimizer has to run in, named off the `Compilation` it is handed — compressing reads the bytes a user downloads, so it asks for `PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER`. Each runs where it asks, chaining through the asset a later pass reads back, and one asking for nothing runs where minifying belongs — after the bundle is rendered and before its hashes are taken
- * @property {(banner: string) => string=} formatBanner the comment the `extractComments` banner is written as at the top of the asset, a `/*!` block comment when absent. An HTML minimizer writes `<!-- ${banner} -->`, a block comment being text in a document
+ * @property {(banner: string) => string=} formatBanner the comment the `extractComments` banner is written as, a `/*!` block comment when absent. An HTML minimizer writes `<!-- ${banner} -->`, a block comment being text in a document
+ * @property {() => "start" | "end" | undefined=} getBannerPosition where the `extractComments` banner goes, `"start"` when absent. `"end"` appends it with nothing between, which an HTML minimizer asks for so that the doctype stays the first thing a document holds
  * @property {() => string | undefined=} getAssetFlag the name this function's work goes under in the asset's info, which is what the asset it wrote is marked with and what stats print. `compress` says `compressed`, another encoding of the bytes being no smaller a version of them; a minimizer saying nothing minified the asset, so `minimized`, and a generator saying nothing wrote a new file, so `generated`. It is also what is not run twice: an asset already marked with every name a function writes is declined, which is how a minified asset a child compilation handed up is left alone
  */
 
@@ -1180,15 +1181,27 @@ class MinimizerPlugin {
               }
 
               if (banner) {
-                const formatter = matched
-                  .map((i) => minimizerSlots[i].fn.formatBanner)
+                const helpers = matched.map((i) => minimizerSlots[i].fn);
+                const formatter = helpers
+                  .map((fn) => fn.formatBanner)
                   .find((format) => typeof format === "function");
-
-                output.source = new ConcatSource(
-                  shebang ? `${shebang}\n` : "",
-                  `${formatter ? formatter(String(banner)) : `/*! ${banner} */`}\n`,
-                  output.source,
+                const positioned = helpers.find(
+                  (fn) => typeof fn.getBannerPosition === "function",
                 );
+                const comment = formatter
+                  ? formatter(String(banner))
+                  : `/*! ${banner} */`;
+
+                output.source =
+                  positioned &&
+                  /** @type {() => "start" | "end" | undefined} */
+                  (positioned.getBannerPosition)() === "end"
+                    ? new ConcatSource(output.source, comment)
+                    : new ConcatSource(
+                        shebang ? `${shebang}\n` : "",
+                        `${comment}\n`,
+                        output.source,
+                      );
               }
             }
 

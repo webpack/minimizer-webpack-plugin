@@ -582,9 +582,13 @@ type MinimizeFunctionHelpers = {
       ) => number | undefined)
     | undefined;
   /**
-   * the comment the `extractComments` banner is written as at the top of the asset, a `/*!` block comment when absent. An HTML minimizer writes `<!-- ${banner} -->`, a block comment being text in a document
+   * the comment the `extractComments` banner is written as, a `/*!` block comment when absent. An HTML minimizer writes `<!-- ${banner} -->`, a block comment being text in a document
    */
   formatBanner?: ((banner: string) => string) | undefined;
+  /**
+   * where the `extractComments` banner goes, `"start"` when absent. `"end"` appends it with nothing between, which an HTML minimizer asks for so that the doctype stays the first thing a document holds
+   */
+  getBannerPosition?: (() => "start" | "end" | undefined) | undefined;
   /**
    * the name this function's work goes under in the asset's info, which is what the asset it wrote is marked with and what stats print. `compress` says `compressed`, another encoding of the bytes being no smaller a version of them; a minimizer saying nothing minified the asset, so `minimized`, and a generator saying nothing wrote a new file, so `generated`. It is also what is not run twice: an asset already marked with every name a function writes is declined, which is how a minified asset a child compilation handed up is left alone
    */

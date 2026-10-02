@@ -256,6 +256,30 @@ describe("minify option", () => {
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
   });
 
+  it("should append the banner where the minimizer's `getBannerPosition` says the end", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+    });
+
+    const minify = async (input) => ({
+      code: `<!doctype html><p>${Object.keys(input)[0]}</p>`,
+      extractedComments: ["<!-- @license MIT -->"],
+    });
+
+    minify.formatBanner = (banner) => `<!-- ${banner} -->`;
+    minify.getBannerPosition = () => "end";
+
+    new MinimizerPlugin({ parallel: false, minify }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readAsset("main.js", compiler, stats)).toBe(
+      "<!doctype html><p>main.js</p><!-- For license information please see main.js.LICENSE.txt -->",
+    );
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
   it("should work with source maps", async () => {
     const compiler = getCompiler({
       devtool: "source-map",
