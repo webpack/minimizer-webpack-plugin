@@ -1422,6 +1422,8 @@ The banner goes at the top of the asset; a `getBannerPosition` helper returning 
 minify.getBannerPosition = () => "end";
 ```
 
+The source of both helpers is part of the cache key and the `[chunkhash]`, but not the values they close over: a helper whose output depends on such a value must make `getMinimizerVersion` change with it, or a rebuild reuses the earlier banner from the cache.
+
 **webpack.config.js**
 
 ```js
