@@ -1410,7 +1410,19 @@ The banner text that points to the extracted file and will be added at the top o
 
 It can be `false` (no banner), a `String`, or a `function<(string) -> String>` that will be called with the filename where the extracted comments have been stored.
 
-The banner will be wrapped in a comment.
+The banner will be wrapped in a comment: `/*! … */` by default, or whatever the `minify` function's `formatBanner` helper returns. An HTML minimizer needs one, since a `/*!` line is text in a document:
+
+```js
+minify.formatBanner = (banner) => `<!-- ${banner} -->`;
+```
+
+The banner goes at the top of the asset; a `getBannerPosition` helper returning `"end"` appends it instead, which keeps a document's doctype first:
+
+```js
+minify.getBannerPosition = () => "end";
+```
+
+The source of both helpers is part of the cache key and the `[chunkhash]`, but not the values they close over: a helper whose output depends on such a value must make `getMinimizerVersion` change with it, or a rebuild reuses the earlier banner from the cache.
 
 **webpack.config.js**
 

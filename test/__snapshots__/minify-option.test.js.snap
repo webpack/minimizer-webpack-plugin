@@ -1,5 +1,9 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
+exports[`minify option should append the banner where the minimizer's \`getBannerPosition\` says the end: errors 1`] = `[]`;
+
+exports[`minify option should append the banner where the minimizer's \`getBannerPosition\` says the end: warnings 1`] = `[]`;
+
 exports[`minify option should carry the last good code forward when a step in the array returns no code: assets 1`] = `
 {
   "main.js": "(()=>{"use strict";console.log("HERE")})();
@@ -1066,3 +1070,7 @@ exports[`minify option should work: assets 1`] = `
 exports[`minify option should work: errors 1`] = `[]`;
 
 exports[`minify option should work: warnings 1`] = `[]`;
+
+exports[`minify option should write the banner as the minimizer's \`formatBanner\` says: errors 1`] = `[]`;
+
+exports[`minify option should write the banner as the minimizer's \`formatBanner\` says: warnings 1`] = `[]`;

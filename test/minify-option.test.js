@@ -33,6 +33,7 @@ import {
   getCompiler,
   getErrors,
   getWarnings,
+  readAsset,
   readsAssets,
 } from "./helpers";
 
@@ -227,6 +228,132 @@ describe("minify option", () => {
     expect(readsAssets(compiler, stats)).toMatchSnapshot("assets");
     expect(getErrors(stats)).toMatchSnapshot("errors");
     expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should write the banner as the minimizer's `formatBanner` says", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+    });
+
+    const minify = async (input) => ({
+      code: `<p>${Object.keys(input)[0]}</p>`,
+      extractedComments: ["<!-- @license MIT -->"],
+    });
+
+    minify.formatBanner = (banner) => `<!-- ${banner} -->`;
+
+    new MinimizerPlugin({ parallel: false, minify }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readAsset("main.js", compiler, stats)).toBe(
+      "<!-- For license information please see main.js.LICENSE.txt -->\n<p>main.js</p>",
+    );
+    expect(readAsset("main.js.LICENSE.txt", compiler, stats)).toBe(
+      "<!-- @license MIT -->\n",
+    );
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should append the banner where the minimizer's `getBannerPosition` says the end", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+    });
+
+    const minify = async (input) => ({
+      code: `<!doctype html><p>${Object.keys(input)[0]}</p>`,
+      extractedComments: ["<!-- @license MIT -->"],
+    });
+
+    minify.formatBanner = (banner) => `<!-- ${banner} -->`;
+    minify.getBannerPosition = () => "end";
+
+    new MinimizerPlugin({ parallel: false, minify }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readAsset("main.js", compiler, stats)).toBe(
+      "<!doctype html><p>main.js</p><!-- For license information please see main.js.LICENSE.txt -->",
+    );
+    expect(getErrors(stats)).toMatchSnapshot("errors");
+    expect(getWarnings(stats)).toMatchSnapshot("warnings");
+  });
+
+  it("should keep the shebang first when the banner goes at the end", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+    });
+
+    const minify = async () => ({
+      code: "#!/usr/bin/env node\nrun()",
+      extractedComments: ["/*! @license MIT */"],
+    });
+
+    minify.formatBanner = (banner) => `/* ${banner} */`;
+    minify.getBannerPosition = () => "end";
+
+    new MinimizerPlugin({ parallel: false, minify }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(readAsset("main.js", compiler, stats)).toBe(
+      "#!/usr/bin/env node\nrun()/* For license information please see main.js.LICENSE.txt */",
+    );
+  });
+
+  it("should report a banner helper that throws as an error of the asset", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+      bail: false,
+    });
+
+    const minify = async () => ({
+      code: "run()",
+      extractedComments: ["/*! @license MIT */"],
+    });
+
+    minify.formatBanner = () => {
+      throw new Error("no banner");
+    };
+
+    new MinimizerPlugin({ parallel: false, minify }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(stats.compilation.errors).toHaveLength(1);
+    expect(stats.compilation.errors[0].message).toMatch(
+      /main\.js from minimizer-webpack-plugin[\s\S]*no banner/,
+    );
+  });
+
+  it("should name a chunk apart when only its minimizer's banner helper differs", async () => {
+    /**
+     * @param {(banner: string) => string} formatBanner the helper
+     * @returns {Promise<string[]>} the emitted script names
+     */
+    const build = async (formatBanner) => {
+      const compiler = getCompiler({
+        entry: path.resolve(__dirname, "./fixtures/minify/es6.js"),
+        output: { filename: "[name].[chunkhash].js" },
+      });
+
+      const minify = async () => ({ code: "run()" });
+
+      minify.formatBanner = formatBanner;
+
+      new MinimizerPlugin({ parallel: false, minify }).apply(compiler);
+
+      const stats = await compile(compiler);
+
+      return Object.keys(stats.compilation.assets).filter((name) =>
+        name.endsWith(".js"),
+      );
+    };
+
+    expect(await build((banner) => `/* ${banner} */`)).not.toEqual(
+      await build((banner) => `<!-- ${banner} -->`),
+    );
   });
 
   it("should work with source maps", async () => {
