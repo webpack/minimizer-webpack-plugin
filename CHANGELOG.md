@@ -1,5 +1,15 @@
 # Changelog
 
+## 5.13.0
+
+### Minor Changes
+
+- Add `formatBanner` and `getBannerPosition` helpers to a `minify` function, so an HTML minimizer can write the `extractComments` banner as `<!-- … -->` at the end. (by [@alexander-akait](https://github.com/alexander-akait) in [#752](https://github.com/webpack/minimizer-webpack-plugin/pull/752))
+
+### Patch Changes
+
+- Fallback to the serialized worker path when regular expression options are used with process workers that cannot preserve them. (by [@xiaoxiaojx](https://github.com/xiaoxiaojx) in [#749](https://github.com/webpack/minimizer-webpack-plugin/pull/749))
+
 ## 5.12.0
 
 ### Minor Changes
