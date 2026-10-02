@@ -1188,20 +1188,32 @@ class MinimizerPlugin {
                 const positioned = helpers.find(
                   (fn) => typeof fn.getBannerPosition === "function",
                 );
-                const comment = formatter
-                  ? formatter(String(banner))
-                  : `/*! ${banner} */`;
 
-                output.source =
-                  positioned &&
-                  /** @type {() => "start" | "end" | undefined} */
-                  (positioned.getBannerPosition)() === "end"
-                    ? new ConcatSource(output.source, comment)
-                    : new ConcatSource(
-                        shebang ? `${shebang}\n` : "",
-                        `${comment}\n`,
-                        output.source,
-                      );
+                // The helpers are the minimizer's code, so one that throws is
+                // reported against this asset like a failed minify.
+                try {
+                  const comment = formatter
+                    ? formatter(String(banner))
+                    : `/*! ${banner} */`;
+                  const head = shebang ? `${shebang}\n` : "";
+
+                  output.source =
+                    positioned &&
+                    /** @type {() => "start" | "end" | undefined} */
+                    (positioned.getBannerPosition)() === "end"
+                      ? new ConcatSource(head, output.source, comment)
+                      : new ConcatSource(head, `${comment}\n`, output.source);
+                } catch (error) {
+                  compilation.errors.push(
+                    MinimizerPlugin.buildError(
+                      /** @type {Error | ErrorObject | string} */
+                      (error),
+                      name,
+                    ),
+                  );
+
+                  return;
+                }
               }
             }
 
@@ -2482,8 +2494,17 @@ class MinimizerPlugin {
             ? fn.getMinimizerVersion() || "0.0.0"
             : "0.0.0";
 
+        // A banner helper changes the bytes written, so its source joins the
+        // identity; only where one is declared, so no other key moves.
+        const banner =
+          fn &&
+          (typeof fn.formatBanner === "function" ||
+            typeof fn.getBannerPosition === "function")
+            ? `|${String(fn.formatBanner)}|${String(fn.getBannerPosition)}`
+            : "";
+
         if (!ref) {
-          return version;
+          return `${version}${banner}`;
         }
 
         // Which module it is, read against the build rather than the disk: two
@@ -2496,7 +2517,7 @@ class MinimizerPlugin {
           )
           .replace(/\\/g, "/");
 
-        return `${version}|${where}|${ref.export || ""}`;
+        return `${version}|${where}|${ref.export || ""}${banner}`;
       };
       const data = getSerializeJavascript()({
         minimizer: Array.isArray(this.options.minimizer.implementation)
