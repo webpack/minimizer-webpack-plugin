@@ -105,6 +105,36 @@ function holdsFunction(value, seen = new Set()) {
 }
 
 /**
+ * Whether a value holds a regular expression anywhere inside it.
+ * Child-process workers on runtimes without worker threads use the default
+ * process IPC serializer, which does not preserve regular expressions.
+ * @param {unknown} value what a worker would be handed
+ * @param {Set<unknown>=} seen values already walked
+ * @returns {boolean} true when a regular expression is in there
+ */
+function holdsRegExp(value, seen = new Set()) {
+  if (value instanceof RegExp) {
+    return true;
+  }
+  if (!value || typeof value !== "object" || seen.has(value)) {
+    return false;
+  }
+  seen.add(value);
+
+  if (value instanceof Map) {
+    return [...value].some(
+      ([key, one]) => holdsRegExp(key, seen) || holdsRegExp(one, seen),
+    );
+  }
+  if (value instanceof Set) {
+    return [...value].some((one) => holdsRegExp(one, seen));
+  }
+  return Object.values(/** @type {Record<string, unknown>} */ (value)).some(
+    (one) => holdsRegExp(one, seen),
+  );
+}
+
+/**
  * True when every `minimizer.implementation` is a module path (`string` or
  * `{ path, export }`). Inline minify functions keep `transform`. When
  * `embedded` is present, *every* configured implementation must be a path —
@@ -112,9 +142,10 @@ function holdsFunction(value, seen = new Set()) {
  * whole asset task, even if that asset's own matched minimizers are paths.
  * @template T
  * @param {import("./index.js").InternalOptions<T>} options options
+ * @param {{ enableWorkerThreads?: boolean }=} capabilities worker capabilities
  * @returns {boolean} whether `worker.minify` can run without `transform`
  */
-function canMinifyByPath(options) {
+function canMinifyByPath(options, capabilities = {}) {
   /**
    * @param {unknown} implementation implementation
    * @returns {boolean} true when a module path is known
@@ -138,12 +169,25 @@ function canMinifyByPath(options) {
   ) {
     return false;
   }
+  if (
+    capabilities.enableWorkerThreads === false &&
+    (holdsRegExp(options.extractComments) ||
+      holdsRegExp(options.minimizer.options))
+  ) {
+    return false;
+  }
 
   if (!options.embedded) {
     return true;
   }
 
   if (holdsFunction(options.embedded.options)) {
+    return false;
+  }
+  if (
+    capabilities.enableWorkerThreads === false &&
+    holdsRegExp(options.embedded.options)
+  ) {
     return false;
   }
 
