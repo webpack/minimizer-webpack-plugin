@@ -27,6 +27,18 @@ const htmlMinify = require(WEBPACK_HTML_MINIFY);
 const fixture = (name) => path.resolve(__dirname, "./fixtures/embedded", name);
 
 /**
+ * A one-rule stylesheet with its declarations sorted: webpack 5.112's CSS
+ * minimizer emits them in a different order than 5.110 and 5.111 did.
+ * @param {string} css minified stylesheet
+ * @returns {string} the stylesheet with sorted declarations
+ */
+const sortDeclarations = (css) => {
+  const [, selector, body] = /^([^{]+)\{(.*)\}$/.exec(css);
+
+  return `${selector}{${body.split(";").sort().join(";")}}`;
+};
+
+/**
  * The three minify functions webpack's own `optimization.minimize` wires into
  * one plugin instance, which is what makes this work out of the box.
  * @param {object} options plugin options
@@ -642,8 +654,10 @@ describe("embedded source", () => {
       const stats = await compile(compiler);
 
       expect(getErrors(stats)).toEqual([]);
-      expect(readAsset("sheet.css", compiler, stats)).toBe(
-        ".a{background:url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'> <rect /> </svg>\");color:red}",
+      expect(sortDeclarations(readAsset("sheet.css", compiler, stats))).toBe(
+        sortDeclarations(
+          ".a{background:url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'> <rect /> </svg>\");color:red}",
+        ),
       );
     });
 
@@ -739,8 +753,10 @@ describe("embedded source", () => {
       const stats = await compile(compiler);
 
       expect(getErrors(stats)).toEqual([]);
-      expect(readAsset("sheet.css", compiler, stats)).toBe(
-        ".a{background:url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'>   <rect  />   </svg>\");color:red}",
+      expect(sortDeclarations(readAsset("sheet.css", compiler, stats))).toBe(
+        sortDeclarations(
+          ".a{background:url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'>   <rect  />   </svg>\");color:red}",
+        ),
       );
     });
   });
