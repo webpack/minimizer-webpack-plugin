@@ -80,6 +80,7 @@
     "CHANGELOG.md",
     "package.json",
     "src/serialize-javascript.js",
+    "src/options.check.js",
     "dist/**",
     "**/__snapshots__/**",
     "package-lock.json",

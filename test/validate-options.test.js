@@ -1,13 +1,37 @@
+import { validate } from "schema-utils";
+
 import MinimizerPlugin from "../src";
+import check from "../src/options.check";
+import schema from "../src/options.json";
 
 import { getCompiler } from "./helpers";
+
+/**
+ * Whether the full validation accepts the options.
+ * @param {EXPECTED_ANY} options plugin options
+ * @returns {boolean} true when valid
+ */
+const isValid = (options) => {
+  try {
+    validate(/** @type {EXPECTED_ANY} */ (schema), options);
+  } catch (_err) {
+    return false;
+  }
+
+  return true;
+};
 
 /**
  * @param {EXPECTED_ANY} options plugin options
  * @returns {import("webpack").Compiler} compiler
  */
-const createCompiler = (options) =>
-  getCompiler({ plugins: [new MinimizerPlugin(options)] });
+const createCompiler = (options) => {
+  // The precompiled check has to agree with the schema it was compiled from,
+  // a valid value is never validated against the schema itself
+  expect(check(options === undefined ? {} : options)).toBe(isValid(options));
+
+  return getCompiler({ plugins: [new MinimizerPlugin(options)] });
+};
 
 describe("validation", () => {
   it("validate", () => {

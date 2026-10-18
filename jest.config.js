@@ -37,7 +37,15 @@ module.exports = {
   // older Node on macOS), where webpack + multiple minimizers per asset
   // routinely take longer than that.
   testTimeout: 60000,
-  coveragePathIgnorePatterns: ["src/serialize-javascript.js"],
+  coveragePathIgnorePatterns: [
+    "src/serialize-javascript.js",
+    "src/options.check.js",
+  ],
+  // Babel ignores the generated check, see `babel.config.js`
+  transformIgnorePatterns: [
+    "/node_modules/",
+    "<rootDir>/src/options\\.check\\.js$",
+  ],
   snapshotSerializers: ["<rootDir>/test/helpers/snapshotHashSerializer.js"],
   testPathIgnorePatterns,
 };

@@ -2413,10 +2413,13 @@ class MinimizerPlugin {
    */
   validateOptions(compiler) {
     if (typeof compiler.validate === "function") {
+      // The precompiled check validates valid options without `ajv`, webpack
+      // only compiles the schema to report what is wrong with invalid ones
       compiler.validate(
         () => /** @type {Schema} */ (require("./options.json")),
         this.rawOptions,
         VALIDATION_CONFIGURATION,
+        require("./options.check.js"),
       );
       this.validateMinimizers();
       this.validateGenerators();
@@ -2432,6 +2435,7 @@ class MinimizerPlugin {
       /** @type {Schema} */ (require("./options.json")),
       this.rawOptions,
       VALIDATION_CONFIGURATION,
+      require("./options.check.js"),
     );
     this.validateMinimizers();
     this.validateGenerators();
