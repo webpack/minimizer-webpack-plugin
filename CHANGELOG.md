@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.13.1
+
+### Patch Changes
+
+- perf: validate options with a check precompiled by `schema-utils precompile`, so valid options no longer load `ajv` and compile the schema, about 200ms off every production webpack start (by [@alexander-akait](https://github.com/alexander-akait) in [#756](https://github.com/webpack/minimizer-webpack-plugin/pull/756))
+
 ## 5.13.0
 
 ### Minor Changes
