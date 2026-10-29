@@ -735,4 +735,89 @@ describe("extractComments option", () => {
       expect(getWarnings(stats)).toEqual([]);
     },
   );
+
+  it("should record the banner and the license URL it holds in the asset info", async () => {
+    new MinimizerPlugin({
+      extractComments: { condition: true, filename: "licenses/[file].txt" },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+    const { info } = stats.compilation.getAsset("filename/one.js");
+
+    expect(info.related.license).toBe("licenses/filename/one.js.txt");
+    expect(info.licenseBanner).toEqual({
+      comment:
+        "/*! For license information please see ../licenses/filename/one.js.txt */",
+      href: "../licenses/filename/one.js.txt",
+    });
+    expect(
+      readAsset("filename/one.js", compiler, stats).startsWith(
+        `${info.licenseBanner.comment}\n`,
+      ),
+    ).toBe(true);
+  });
+
+  it("should record the banner of a result read back from the cache", async () => {
+    compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/comments.js"),
+      output: { filename: "filename/[name].js" },
+      cache: { type: "memory" },
+    });
+    new MinimizerPlugin({ extractComments: true }).apply(compiler);
+
+    await compile(compiler);
+    const stats = await compile(compiler);
+
+    expect(
+      stats.compilation.getAsset("filename/main.js").info.licenseBanner,
+    ).toEqual({
+      comment: "/*! For license information please see main.js.LICENSE.txt */",
+      href: "main.js.LICENSE.txt",
+    });
+  });
+
+  it("should record the license file a custom banner names as its URL", async () => {
+    new MinimizerPlugin({
+      extractComments: {
+        condition: true,
+        banner: (licenseFile) => `License information is in ${licenseFile}`,
+      },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(
+      stats.compilation.getAsset("filename/one.js").info.licenseBanner,
+    ).toEqual({
+      comment: "/*! License information is in filename/one.js.LICENSE.txt */",
+      href: "filename/one.js.LICENSE.txt",
+    });
+  });
+
+  it("should record no URL for a banner that names no license file", async () => {
+    new MinimizerPlugin({
+      extractComments: { condition: true, banner: "See the licenses" },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(
+      stats.compilation.getAsset("filename/one.js").info.licenseBanner,
+    ).toEqual({
+      comment: "/*! See the licenses */",
+      href: undefined,
+    });
+  });
+
+  it("should record no banner when none is written", async () => {
+    new MinimizerPlugin({
+      extractComments: { condition: true, banner: false },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+    const { info } = stats.compilation.getAsset("filename/one.js");
+
+    expect(info.related.license).toBe("filename/one.js.LICENSE.txt");
+    expect(info.licenseBanner).toBeUndefined();
+  });
 });

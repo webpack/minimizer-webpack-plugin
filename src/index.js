@@ -364,6 +364,32 @@ const chunkAssetName = (compilation, chunk) => {
 };
 
 /**
+ * The relative URL one output file reaches another by: asset names are URL
+ * paths, `/`-separated whatever the platform.
+ * @param {string} from the name of the file the URL is written in
+ * @param {string} to the name of the file the URL points at
+ * @returns {string} the relative URL
+ */
+const relativeUrl = (from, to) => {
+  const fromDirectories = from.split("/").slice(0, -1);
+  const toParts = to.split("/");
+  let shared = 0;
+
+  while (
+    shared < fromDirectories.length &&
+    shared < toParts.length - 1 &&
+    fromDirectories[shared] === toParts[shared]
+  ) {
+    shared++;
+  }
+
+  return (
+    "../".repeat(fromDirectories.length - shared) +
+    toParts.slice(shared).join("/")
+  );
+};
+
+/**
  * The names an implementation's work goes under in an asset's info, which is
  * the union where several ran as one chain.
  * @param {EXPECTED_ANY} implementation one implementation, or an array of them
@@ -1169,12 +1195,12 @@ class MinimizerPlugin {
               /** @type {ExtractCommentsObject} */
               (this.options.extractComments).banner !== false
             ) {
-              let banner =
+              const custom =
                 /** @type {ExtractCommentsObject} */
-                (this.options.extractComments).banner ||
-                `For license information please see ${path
-                  .relative(path.dirname(name), output.commentsFilename)
-                  .replace(/\\/g, "/")}`;
+                (this.options.extractComments).banner;
+              const href = relativeUrl(name, output.commentsFilename);
+              let banner =
+                custom || `For license information please see ${href}`;
 
               if (typeof banner === "function") {
                 banner = banner(output.commentsFilename);
@@ -1196,6 +1222,18 @@ class MinimizerPlugin {
                     ? formatter(String(banner))
                     : `/*! ${banner} */`;
                   const head = shebang ? `${shebang}\n` : "";
+
+                  // Where the bytes end up written into another file, a tool
+                  // rebases the URL the comment holds, found here rather than
+                  // by its wording.
+                  output.licenseBanner = {
+                    comment,
+                    href: !custom
+                      ? href
+                      : comment.includes(output.commentsFilename)
+                        ? output.commentsFilename
+                        : undefined,
+                  };
 
                   output.source =
                     positioned &&
@@ -1232,6 +1270,7 @@ class MinimizerPlugin {
             warnings: output.warnings,
             commentsFilename: output.commentsFilename,
             extractedCommentsSource: output.extractedCommentsSource,
+            licenseBanner: output.licenseBanner,
           });
         }
 
@@ -1277,6 +1316,10 @@ class MinimizerPlugin {
           newInfo.related = {
             license: /** @type {string} */ (output.commentsFilename),
           };
+        }
+
+        if (output.licenseBanner) {
+          newInfo.licenseBanner = output.licenseBanner;
         }
 
         compilation.updateAsset(name, output.source, newInfo);
