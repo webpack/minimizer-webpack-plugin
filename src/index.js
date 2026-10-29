@@ -1198,7 +1198,7 @@ class MinimizerPlugin {
               const custom =
                 /** @type {ExtractCommentsObject} */
                 (this.options.extractComments).banner;
-              const href = relativeUrl(name, output.commentsFilename);
+              const href = relativeUrl(filename, output.commentsFilename);
               let banner =
                 custom || `For license information please see ${href}`;
 

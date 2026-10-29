@@ -757,6 +757,23 @@ describe("extractComments option", () => {
     ).toBe(true);
   });
 
+  it("should keep a slash in the query out of the banner's URL", async () => {
+    compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/comments.js"),
+      output: { filename: "filename/[name].js?x=/a" },
+    });
+    new MinimizerPlugin({ extractComments: true }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(
+      stats.compilation.getAsset("filename/main.js?x=/a").info.licenseBanner,
+    ).toEqual({
+      comment: "/*! For license information please see main.js.LICENSE.txt */",
+      href: "main.js.LICENSE.txt",
+    });
+  });
+
   it("should record the banner of a result read back from the cache", async () => {
     compiler = getCompiler({
       entry: path.resolve(__dirname, "./fixtures/comments.js"),
