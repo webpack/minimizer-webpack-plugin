@@ -9,6 +9,7 @@ const {
   resolveImplementationModule,
 } = require("./implementation");
 const { minify } = require("./minify");
+const { getSources } = require("./sources");
 const {
   cleanCssMinify,
   compress,
@@ -413,12 +414,6 @@ const VALIDATION_CONFIGURATION = {
   baseDataPath: "options",
 };
 
-// TODO use `compiler.webpack.sources` in the next major release, when the
-// minimum webpack ships webpack-sources >= 3.7.0, and drop the dependency;
-// until then an older webpack's copy may lack `util.sourceMap`.
-const getSourceMapUtil = memoize(
-  () => require("webpack-sources").util.sourceMap,
-);
 const getSerializeJavascript = memoize(() => require("./serialize-javascript"));
 
 /**
@@ -555,9 +550,10 @@ class MinimizerPlugin {
    * @param {string} file file
    * @param {RawSourceMap=} sourceMap source map
    * @param {Compilation["requestShortener"]=} requestShortener request shortener
+   * @param {Compiler["webpack"]["sources"]=} sources `compiler.webpack.sources`, to read the source map with
    * @returns {Error} built error
    */
-  static buildError(error, file, sourceMap, requestShortener) {
+  static buildError(error, file, sourceMap, requestShortener, sources) {
     /**
      * @type {Error & { file?: string }}
      */
@@ -576,7 +572,11 @@ class MinimizerPlugin {
       const original =
         sourceMap &&
         typeof column === "number" &&
-        getSourceMapUtil().originalPositionFor(sourceMap, line, column);
+        getSources(sources).util.sourceMap.originalPositionFor(
+          sourceMap,
+          line,
+          column,
+        );
 
       if (original && original.source && requestShortener) {
         builtError = new Error(
@@ -1036,6 +1036,7 @@ class MinimizerPlugin {
                 hasSourceMap ? inputSourceMap : undefined,
 
                 hasSourceMap ? compilation.requestShortener : undefined,
+                compiler.webpack.sources,
               ),
             );
 
@@ -1076,6 +1077,7 @@ class MinimizerPlugin {
                   hasSourceMap ? inputSourceMap : undefined,
 
                   hasSourceMap ? compilation.requestShortener : undefined,
+                  compiler.webpack.sources,
                 ),
             );
           }

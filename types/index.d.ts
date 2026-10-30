@@ -22,6 +22,7 @@ declare class MinimizerPlugin<T = import("terser").MinifyOptions> {
    * @param {string} file file
    * @param {RawSourceMap=} sourceMap source map
    * @param {Compilation["requestShortener"]=} requestShortener request shortener
+   * @param {Compiler["webpack"]["sources"]=} sources `compiler.webpack.sources`, to read the source map with
    * @returns {Error} built error
    */
   private static buildError;
