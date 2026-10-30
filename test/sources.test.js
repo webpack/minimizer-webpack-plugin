@@ -19,11 +19,11 @@ describe("getSources", () => {
   });
 
   it("should read the installed webpack's copy by default", () => {
+    // An older webpack-sources may lack `util` itself, as well as `util.sourceMap`.
+    const { util } = /** @type {EXPECTED_ANY} */ (webpackSources);
+
     expect(getSources()).toBe(
-      typeof (/** @type {EXPECTED_ANY} */ (webpackSources).util.sourceMap) ===
-        "object"
-        ? webpackSources
-        : pluginSources,
+      util && util.sourceMap ? webpackSources : pluginSources,
     );
   });
 });
