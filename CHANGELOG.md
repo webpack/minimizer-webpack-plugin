@@ -1,5 +1,15 @@
 # Changelog
 
+## 5.14.0
+
+### Minor Changes
+
+- Record the `extractComments` banner and the URL it names the license file by as `licenseBanner` in the asset info, and build that URL without the `path` module. (by [@alexander-akait](https://github.com/alexander-akait) in [#764](https://github.com/webpack/minimizer-webpack-plugin/pull/764))
+
+### Patch Changes
+
+- Compose source maps and locate minifier errors with webpack's own `webpack-sources` (`compiler.webpack.sources`) instead of `@jridgewell/trace-mapping`, which now map each token to its exact original column. The plugin no longer has a source map dependency of its own; with a webpack whose `webpack-sources` predates 3.7.0, minifier errors are reported at their minified position. (by [@alexander-akait](https://github.com/alexander-akait) in [#767](https://github.com/webpack/minimizer-webpack-plugin/pull/767))
+
 ## 5.13.1
 
 ### Patch Changes
