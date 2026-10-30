@@ -1318,11 +1318,19 @@ class MinimizerPlugin {
           };
         }
 
-        if (output.licenseBanner) {
-          newInfo.licenseBanner = output.licenseBanner;
-        }
-
         compilation.updateAsset(name, output.source, newInfo);
+
+        // Asset info merges field by field, which would pair this comment with
+        // an earlier banner's `href`, so the banner replaces it whole.
+        if (output.licenseBanner) {
+          const { licenseBanner } = output;
+
+          compilation.updateAsset(
+            name,
+            (source) => source,
+            (info) => ({ ...info, licenseBanner }),
+          );
+        }
       });
     }
 
@@ -2698,12 +2706,12 @@ class MinimizerPlugin {
               availableNumberOfCores,
               only,
               written,
-              // Only where a second pass exists to be confused with: one pass
-              // keeps the cache keys every earlier release wrote.
-              // The minimizers and their options answer for what is cached
-              // under an asset's name, which otherwise varies only with its
-              // source.
-              cacheSuffix: `${minimizersByStage.size > 1 ? `|${at}` : ""}|${identity}`,
+              // The stage joins the key only where a second pass exists to be
+              // confused with. The minimizers and their options answer for what
+              // is cached under an asset's name, which otherwise varies only
+              // with its source; `license-banner` keeps a result cached before
+              // the asset info recorded the banner from being restored without.
+              cacheSuffix: `${minimizersByStage.size > 1 ? `|${at}` : ""}|${identity}|license-banner`,
             }),
         );
       }

@@ -826,6 +826,31 @@ describe("extractComments option", () => {
     });
   });
 
+  it("should replace a banner recorded earlier as a whole", async () => {
+    compiler.hooks.thisCompilation.tap("earlier-banner", (compilation) => {
+      compilation.hooks.processAssets.tap(
+        {
+          name: "earlier-banner",
+          stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
+        },
+        () => {
+          compilation.updateAsset("filename/one.js", (source) => source, {
+            licenseBanner: { comment: "/*! earlier */", href: "earlier.txt" },
+          });
+        },
+      );
+    });
+    new MinimizerPlugin({
+      extractComments: { condition: true, banner: "See the licenses" },
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(
+      stats.compilation.getAsset("filename/one.js").info.licenseBanner,
+    ).toEqual({ comment: "/*! See the licenses */", href: undefined });
+  });
+
   it("should record no banner when none is written", async () => {
     new MinimizerPlugin({
       extractComments: { condition: true, banner: false },
