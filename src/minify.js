@@ -29,6 +29,8 @@ function composeSourceMaps(code, currentMap, input, prevMap, name) {
     return currentMap;
   }
 
+  // TODO take `SourceMapSource` from webpack in the next major release, with
+  // the `webpack-sources` dependency dropped (see `getSourceMapUtil`).
   const { SourceMapSource } = require("webpack-sources");
 
   // `true` drops `name` itself: every mapping into it is traced on into

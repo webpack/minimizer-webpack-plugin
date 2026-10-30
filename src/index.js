@@ -413,6 +413,9 @@ const VALIDATION_CONFIGURATION = {
   baseDataPath: "options",
 };
 
+// TODO use `compiler.webpack.sources` in the next major release, when the
+// minimum webpack ships webpack-sources >= 3.7.0, and drop the dependency;
+// until then an older webpack's copy may lack `util.sourceMap`.
 const getSourceMapUtil = memoize(
   () => require("webpack-sources").util.sourceMap,
 );
