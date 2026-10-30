@@ -1424,6 +1424,8 @@ minify.getBannerPosition = () => "end";
 
 The source of both helpers is part of the cache key and the `[chunkhash]`, but not the values they close over: a helper whose output depends on such a value must make `getMinimizerVersion` change with it, or a rebuild reuses the earlier banner from the cache.
 
+The asset's info records the banner as `licenseBanner`: `comment` is the comment as written, and `href` the URL it reaches the extracted file by — relative to the asset for the default banner, the name a custom banner was called with where its text holds it, and `undefined` otherwise. A tool that writes the asset's bytes into another file, such as a page inlining a script, replaces `href` within `comment` with the URL from where that file is.
+
 **webpack.config.js**
 
 ```js

@@ -364,6 +364,32 @@ const chunkAssetName = (compilation, chunk) => {
 };
 
 /**
+ * The relative URL one output file reaches another by: asset names are URL
+ * paths, `/`-separated whatever the platform.
+ * @param {string} from the name of the file the URL is written in
+ * @param {string} to the name of the file the URL points at
+ * @returns {string} the relative URL
+ */
+const relativeUrl = (from, to) => {
+  const fromDirectories = from.split("/").slice(0, -1);
+  const toParts = to.split("/");
+  let shared = 0;
+
+  while (
+    shared < fromDirectories.length &&
+    shared < toParts.length - 1 &&
+    fromDirectories[shared] === toParts[shared]
+  ) {
+    shared++;
+  }
+
+  return (
+    "../".repeat(fromDirectories.length - shared) +
+    toParts.slice(shared).join("/")
+  );
+};
+
+/**
  * The names an implementation's work goes under in an asset's info, which is
  * the union where several ran as one chain.
  * @param {EXPECTED_ANY} implementation one implementation, or an array of them
@@ -1169,12 +1195,12 @@ class MinimizerPlugin {
               /** @type {ExtractCommentsObject} */
               (this.options.extractComments).banner !== false
             ) {
-              let banner =
+              const custom =
                 /** @type {ExtractCommentsObject} */
-                (this.options.extractComments).banner ||
-                `For license information please see ${path
-                  .relative(path.dirname(name), output.commentsFilename)
-                  .replace(/\\/g, "/")}`;
+                (this.options.extractComments).banner;
+              const href = relativeUrl(filename, output.commentsFilename);
+              let banner =
+                custom || `For license information please see ${href}`;
 
               if (typeof banner === "function") {
                 banner = banner(output.commentsFilename);
@@ -1196,6 +1222,18 @@ class MinimizerPlugin {
                     ? formatter(String(banner))
                     : `/*! ${banner} */`;
                   const head = shebang ? `${shebang}\n` : "";
+
+                  // Where the bytes end up written into another file, a tool
+                  // rebases the URL the comment holds, found here rather than
+                  // by its wording.
+                  output.licenseBanner = {
+                    comment,
+                    href: !custom
+                      ? href
+                      : comment.includes(output.commentsFilename)
+                        ? output.commentsFilename
+                        : undefined,
+                  };
 
                   output.source =
                     positioned &&
@@ -1232,6 +1270,7 @@ class MinimizerPlugin {
             warnings: output.warnings,
             commentsFilename: output.commentsFilename,
             extractedCommentsSource: output.extractedCommentsSource,
+            licenseBanner: output.licenseBanner,
           });
         }
 
@@ -1280,6 +1319,18 @@ class MinimizerPlugin {
         }
 
         compilation.updateAsset(name, output.source, newInfo);
+
+        // Asset info merges field by field, which would pair this comment with
+        // an earlier banner's `href`, so the banner replaces it whole.
+        if (output.licenseBanner) {
+          const { licenseBanner } = output;
+
+          compilation.updateAsset(
+            name,
+            (source) => source,
+            (info) => ({ ...info, licenseBanner }),
+          );
+        }
       });
     }
 
@@ -2655,12 +2706,12 @@ class MinimizerPlugin {
               availableNumberOfCores,
               only,
               written,
-              // Only where a second pass exists to be confused with: one pass
-              // keeps the cache keys every earlier release wrote.
-              // The minimizers and their options answer for what is cached
-              // under an asset's name, which otherwise varies only with its
-              // source.
-              cacheSuffix: `${minimizersByStage.size > 1 ? `|${at}` : ""}|${identity}`,
+              // The stage joins the key only where a second pass exists to be
+              // confused with. The minimizers and their options answer for what
+              // is cached under an asset's name, which otherwise varies only
+              // with its source; `license-banner` keeps a result cached before
+              // the asset info recorded the banner from being restored without.
+              cacheSuffix: `${minimizersByStage.size > 1 ? `|${at}` : ""}|${identity}|license-banner`,
             }),
         );
       }
