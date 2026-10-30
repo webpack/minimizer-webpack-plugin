@@ -12,6 +12,66 @@
  * @typedef {import("./index.js").MinimizerOptions<T>} MinimizerOptions
  */
 
+const BASE64 =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+/**
+ * Encode decoded mappings (per line, arrays of segments) into the spec's
+ * `mappings` string, which is all `SourceMapSource` reads.
+ * @param {number[][][]} decoded decoded mappings
+ * @returns {string} encoded mappings
+ */
+function encodeMappings(decoded) {
+  // Generated column restarts on every line; the other fields run on.
+  const previous = [0, 0, 0, 0, 0];
+  let result = "";
+
+  for (let line = 0; line < decoded.length; line++) {
+    if (line > 0) result += ";";
+
+    previous[0] = 0;
+
+    for (let i = 0; i < decoded[line].length; i++) {
+      if (i > 0) result += ",";
+
+      const segment = decoded[line][i];
+
+      for (let field = 0; field < segment.length; field++) {
+        const delta = segment[field] - previous[field];
+        let vlq = delta < 0 ? (-delta << 1) | 1 : delta << 1;
+
+        previous[field] = segment[field];
+
+        do {
+          let digit = vlq & 31;
+
+          vlq >>>= 5;
+
+          if (vlq > 0) digit |= 32;
+
+          result += BASE64[digit];
+        } while (vlq > 0);
+      }
+    }
+  }
+
+  return result;
+}
+
+/**
+ * A minimizer's map as `SourceMapSource` reads it: a custom minimizer may
+ * answer with decoded `mappings`, which it cannot.
+ * @param {RawSourceMap | string} map source map
+ * @returns {RawSourceMap | string} source map with encoded mappings
+ */
+function encodeSourceMap(map) {
+  const raw = typeof map === "string" ? JSON.parse(map) : map;
+
+  return Array.isArray(raw.mappings)
+    ? { ...raw, mappings: encodeMappings(raw.mappings) }
+    : map;
+}
+
 /**
  * Compose a freshly-produced source map with the input source map fed to
  * the minimizer. `currentMap` represents `name → step-output` and
@@ -37,9 +97,9 @@ function composeSourceMaps(code, currentMap, input, prevMap, name) {
   const map = new SourceMapSource(
     code,
     name,
-    currentMap,
+    encodeSourceMap(currentMap),
     input,
-    prevMap,
+    encodeSourceMap(prevMap),
     true,
   ).map();
 

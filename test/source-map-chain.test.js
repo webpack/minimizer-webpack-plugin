@@ -1,6 +1,10 @@
 import path from "path";
 
-import { TraceMap, eachMapping } from "@jridgewell/trace-mapping";
+import {
+  TraceMap,
+  decodedMappings,
+  eachMapping,
+} from "@jridgewell/trace-mapping";
 
 import MinimizerPlugin from "../src/index";
 
@@ -99,6 +103,37 @@ describe("source maps through a chain of minimizers", () => {
 
       expect(errors).toEqual([]);
       // The asset itself is an intermediate step, never an original source.
+      expect(map.sources).not.toContain("main.js");
+      expect(named).toBeGreaterThan(0);
+      expect(wrong).toEqual([]);
+    },
+  );
+
+  it.each([
+    ["first", (decoded) => [decoded, MinimizerPlugin.terserMinify]],
+    ["last", (decoded) => [MinimizerPlugin.terserMinify, decoded]],
+  ])(
+    "should map every name back when the %s minimizer returns decoded mappings",
+    async (_name, chain) => {
+      // A custom minimizer may answer with `mappings` as arrays of segments.
+      /** @type {EXPECTED_ANY} */
+      const decoded = async (...args) => {
+        const result = await MinimizerPlugin.terserMinify(...args);
+        const map =
+          typeof result.map === "string" ? JSON.parse(result.map) : result.map;
+
+        return {
+          ...result,
+          map: { ...map, mappings: decodedMappings(new TraceMap(map)) },
+        };
+      };
+      const { map, errors } = await build(chain(decoded), [
+        { mangle: false },
+        { mangle: true },
+      ]);
+      const { named, wrong } = checkNames(map);
+
+      expect(errors).toEqual([]);
       expect(map.sources).not.toContain("main.js");
       expect(named).toBeGreaterThan(0);
       expect(wrong).toEqual([]);
