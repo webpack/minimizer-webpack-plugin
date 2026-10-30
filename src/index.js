@@ -9,6 +9,7 @@ const {
   resolveImplementationModule,
 } = require("./implementation");
 const { minify } = require("./minify");
+const { getSourceMapUtil } = require("./sources");
 const {
   cleanCssMinify,
   compress,
@@ -68,8 +69,7 @@ const canUseWorkerThreads = () => {
 /** @typedef {import("webpack").AssetInfo} AssetInfo */
 /** @typedef {import("webpack").TemplatePath} TemplatePath */
 /** @typedef {import("jest-worker").Worker} JestWorker */
-/** @typedef {import("@jridgewell/trace-mapping").EncodedSourceMap & { sources: string[], sourcesContent?: string[], file: string }} RawSourceMap */
-/** @typedef {import("@jridgewell/trace-mapping").TraceMap} TraceMap */
+/** @typedef {Exclude<ReturnType<import("webpack").sources.Source["map"]>, null>} RawSourceMap */
 
 /** @typedef {RegExp | string} Rule */
 /** @typedef {Rule[] | Rule} Rules */
@@ -440,7 +440,6 @@ const VALIDATION_CONFIGURATION = {
   baseDataPath: "options",
 };
 
-const getTraceMapping = memoize(() => require("@jridgewell/trace-mapping"));
 const getSerializeJavascript = memoize(() => require("./serialize-javascript"));
 
 /**
@@ -538,8 +537,7 @@ class MinimizerPlugin {
    * @returns {boolean} Whether input is a source map
    */
   static isSourceMap(input) {
-    // All required options for `new TraceMap(...options)`
-    // https://github.com/jridgewell/trace-mapping#usage
+    // The fields a map needs to be read at all.
     return Boolean(
       input &&
       typeof input === "object" &&
@@ -576,11 +574,12 @@ class MinimizerPlugin {
    * @private
    * @param {Error | ErrorObject | string} error error
    * @param {string} file file
-   * @param {TraceMap=} sourceMap source map
+   * @param {RawSourceMap=} sourceMap source map
    * @param {Compilation["requestShortener"]=} requestShortener request shortener
+   * @param {Compiler["webpack"]["sources"]=} sources `compiler.webpack.sources`, to read the source map with
    * @returns {Error} built error
    */
-  static buildError(error, file, sourceMap, requestShortener) {
+  static buildError(error, file, sourceMap, requestShortener, sources) {
     /**
      * @type {Error & { file?: string }}
      */
@@ -596,12 +595,17 @@ class MinimizerPlugin {
     if (/** @type {ErrorObject} */ (error).line) {
       const { line, column } =
         /** @type {ErrorObject & { line: number, column: number }} */ (error);
+      // A webpack whose webpack-sources predates 3.7.0 cannot read the map,
+      // and the error is reported at its minified position.
+      const sourceMapUtil = sourceMap && getSourceMapUtil(sources);
       const original =
-        sourceMap &&
-        getTraceMapping().originalPositionFor(sourceMap, {
+        sourceMapUtil &&
+        typeof column === "number" &&
+        sourceMapUtil.originalPositionFor(
+          /** @type {RawSourceMap} */ (sourceMap),
           line,
           column,
-        });
+        );
 
       if (original && original.source && requestShortener) {
         builtError = new Error(
@@ -1058,14 +1062,10 @@ class MinimizerPlugin {
                 /** @type {Error | ErrorObject | string} */
                 (error),
                 name,
-                hasSourceMap
-                  ? new (getTraceMapping().TraceMap)(
-                      /** @type {RawSourceMap} */
-                      (inputSourceMap),
-                    )
-                  : undefined,
+                hasSourceMap ? inputSourceMap : undefined,
 
                 hasSourceMap ? compilation.requestShortener : undefined,
+                compiler.webpack.sources,
               ),
             );
 
@@ -1103,14 +1103,10 @@ class MinimizerPlugin {
                 MinimizerPlugin.buildError(
                   item,
                   name,
-                  hasSourceMap
-                    ? new (getTraceMapping().TraceMap)(
-                        /** @type {RawSourceMap} */
-                        (inputSourceMap),
-                      )
-                    : undefined,
+                  hasSourceMap ? inputSourceMap : undefined,
 
                   hasSourceMap ? compilation.requestShortener : undefined,
+                  compiler.webpack.sources,
                 ),
             );
           }

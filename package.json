@@ -83,7 +83,6 @@
     "release": "npm run build && changeset publish"
   },
   "dependencies": {
-    "@jridgewell/trace-mapping": "^0.3.31",
     "jest-worker": "^27.4.5",
     "schema-utils": "^4.6.0",
     "terser": "^5.51.0"
@@ -94,6 +93,7 @@
     "@babel/preset-env": "^7.29.5",
     "@changesets/cli": "^3.0.1",
     "@changesets/get-github-info": "^1.0.0",
+    "@jridgewell/trace-mapping": "^0.3.31",
     "@minify-html/node": "^0.18.1",
     "@napi-rs/image": "^1.14.0",
     "@swc/core": "^1.16.1",

@@ -595,7 +595,7 @@ describe("MinimizerPlugin", () => {
       MinimizerPlugin.buildError(
         errorWithLineAndCol,
         "test.js",
-        new TraceMap(rawSourceMap),
+        rawSourceMap,
 
         undefined,
       ),
@@ -611,10 +611,37 @@ describe("MinimizerPlugin", () => {
       MinimizerPlugin.buildError(
         otherErrorWithLineAndCol,
         "test.js",
-        new TraceMap(rawSourceMap),
+        rawSourceMap,
         new RequestShortener("/example.com/www/js/"),
       ),
     ).toMatchSnapshot();
+
+    const errorWithLineAndColumn = new Error("Message");
+
+    errorWithLineAndColumn.stack = null;
+    errorWithLineAndColumn.line = 1;
+    errorWithLineAndColumn.column = 5;
+
+    expect(
+      MinimizerPlugin.buildError(
+        errorWithLineAndColumn,
+        "test.js",
+        rawSourceMap,
+        new RequestShortener("/example.com/www/js/"),
+      ),
+    ).toMatchSnapshot();
+
+    // A webpack whose webpack-sources predates 3.7.0 has no `util.sourceMap`,
+    // so the error stays at its minified position.
+    expect(
+      MinimizerPlugin.buildError(
+        errorWithLineAndColumn,
+        "test.js",
+        rawSourceMap,
+        new RequestShortener("/example.com/www/js/"),
+        /** @type {EXPECTED_ANY} */ ({ util: {} }),
+      ).message,
+    ).toBe("test.js from minimizer-webpack-plugin\nMessage [test.js:1,5]");
 
     const errorWithStack = new Error("Message");
 

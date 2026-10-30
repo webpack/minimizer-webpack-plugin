@@ -282,9 +282,15 @@ module.exports = {
 Type:
 
 ```ts
+// The source map type webpack's `Source#map()` returns.
+type RawSourceMap = Exclude<
+  ReturnType<import("webpack").sources.Source["map"]>,
+  null
+>;
+
 type minifyFn = (
   input: Record<string, string | Buffer>,
-  sourceMap: import("@jridgewell/trace-mapping").SourceMapInput | undefined,
+  sourceMap: RawSourceMap | undefined,
   minifyOptions: {
     module?: boolean | undefined;
     ecma?: import("terser").ECMA | undefined;
@@ -328,7 +334,7 @@ type minifyFn = (
     | undefined,
 ) => Promise<{
   code: string;
-  map?: import("@jridgewell/trace-mapping").SourceMapInput | undefined;
+  map?: RawSourceMap | undefined;
   errors?: (string | Error)[] | undefined;
   warnings?: (string | Error)[] | undefined;
   extractedComments?: string[] | undefined;
