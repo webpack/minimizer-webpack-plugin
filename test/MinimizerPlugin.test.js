@@ -595,7 +595,7 @@ describe("MinimizerPlugin", () => {
       MinimizerPlugin.buildError(
         errorWithLineAndCol,
         "test.js",
-        new TraceMap(rawSourceMap),
+        rawSourceMap,
 
         undefined,
       ),
@@ -611,7 +611,22 @@ describe("MinimizerPlugin", () => {
       MinimizerPlugin.buildError(
         otherErrorWithLineAndCol,
         "test.js",
-        new TraceMap(rawSourceMap),
+        rawSourceMap,
+        new RequestShortener("/example.com/www/js/"),
+      ),
+    ).toMatchSnapshot();
+
+    const errorWithLineAndColumn = new Error("Message");
+
+    errorWithLineAndColumn.stack = null;
+    errorWithLineAndColumn.line = 1;
+    errorWithLineAndColumn.column = 5;
+
+    expect(
+      MinimizerPlugin.buildError(
+        errorWithLineAndColumn,
+        "test.js",
+        rawSourceMap,
         new RequestShortener("/example.com/www/js/"),
       ),
     ).toMatchSnapshot();

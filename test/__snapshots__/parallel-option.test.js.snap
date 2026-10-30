@@ -339,7 +339,7 @@ exports[`worker should match snapshot with options.inputSourceMap 1`] = `
   "errors": [],
   "extractedComments": [],
   "map": {
-    "mappings": "AAAA,SAASA,IAAIC,GACT,GACIA,EAAA,OACAC,KAAAA",
+    "mappings": "AAAA,SAASA,IAAIC,GACT,GACI,SACAC,KAAAA",
     "names": [
       "foo",
       "x",

@@ -20,7 +20,7 @@ declare class MinimizerPlugin<T = import("terser").MinifyOptions> {
    * @private
    * @param {Error | ErrorObject | string} error error
    * @param {string} file file
-   * @param {TraceMap=} sourceMap source map
+   * @param {RawSourceMap=} sourceMap source map
    * @param {Compilation["requestShortener"]=} requestShortener request shortener
    * @returns {Error} built error
    */
@@ -283,7 +283,6 @@ declare namespace MinimizerPlugin {
     TemplatePath,
     JestWorker,
     RawSourceMap,
-    TraceMap,
     Rule,
     Rules,
     EXPECTED_ANY,
@@ -352,12 +351,7 @@ type Asset = import("webpack").Asset;
 type AssetInfo = import("webpack").AssetInfo;
 type TemplatePath = import("webpack").TemplatePath;
 type JestWorker = import("jest-worker").Worker;
-type RawSourceMap = import("@jridgewell/trace-mapping").EncodedSourceMap & {
-  sources: string[];
-  sourcesContent?: string[];
-  file: string;
-};
-type TraceMap = import("@jridgewell/trace-mapping").TraceMap;
+type RawSourceMap = import("webpack-sources").RawSourceMap;
 type Rule = RegExp | string;
 type Rules = Rule[] | Rule;
 type EXPECTED_ANY = any;

@@ -68,8 +68,7 @@ const canUseWorkerThreads = () => {
 /** @typedef {import("webpack").AssetInfo} AssetInfo */
 /** @typedef {import("webpack").TemplatePath} TemplatePath */
 /** @typedef {import("jest-worker").Worker} JestWorker */
-/** @typedef {import("@jridgewell/trace-mapping").EncodedSourceMap & { sources: string[], sourcesContent?: string[], file: string }} RawSourceMap */
-/** @typedef {import("@jridgewell/trace-mapping").TraceMap} TraceMap */
+/** @typedef {import("webpack-sources").RawSourceMap} RawSourceMap */
 
 /** @typedef {RegExp | string} Rule */
 /** @typedef {Rule[] | Rule} Rules */
@@ -414,7 +413,9 @@ const VALIDATION_CONFIGURATION = {
   baseDataPath: "options",
 };
 
-const getTraceMapping = memoize(() => require("@jridgewell/trace-mapping"));
+const getSourceMapUtil = memoize(
+  () => require("webpack-sources").util.sourceMap,
+);
 const getSerializeJavascript = memoize(() => require("./serialize-javascript"));
 
 /**
@@ -512,8 +513,7 @@ class MinimizerPlugin {
    * @returns {boolean} Whether input is a source map
    */
   static isSourceMap(input) {
-    // All required options for `new TraceMap(...options)`
-    // https://github.com/jridgewell/trace-mapping#usage
+    // The fields a map needs to be read at all.
     return Boolean(
       input &&
       typeof input === "object" &&
@@ -550,7 +550,7 @@ class MinimizerPlugin {
    * @private
    * @param {Error | ErrorObject | string} error error
    * @param {string} file file
-   * @param {TraceMap=} sourceMap source map
+   * @param {RawSourceMap=} sourceMap source map
    * @param {Compilation["requestShortener"]=} requestShortener request shortener
    * @returns {Error} built error
    */
@@ -572,10 +572,8 @@ class MinimizerPlugin {
         /** @type {ErrorObject & { line: number, column: number }} */ (error);
       const original =
         sourceMap &&
-        getTraceMapping().originalPositionFor(sourceMap, {
-          line,
-          column,
-        });
+        typeof column === "number" &&
+        getSourceMapUtil().originalPositionFor(sourceMap, line, column);
 
       if (original && original.source && requestShortener) {
         builtError = new Error(
@@ -1032,12 +1030,7 @@ class MinimizerPlugin {
                 /** @type {Error | ErrorObject | string} */
                 (error),
                 name,
-                hasSourceMap
-                  ? new (getTraceMapping().TraceMap)(
-                      /** @type {RawSourceMap} */
-                      (inputSourceMap),
-                    )
-                  : undefined,
+                hasSourceMap ? inputSourceMap : undefined,
 
                 hasSourceMap ? compilation.requestShortener : undefined,
               ),
@@ -1077,12 +1070,7 @@ class MinimizerPlugin {
                 MinimizerPlugin.buildError(
                   item,
                   name,
-                  hasSourceMap
-                    ? new (getTraceMapping().TraceMap)(
-                        /** @type {RawSourceMap} */
-                        (inputSourceMap),
-                      )
-                    : undefined,
+                  hasSourceMap ? inputSourceMap : undefined,
 
                   hasSourceMap ? compilation.requestShortener : undefined,
                 ),

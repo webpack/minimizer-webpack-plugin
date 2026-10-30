@@ -1552,6 +1552,42 @@ describe("minify option", () => {
     expect(received.sourcesContent).toEqual([""]);
     expect(getErrors(stats)).toEqual([]);
   });
+
+  it("should keep a map without mappings on to the next minimizer", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/entry.js"),
+      devtool: "source-map",
+    });
+
+    let received;
+
+    new MinimizerPlugin({
+      parallel: false,
+      minify: [
+        () => ({
+          code: "",
+          map: {
+            version: 3,
+            file: "main.js",
+            sources: ["main.js"],
+            names: [],
+            mappings: "",
+          },
+        }),
+        (file, sourceMap) => {
+          received = sourceMap;
+
+          return { code: Object.values(file)[0] };
+        },
+      ],
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(received.file).toBe("main.js");
+    expect(received.mappings).toBe("");
+    expect(getErrors(stats)).toEqual([]);
+  });
 });
 
 /**

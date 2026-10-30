@@ -284,7 +284,7 @@ Type:
 ```ts
 type minifyFn = (
   input: Record<string, string | Buffer>,
-  sourceMap: import("@jridgewell/trace-mapping").SourceMapInput | undefined,
+  sourceMap: import("webpack-sources").RawSourceMap | undefined,
   minifyOptions: {
     module?: boolean | undefined;
     ecma?: import("terser").ECMA | undefined;
@@ -328,7 +328,7 @@ type minifyFn = (
     | undefined,
 ) => Promise<{
   code: string;
-  map?: import("@jridgewell/trace-mapping").SourceMapInput | undefined;
+  map?: import("webpack-sources").RawSourceMap | undefined;
   errors?: (string | Error)[] | undefined;
   warnings?: (string | Error)[] | undefined;
   extractedComments?: string[] | undefined;
