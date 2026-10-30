@@ -85,8 +85,15 @@ function encodeSourceMap(map) {
  * @returns {RawSourceMap | undefined} composed map
  */
 function composeSourceMaps(code, currentMap, input, prevMap, name) {
-  if (!currentMap || !prevMap) {
+  if (!currentMap) {
     return currentMap;
+  }
+
+  // What is handed on, composed or not, is read by another `SourceMapSource`.
+  const encoded = /** @type {RawSourceMap} */ (encodeSourceMap(currentMap));
+
+  if (!prevMap) {
+    return encoded;
   }
 
   // No compiler in a worker, so this is the installed webpack's own copy.
@@ -97,7 +104,7 @@ function composeSourceMaps(code, currentMap, input, prevMap, name) {
   const map = new SourceMapSource(
     code,
     name,
-    encodeSourceMap(currentMap),
+    encoded,
     input,
     encodeSourceMap(prevMap),
     true,
@@ -105,7 +112,7 @@ function composeSourceMaps(code, currentMap, input, prevMap, name) {
 
   // No mappings at all leaves nothing to compose.
   if (!map) {
-    return currentMap;
+    return encoded;
   }
 
   // `SourceMapSource` writes a placeholder `file` and an absent

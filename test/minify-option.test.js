@@ -1588,6 +1588,42 @@ describe("minify option", () => {
     expect(received.mappings).toBe("");
     expect(getErrors(stats)).toEqual([]);
   });
+
+  it("should encode decoded mappings even when nothing composes", async () => {
+    const compiler = getCompiler({
+      entry: path.resolve(__dirname, "./fixtures/entry.js"),
+      devtool: "source-map",
+    });
+
+    let received;
+
+    new MinimizerPlugin({
+      parallel: false,
+      minify: [
+        // Decoded and empty: composing it with the input map gives no map.
+        () => ({
+          code: "",
+          map: {
+            version: 3,
+            file: "main.js",
+            sources: ["main.js"],
+            names: [],
+            mappings: /** @type {EXPECTED_ANY} */ ([]),
+          },
+        }),
+        (file, sourceMap) => {
+          received = sourceMap;
+
+          return { code: Object.values(file)[0] };
+        },
+      ],
+    }).apply(compiler);
+
+    const stats = await compile(compiler);
+
+    expect(received.mappings).toBe("");
+    expect(getErrors(stats)).toEqual([]);
+  });
 });
 
 /**
