@@ -85,8 +85,7 @@
   "dependencies": {
     "jest-worker": "^27.4.5",
     "schema-utils": "^4.6.0",
-    "terser": "^5.51.0",
-    "webpack-sources": "^3.7.0"
+    "terser": "^5.51.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.28.6",

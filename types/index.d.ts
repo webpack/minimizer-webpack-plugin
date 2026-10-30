@@ -352,7 +352,10 @@ type Asset = import("webpack").Asset;
 type AssetInfo = import("webpack").AssetInfo;
 type TemplatePath = import("webpack").TemplatePath;
 type JestWorker = import("jest-worker").Worker;
-type RawSourceMap = import("webpack-sources").RawSourceMap;
+type RawSourceMap = Exclude<
+  ReturnType<import("webpack").sources.Source["map"]>,
+  null
+>;
 type Rule = RegExp | string;
 type Rules = Rule[] | Rule;
 type EXPECTED_ANY = any;

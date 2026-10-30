@@ -631,6 +631,18 @@ describe("MinimizerPlugin", () => {
       ),
     ).toMatchSnapshot();
 
+    // A webpack whose webpack-sources predates 3.7.0 has no `util.sourceMap`,
+    // so the error stays at its minified position.
+    expect(
+      MinimizerPlugin.buildError(
+        errorWithLineAndColumn,
+        "test.js",
+        rawSourceMap,
+        new RequestShortener("/example.com/www/js/"),
+        /** @type {EXPECTED_ANY} */ ({ util: {} }),
+      ).message,
+    ).toBe("test.js from minimizer-webpack-plugin\nMessage [test.js:1,5]");
+
     const errorWithStack = new Error("Message");
 
     errorWithStack.stack = "Stack";

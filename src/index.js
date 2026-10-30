@@ -9,7 +9,7 @@ const {
   resolveImplementationModule,
 } = require("./implementation");
 const { minify } = require("./minify");
-const { getSources } = require("./sources");
+const { getSourceMapUtil } = require("./sources");
 const {
   cleanCssMinify,
   compress,
@@ -69,7 +69,7 @@ const canUseWorkerThreads = () => {
 /** @typedef {import("webpack").AssetInfo} AssetInfo */
 /** @typedef {import("webpack").TemplatePath} TemplatePath */
 /** @typedef {import("jest-worker").Worker} JestWorker */
-/** @typedef {import("webpack-sources").RawSourceMap} RawSourceMap */
+/** @typedef {Exclude<ReturnType<import("webpack").sources.Source["map"]>, null>} RawSourceMap */
 
 /** @typedef {RegExp | string} Rule */
 /** @typedef {Rule[] | Rule} Rules */
@@ -569,11 +569,14 @@ class MinimizerPlugin {
     if (/** @type {ErrorObject} */ (error).line) {
       const { line, column } =
         /** @type {ErrorObject & { line: number, column: number }} */ (error);
+      // A webpack whose webpack-sources predates 3.7.0 cannot read the map,
+      // and the error is reported at its minified position.
+      const sourceMapUtil = sourceMap && getSourceMapUtil(sources);
       const original =
-        sourceMap &&
+        sourceMapUtil &&
         typeof column === "number" &&
-        getSources(sources).util.sourceMap.originalPositionFor(
-          sourceMap,
+        sourceMapUtil.originalPositionFor(
+          /** @type {RawSourceMap} */ (sourceMap),
           line,
           column,
         );
