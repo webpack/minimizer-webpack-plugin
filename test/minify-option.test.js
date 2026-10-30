@@ -1624,6 +1624,31 @@ describe("minify option", () => {
     expect(received.mappings).toBe("");
     expect(getErrors(stats)).toEqual([]);
   });
+
+  it("should encode decoded mappings when there is no map to compose with", async () => {
+    const { minify } = require("../src/minify");
+
+    const result = await minify(
+      /** @type {EXPECTED_ANY} */ ({
+        name: "main.js",
+        input: "a",
+        inputSourceMap: undefined,
+        minimizer: {
+          implementation: () => ({
+            code: "a",
+            map: {
+              version: 3,
+              sources: ["main.js"],
+              names: [],
+              mappings: [[[0, 0, 0, 0]]],
+            },
+          }),
+        },
+      }),
+    );
+
+    expect(result.map.mappings).toBe("AAAA");
+  });
 });
 
 /**
