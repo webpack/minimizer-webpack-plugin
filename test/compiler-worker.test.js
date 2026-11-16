@@ -13,6 +13,24 @@ import {
 
 jest.mock("jest-worker", () => ({ Worker: jest.fn() }));
 
+/**
+ * One-CPU hosts compute zero parallel workers and skip the worker branch, so
+ * pin a positive count while the plugin reads it in `apply`.
+ * @param {MinimizerPlugin} plugin the plugin
+ * @param {import("webpack").Compiler} compiler the compiler
+ */
+const applyWithCores = (plugin, compiler) => {
+  const cores = jest
+    .spyOn(MinimizerPlugin, "getAvailableNumberOfCores")
+    .mockReturnValue(2);
+
+  try {
+    plugin.apply(compiler);
+  } finally {
+    cores.mockRestore();
+  }
+};
+
 describe("compiler.worker", () => {
   // `compiler.worker` arrived with webpack's `experiments.threads`.
   const describeCompilerWorker =
@@ -35,7 +53,7 @@ describe("compiler.worker", () => {
       const compiler = getCompiler({ experiments: { threads: { max: 2 } } });
       const workerSpy = jest.spyOn(compiler, "worker");
 
-      new MinimizerPlugin().apply(compiler);
+      applyWithCores(new MinimizerPlugin(), compiler);
 
       try {
         const stats = await compile(compiler);
@@ -48,7 +66,10 @@ describe("compiler.worker", () => {
         expect(workerSpy).toHaveBeenCalledWith(
           require.resolve("../src/minify"),
         );
-        expect(pool.stats.spawned).toBeGreaterThan(0);
+        // a one-CPU host gets an inline pool (`max: 0`)
+        if (pool.options.max > 0) {
+          expect(pool.stats.spawned).toBeGreaterThan(0);
+        }
         expect(pool.stats.spawned).toBeLessThanOrEqual(2);
 
         // the next build runs on the same threads
@@ -76,7 +97,7 @@ describe("compiler.worker", () => {
 
       const compiler = getCompiler();
 
-      new MinimizerPlugin().apply(compiler);
+      applyWithCores(new MinimizerPlugin(), compiler);
 
       const stats = await compile(compiler);
 
@@ -106,7 +127,7 @@ describe("compiler.worker", () => {
       Object.assign(compiler, { worker: jest.fn(() => ({ run })) });
       compiler.options.experiments.threads = true;
 
-      new MinimizerPlugin().apply(compiler);
+      applyWithCores(new MinimizerPlugin(), compiler);
 
       const stats = await compile(compiler);
 
@@ -135,7 +156,7 @@ describe("compiler.worker", () => {
       Object.assign(compiler, { worker: jest.fn(() => ({ run })) });
       compiler.options.experiments.threads = true;
 
-      new MinimizerPlugin({ minify: impl }).apply(compiler);
+      applyWithCores(new MinimizerPlugin({ minify: impl }), compiler);
 
       const stats = await compile(compiler);
 
@@ -162,7 +183,7 @@ describe("compiler.worker", () => {
 
       Object.assign(compiler, { worker: jest.fn() });
 
-      new MinimizerPlugin().apply(compiler);
+      applyWithCores(new MinimizerPlugin(), compiler);
 
       const stats = await compile(compiler);
 
