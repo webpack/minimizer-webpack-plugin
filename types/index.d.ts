@@ -670,7 +670,11 @@ type ThreadsCompiler<T> = {
   };
   options: {
     experiments: {
-      threads?: boolean | object;
+      threads?:
+        | boolean
+        | {
+            max?: number;
+          };
     };
   };
 };
