@@ -311,6 +311,7 @@ declare namespace MinimizerPlugin {
     MinimizerImplementation,
     InternalOptions,
     MinimizerWorker,
+    ThreadsCompiler,
     Parallel,
     GeneratorImplementation,
     GeneratorDescriptor,
@@ -652,9 +653,26 @@ type InternalOptions<T> = {
    */
   ecma?: (number | string) | undefined;
 };
-type MinimizerWorker<T> = JestWorker & {
+type MinimizerWorker<T> = {
   transform: (options: string) => Promise<MinimizedResult>;
   minify: (options: InternalOptions<T>) => Promise<MinimizedResult>;
+};
+/**
+ * What the plugin reads of webpack's shared thread pool, `compiler.worker()` with `experiments.threads`; older webpack has neither, so both are optional.
+ */
+type ThreadsCompiler<T> = {
+  worker?: (workerPath: string) => {
+    run(
+      method: "minify",
+      options: InternalOptions<T>,
+    ): Promise<MinimizedResult>;
+    run(method: "transform", options: string): Promise<MinimizedResult>;
+  };
+  options: {
+    experiments: {
+      threads?: boolean | object;
+    };
+  };
 };
 type Parallel = undefined | boolean | number;
 /**
