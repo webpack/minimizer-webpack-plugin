@@ -240,7 +240,7 @@ const canUseWorkerThreads = () => {
 /**
  * What the plugin reads of webpack's shared thread pool, `compiler.worker()` with `experiments.threads`; older webpack has neither, so both are optional.
  * @template T
- * @typedef {{ worker?: (workerPath: string) => { run(method: "minify", options: InternalOptions<T>): Promise<MinimizedResult>, run(method: "transform", options: string): Promise<MinimizedResult> }, options: { experiments: { threads?: boolean | object } } }} ThreadsCompiler
+ * @typedef {{ worker?: (workerPath: string) => { run(method: "minify", options: InternalOptions<T>): Promise<MinimizedResult>, run(method: "transform", options: string): Promise<MinimizedResult> }, options: { experiments: { threads?: boolean | { max?: number } } } }} ThreadsCompiler
  */
 
 /**
