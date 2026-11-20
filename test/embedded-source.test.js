@@ -1,3 +1,4 @@
+import fs from "fs";
 import path from "path";
 
 import { TraceMap, originalPositionFor } from "@jridgewell/trace-mapping";
@@ -25,6 +26,14 @@ const cssMinify = require(WEBPACK_CSS_MINIFY);
 const htmlMinify = require(WEBPACK_HTML_MINIFY);
 
 const fixture = (name) => path.resolve(__dirname, "./fixtures/embedded", name);
+
+// From webpack 5.113 an `asset/source` module embeds its text as written: the
+// program reads it as data, so webpack no longer offers it to a minifier.
+const [major, minor] = require("webpack").version.split(".").map(Number);
+
+const embedsAssetSourceAsWritten = major > 5 || (major === 5 && minor >= 113);
+
+const readFixture = (name) => fs.readFileSync(fixture(name), "utf8");
 
 /**
  * A one-rule stylesheet with its declarations sorted: webpack 5.112's CSS
@@ -192,7 +201,7 @@ describe("embedded source", () => {
     expect(exported(compiler, stats)).toBe("<div><p>hello</div>");
   });
 
-  it("minifies the text an `asset/source` module embeds", async () => {
+  it("minifies the text an `asset/source` module embeds, where webpack offers it", async () => {
     const compiler = getCompiler({
       entry: fixture("entry-asset-source.js"),
       target: "node",
@@ -213,13 +222,15 @@ describe("embedded source", () => {
 
     expect(getErrors(stats)).toEqual([]);
     expect(exported(compiler, stats)).toEqual({
-      icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"> <rect width="10" height="10" /> </svg>',
+      icon: embedsAssetSourceAsWritten
+        ? readFixture("icon.svg")
+        : '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"> <rect width="10" height="10" /> </svg>',
       // `.txt` names no language webpack knows, so it is never offered.
       note: "   plain   text   names   no   language   \n",
     });
   });
 
-  it("minifies the JavaScript an `asset/source` module embeds", async () => {
+  it("minifies the JavaScript an `asset/source` module embeds, where webpack offers it", async () => {
     const compiler = getCompiler({
       entry: fixture("entry-asset-source-js.js"),
       target: "node",
@@ -236,8 +247,10 @@ describe("embedded source", () => {
     // terser's, reached by the file's own name — the plugin's default `test`
     // already claims it.
     expect(exported(compiler, stats)).toBe(
-      // eslint-disable-next-line no-template-curly-in-string
-      'function greet(e){return`hello, ${e}`}greet("world");',
+      embedsAssetSourceAsWritten
+        ? readFixture("script.js")
+        : // eslint-disable-next-line no-template-curly-in-string
+          'function greet(e){return`hello, ${e}`}greet("world");',
     );
   });
 

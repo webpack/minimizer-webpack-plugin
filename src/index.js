@@ -2476,14 +2476,18 @@ class MinimizerPlugin {
 
     // TODO remove in the next major release, when webpack >= 5.106 is the
     // minimum and `compiler.validate` is always there.
-    const { validate } = require("schema-utils");
+    // The check runs first, so valid options load neither `schema-utils` nor
+    // the schema, as with `compiler.validate`
+    if (!require("./options.check.js")(this.rawOptions)) {
+      const { validate } = require("schema-utils");
 
-    validate(
-      /** @type {Schema} */ (require("./options.json")),
-      this.rawOptions,
-      VALIDATION_CONFIGURATION,
-      require("./options.check.js"),
-    );
+      validate(
+        /** @type {Schema} */ (require("./options.json")),
+        this.rawOptions,
+        VALIDATION_CONFIGURATION,
+      );
+    }
+
     this.validateMinimizers();
     this.validateGenerators();
   }

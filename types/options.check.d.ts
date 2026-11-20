@@ -1,8 +1,8 @@
-export = validate11;
-declare function validate11(
-  data: any,
+export = o;
+declare function o(
+  i: any,
   {
-    instancePath,
+    instancePath: t,
     parentData,
     parentDataProperty,
     rootData,
@@ -11,6 +11,6 @@ declare function validate11(
     rootData?: any;
   },
 ): boolean;
-declare namespace validate11 {
-  export { validate11 as default };
+declare namespace o {
+  export { o as default };
 }

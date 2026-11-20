@@ -207,7 +207,8 @@ exports[`terserOptions option should match snapshot for the "ecma" and set the o
                     configurable: !0,
                     writable: !0
                 }
-            }), Manager = Object.create(Employee, {
+            });
+            Object.create(Employee, {
                 department: {
                     value: null,
                     enumerable: !0,
@@ -215,11 +216,7 @@ exports[`terserOptions option should match snapshot for the "ecma" and set the o
                     writable: !0
                 }
             });
-            module.exports = {
-                Person,
-                Employee,
-                Manager
-            }, abc = {
+            module.exports = {}, abc = {
                 data: () => ({
                     a: 2
                 })
@@ -246,7 +243,7 @@ exports[`terserOptions option should match snapshot for the "ecma" and set the o
 
 exports[`terserOptions option should match snapshot for the "ecma" option with the "5" value ("swc"): assets 1`] = `
 {
-  "main.js": "(()=>{var __webpack_modules__={326(module){var Person={firstName:null,lastName:null},Employee=Object.create(Person,{id:{value:null,enumerable:!0,configurable:!0,writable:!0}}),Manager=Object.create(Employee,{department:{value:null,enumerable:!0,configurable:!0,writable:!0}});module.exports={Person:Person,Employee:Employee,Manager:Manager},console.log({data(){return{a:2}}})}};let __webpack_module_cache__={};!function __webpack_require__(moduleId){let cachedModule=__webpack_module_cache__[moduleId];if(void 0!==cachedModule)return cachedModule.exports;let module=__webpack_module_cache__[moduleId]={exports:{}};return __webpack_modules__[moduleId](module,module.exports,__webpack_require__),module.exports}(326)})();",
+  "main.js": "(()=>{var __webpack_modules__={326(module){Object.create(Object.create({firstName:null,lastName:null},{id:{value:null,enumerable:!0,configurable:!0,writable:!0}}),{department:{value:null,enumerable:!0,configurable:!0,writable:!0}}),module.exports={},console.log({data(){return{a:2}}})}};let __webpack_module_cache__={};!function __webpack_require__(moduleId){let cachedModule=__webpack_module_cache__[moduleId];if(void 0!==cachedModule)return cachedModule.exports;let module=__webpack_module_cache__[moduleId]={exports:{}};return __webpack_modules__[moduleId](module,module.exports,__webpack_require__),module.exports}(326)})();",
 }
 `;
 
@@ -269,7 +266,8 @@ exports[`terserOptions option should match snapshot for the "ecma" option with t
                     configurable: !0,
                     writable: !0
                 }
-            }), Manager = Object.create(Employee, {
+            });
+            Object.create(Employee, {
                 department: {
                     value: null,
                     enumerable: !0,
@@ -277,11 +275,7 @@ exports[`terserOptions option should match snapshot for the "ecma" option with t
                     writable: !0
                 }
             });
-            module.exports = {
-                Person: Person,
-                Employee: Employee,
-                Manager: Manager
-            }, abc = {
+            module.exports = {}, abc = {
                 data() {
                     return {
                         a: 2

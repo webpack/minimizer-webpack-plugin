@@ -5,3 +5,4 @@ src/options.check.js
 /node_modules
 /test/fixtures
 CHANGELOG.md
+/src/options.check.js
