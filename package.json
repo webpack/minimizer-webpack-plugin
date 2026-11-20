@@ -63,7 +63,7 @@
     "build": "npm-run-all -p \"build:**\"",
     "security": "npm audit --production",
     "lint:serialize-javascript": "node ./scripts/copy-serialize-javascript.js --check",
-    "lint:schema": "schema-utils precompile --check src/options.json",
+    "lint:schema": "schema-utils precompile --check --minify src/options.json",
     "lint:prettier": "prettier --list-different .",
     "lint:code": "eslint --cache .",
     "lint:spelling": "cspell \"**/*.*\"",
@@ -71,7 +71,7 @@
     "lint": "npm-run-all -l -p \"lint:**\"",
     "fix:code": "npm run lint:code -- --fix",
     "fix:prettier": "npm run lint:prettier -- --write",
-    "fix:schema": "schema-utils precompile src/options.json",
+    "fix:schema": "schema-utils precompile --minify src/options.json",
     "fix": "npm-run-all -l fix:schema fix:code fix:prettier",
     "test:base": "node ./scripts/jest.js",
     "test:watch": "npm run test:base -- --watch",
@@ -84,7 +84,7 @@
   },
   "dependencies": {
     "jest-worker": "^27.4.5",
-    "schema-utils": "^4.6.0",
+    "schema-utils": "^4.8.5",
     "terser": "^5.51.0"
   },
   "devDependencies": {
@@ -133,7 +133,7 @@
     "svgo": "^4.0.0",
     "typescript": "^6.0.3",
     "uglify-js": "^3.19.3",
-    "webpack": "^5.109.2",
+    "webpack": "^5.112.2",
     "webpack-cli": "^7.2.2",
     "worker-loader": "^3.0.8"
   },

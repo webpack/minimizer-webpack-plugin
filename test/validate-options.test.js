@@ -391,4 +391,20 @@ describe("validation", () => {
       });
     }).not.toThrow();
   });
+
+  it("should validate without `compiler.validate`, as webpack < 5.106 has none", () => {
+    expect(() => {
+      new MinimizerPlugin({ parallel: 2 }).validateOptions(
+        /** @type {EXPECTED_ANY} */ ({}),
+      );
+    }).not.toThrow();
+
+    expect(() => {
+      new MinimizerPlugin({ unknown: true }).validateOptions(
+        /** @type {EXPECTED_ANY} */ ({}),
+      );
+    }).toThrow(
+      /^Invalid options object\. Minimizer Plugin has been initialized/,
+    );
+  });
 });
