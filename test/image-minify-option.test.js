@@ -582,7 +582,7 @@ describe("image minify option", () => {
     // Mangled and without the module wrapper: terser ran on it. Which letters
     // it picks depends on webpack's runtime, so only their shape is checked.
     expect(readBytes(compiler, stats, "main.js").toString()).toMatch(
-      /console\.log\([a-z],[a-z],[a-z]\)/,
+      /console\.log\([A-Za-z_$],[A-Za-z_$],[A-Za-z_$]\)/,
     );
   });
 });
