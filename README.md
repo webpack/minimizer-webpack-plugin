@@ -49,7 +49,7 @@ CSS minimizers:
 Image minimizers:
 
 - [`sharp`](https://github.com/lovell/sharp) — `MinimizerPlugin.sharpMinify`. Re-encodes an image as the format its name already claims (`avif`, `gif`, `heif`, `jp2`, `jpeg`, `png`, `tiff`, `webp`), and can resize, rotate, flip, grayscale, blur or sharpen on the way — from the options or from the asset's own name. Requires `npm install --save-dev sharp`.
-- [`svgo`](https://github.com/svg/svgo) — `MinimizerPlugin.svgoMinify`. Minifies SVG, including an `asset/inline` SVG that no `test` can match. Requires `npm install --save-dev svgo`.
+- [`svgo`](https://github.com/svg/svgo) — `MinimizerPlugin.svgoMinify`. Minifies SVG, including an `asset/inline` or `asset/source` SVG that no `test` can match. Requires `npm install --save-dev svgo`.
 - [`imagemin`](https://github.com/imagemin/imagemin) — `MinimizerPlugin.imageminMinify`. Runs the `imagemin` plugins you name. Requires `npm install --save-dev imagemin` plus each plugin. Pair it with `MinimizerPlugin.imageminGenerate` under [`generate`](#generate) when a plugin converts the format, since only that can rename the asset.
 - [`@napi-rs/image`](https://github.com/Brooooooklyn/Image) — `MinimizerPlugin.napiRsImageMinify`. Rust codecs with no system dependency; recompresses `png` losslessly with oxipng and `jpeg` with mozjpeg, and can resize, turn, mirror, grayscale, invert or blur on the way — from the options or from the asset's own name. Requires `npm install --save-dev @napi-rs/image`.
 
@@ -1485,11 +1485,24 @@ What this reaches:
 
 - CSS and HTML a module embeds in a JavaScript string literal (every
   `exportType` but `link`).
-- The text an `asset/source` module embeds, and the payload an `asset/inline`
-  module encodes — the payload before it is encoded, so the encoding covers
-  what came back. **A language written as text only**: an inline `svg` is
-  offered, an inline `png` or `jpeg` is not, so a raster image that becomes a
-  `data:` URI is minified by [`generate`](#generate) rather than here.
+- The payload an `asset/inline` module encodes — the payload before it is
+  encoded, so the encoding covers what came back. **A language written as text
+  only**: an inline `svg` is offered, an inline `png` or `jpeg` is not, so a
+  raster image that becomes a `data:` URI is minified by
+  [`generate`](#generate) rather than here.
+- The SVG an `asset/source` module embeds. Any other text import is data the
+  program reads, so webpack embeds it as written: a minifier would change what
+  the program reads, quotes and names included. Which text webpack offers
+  depends on its version:
+  - webpack 5.110 to 5.112 offers every language the file's name names.
+  - webpack 5.113.0 offers none.
+  - The release with
+    [webpack/webpack#23500](https://github.com/webpack/webpack/pull/23500) and
+    later offer SVG only.
+
+  An `asset/resource` SVG is a file of its own, so it is minified as any asset
+  is, when [`test`](#test) matches it.
+
 - What a document or a stylesheet nests inside itself: an inline `<style>`,
   every `style=""`, a `<script>` holding JavaScript or JSON, an `<svg>` subtree,
   the document an `<iframe srcdoc>` holds, and the payload of a `url()` `data:`

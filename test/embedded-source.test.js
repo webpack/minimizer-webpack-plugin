@@ -14,6 +14,7 @@ import {
   getWarnings,
   readAsset,
 } from "./helpers";
+import { RUN_IMAGE_TESTS } from "./helpers/env";
 
 // `renderEmbeddedSource` landed in webpack 5.110; see `jest.config.js`, which
 // skips this file where the installed webpack has no such hook. Its minify
@@ -27,13 +28,29 @@ const htmlMinify = require(WEBPACK_HTML_MINIFY);
 
 const fixture = (name) => path.resolve(__dirname, "./fixtures/embedded", name);
 
-// From webpack 5.113 an `asset/source` module embeds its text as written: the
-// program reads it as data, so webpack no longer offers it to a minifier.
-const [major, minor] = require("webpack").version.split(".").map(Number);
+// What webpack offers of an `asset/source` module's text: through 5.112 every
+// language its name names; 5.113.0 none, since a text import is data the
+// program reads; from webpack/webpack#23500 on SVG only, which is markup to
+// render. Read off the generator rather than the version, so a release that
+// carries the fix needs no change here.
+const AssetSourceGenerator = require("webpack/lib/asset/AssetSourceGenerator");
 
-const embedsAssetSourceAsWritten = major > 5 || (major === 5 && minor >= 113);
+const offersAssetSource =
+  typeof AssetSourceGenerator._renderEmbedded !== "function"
+    ? "none"
+    : typeof AssetSourceGenerator._isOffered === "function"
+      ? "svg"
+      : "all";
 
 const readFixture = (name) => fs.readFileSync(fixture(name), "utf8");
+
+/**
+ * `describe` where this environment can run the block, `describe.skip` where it
+ * cannot.
+ * @param {boolean} condition whether the block can run here
+ * @returns {jest.Describe} describe, or describe.skip
+ */
+const describeIf = (condition) => (condition ? describe : describe.skip);
 
 /**
  * A one-rule stylesheet with its declarations sorted: webpack 5.112's CSS
@@ -222,9 +239,10 @@ describe("embedded source", () => {
 
     expect(getErrors(stats)).toEqual([]);
     expect(exported(compiler, stats)).toEqual({
-      icon: embedsAssetSourceAsWritten
-        ? readFixture("icon.svg")
-        : '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"> <rect width="10" height="10" /> </svg>',
+      icon:
+        offersAssetSource === "none"
+          ? readFixture("icon.svg")
+          : '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"> <rect width="10" height="10" /> </svg>',
       // `.txt` names no language webpack knows, so it is never offered.
       note: "   plain   text   names   no   language   \n",
     });
@@ -247,11 +265,56 @@ describe("embedded source", () => {
     // terser's, reached by the file's own name — the plugin's default `test`
     // already claims it.
     expect(exported(compiler, stats)).toBe(
-      embedsAssetSourceAsWritten
+      offersAssetSource !== "all"
         ? readFixture("script.js")
         : // eslint-disable-next-line no-template-curly-in-string
           'function greet(e){return`hello, ${e}`}greet("world");',
     );
+  });
+
+  // svgo is one of the image minimizers the legacy rows never get, see
+  // `test/helpers/env.js`. Gated here rather than by file: it takes no snapshot.
+  describeIf(RUN_IMAGE_TESTS)("where svgo runs", () => {
+    it("minifies an SVG with `svgoMinify` as `asset/source`, `asset/inline` and `asset/resource`", async () => {
+      const compiler = getCompiler({
+        entry: fixture("entry-svg-assets.js"),
+        target: "node",
+        output: { publicPath: "/" },
+        module: {
+          rules: [
+            { resourceQuery: /source/, type: "asset/source" },
+            { resourceQuery: /inline/, type: "asset/inline" },
+            { resourceQuery: /resource/, type: "asset/resource" },
+          ],
+        },
+      });
+
+      defaultPlugin({
+        test: /\.(?:[cm]?js|svg)(\?.*)?$/i,
+        minify: [MinimizerPlugin.terserMinify, MinimizerPlugin.svgoMinify],
+        minimizerOptions: [{}, {}],
+      }).apply(compiler);
+
+      const stats = await compile(compiler);
+
+      expect(getErrors(stats)).toEqual([]);
+      expect(getWarnings(stats)).toEqual([]);
+
+      const minified =
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><path d="M0 0h10v10H0z"/></svg>';
+      const { source, inline, resource } = exported(compiler, stats);
+      const [, base64] = /^data:image\/svg\+xml;base64,(.+)$/.exec(inline);
+      const file = Object.keys(stats.compilation.assets).find((name) =>
+        /\.svg(?:\?|$)/.test(name),
+      );
+
+      expect(source).toBe(
+        offersAssetSource === "none" ? readFixture("icon.svg") : minified,
+      );
+      expect(Buffer.from(base64, "base64").toString("utf8")).toBe(minified);
+      expect(resource).toBe(`/${file}`);
+      expect(readAsset(file, compiler, stats)).toBe(minified);
+    });
   });
 
   it("minifies the payload an `asset/inline` module encodes", async () => {
