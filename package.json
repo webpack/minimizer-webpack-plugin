@@ -133,7 +133,7 @@
     "svgo": "^4.0.0",
     "typescript": "^6.0.3",
     "uglify-js": "^3.19.3",
-    "webpack": "^5.112.2",
+    "webpack": "^5.113.0",
     "webpack-cli": "^7.2.2",
     "worker-loader": "^3.0.8"
   },

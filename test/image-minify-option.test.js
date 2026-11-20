@@ -579,9 +579,10 @@ describe("image minify option", () => {
     expect(
       fileTypeFromBuffer(readBytes(compiler, stats, "image.png")).ext,
     ).toBe("png");
-    // Mangled and without the module wrapper: terser ran on it.
-    expect(readBytes(compiler, stats, "main.js").toString()).toContain(
-      "console.log(e,r,o)",
+    // Mangled and without the module wrapper: terser ran on it. Which letters
+    // it picks depends on webpack's runtime, so only their shape is checked.
+    expect(readBytes(compiler, stats, "main.js").toString()).toMatch(
+      /console\.log\([a-z],[a-z],[a-z]\)/,
     );
   });
 });
