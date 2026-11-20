@@ -1,5 +1,13 @@
 # Changelog
 
+## 5.14.1
+
+### Patch Changes
+
+- Minify the precompiled options check, so it loads faster, and run it before `schema-utils` on webpack versions without `compiler.validate`, so valid options load neither `schema-utils` nor the schema there either. (by [@alexander-akait](https://github.com/alexander-akait) in [#770](https://github.com/webpack/minimizer-webpack-plugin/pull/770))
+
+- Bring the bundled copy of `serialize-javascript` up to the locked 7.1.4. (by [@alexander-akait](https://github.com/alexander-akait) in [#771](https://github.com/webpack/minimizer-webpack-plugin/pull/771))
+
 ## 5.14.0
 
 ### Minor Changes
