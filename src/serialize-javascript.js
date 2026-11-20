@@ -31,13 +31,41 @@ var UID_LENGTH          = 16;
 var UID                 = generateUID();
 var PLACE_HOLDER_REGEXP = new RegExp('(\\\\)?"@__(F|R|D|M|S|A|U|I|B|L)-' + UID + '-(\\d+)__@"', 'g');
 
-var IS_NATIVE_CODE_REGEXP = /\{\s*\[native code\]\s*\}/g;
-var IS_PURE_FUNCTION = /function.*?\(/;
-var IS_ARROW_FUNCTION = /.*?=>.*?/;
+// Not global: `.test()` on a `/g` regexp advances `lastIndex`, so a second
+// call could start past a `[native code]` match and wrongly report a native
+// function as safe to serialize.
+var IS_NATIVE_CODE_REGEXP = /\{\s*\[native code\]\s*\}/;
+// Classify the outer function, not a declaration or arrow inside its body.
+var IS_PURE_FUNCTION = /^(?:async(?:\s|\/\*[\s\S]*?\*\/|\/\/[^\n]*\n)+)?function\b/;
+// A concise method named `class` is followed by `(`, unlike a class expression.
+var IS_CLASS = /^class\b(?:\s|\/\*[\s\S]*?\*\/|\/\/[^\n]*\n)*(?:\{|[^\s(/])/;
+var IS_ARROW_FUNCTION = /^(?:async(?:\s|\/\*[\s\S]*?\*\/|\/\/[^\n]*\n)+)?(?:\([\s\S]*?\)|[^\s()]+)\s*=>/;
 var UNSAFE_CHARS_REGEXP   = /[<>\/\u2028\u2029]/g;
-// Regex to match </script> and variations (case-insensitive) for XSS protection
-// Matches </script followed by optional whitespace/attributes and >
-var SCRIPT_CLOSE_REGEXP = /<\/script[^>]*>/gi;
+// Matches a script end tag (case-insensitive) for XSS protection: either a
+// literal `</script>`, or a bare `</script` followed by one of the other
+// characters (TAB, LF, FF, CR, SPACE, `/`) that the HTML tokenizer treats as
+// ending the tag name (see the WHATWG "script data end tag name state"). Any
+// other following character means the tokenizer emits `</script` as text and
+// stays in script data, so only these need neutralizing. The bare-prefix form
+// matters because the matching `>` could be supplied by a different
+// serialized value later in the output, so escaping stops there without
+// waiting for a closing `>`. For the same reason the bare form also matches
+// at the very end of the string: each function body is escaped on its own, so
+// a body ending in `</script` can't see the delimiter (e.g. the newline added
+// by the `space` option) that the surrounding output supplies next
+// (PSECBUGS-118415). A trailing backslash is not a delimiter here
+// (that's a JS-level concern, not an HTML one), so this doesn't affect tagged
+// template literals like `String.raw`.
+//
+// The `[^<>]*` in the first alternative excludes `<`, which is load-bearing:
+// it was previously `[^>]*`, letting a single match run from one `</script`
+// to the next `>` anywhere in the source and swallow a complete `</script>`
+// in between. Only one replacement is emitted per match, so the swallowed tag
+// survived verbatim in the output (PSECBUGS-117112). Because a match can no
+// longer contain a second `<`, every `</script` in the source is either the
+// start of its own match or is followed by a non-delimiter — and the latter
+// the tokenizer never treats as an end tag.
+var SCRIPT_CLOSE_REGEXP = /<\/script[^<>]*>|<\/script(?=$|[\t\n\f\r \/>])/gi;
 
 var RESERVED_SYMBOLS = ['*', 'async'];
 
@@ -55,16 +83,57 @@ function escapeUnsafeChars(unsafeChar) {
     return ESCAPED_CHARS[unsafeChar];
 }
 
-// Escape function body for XSS protection while preserving arrow function syntax
+// Roughly matches string literals, template literals, regex literals, and
+// comments, so `escapeFunctionBody` can treat their contents differently
+// from plain code. This is a heuristic, not a full parser, with two known
+// limitations:
+// - A template literal is treated as one opaque span, including any
+//   `${...}` inside it. A `</script`-like sequence inside such a
+//   substitution (real code) can be misclassified as string content.
+// - The regex-literal alternative can't tell a regex from division (e.g.
+//   `a / b / c`); a division expression that matches it is simply treated
+//   as opaque, which only risks an unnecessary (but valid) unicode-escape.
+//   It exists mainly so quotes and slashes inside a real regex (including
+//   inside a `[...]` character class) aren't mistaken for string/regex
+//   delimiters, which would misalign whatever follows.
+var STRING_OR_COMMENT_REGEXP = /\/\*[\s\S]*?\*\/|\/\/[^\n]*|'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"|`(?:\\.|[^`\\])*`|\/(?:\\.|\[(?:\\.|[^\]\\\n])*\]|[^\/\\\n])+\//g;
+
+// Escape function body for XSS protection while preserving arrow function
+// syntax (=>), comparison operators, and regex literals: only script end
+// tags and line terminators are escaped.
 function escapeFunctionBody(str) {
-    // Escape </script> sequences and variations (case-insensitive) - the main XSS risk
-    // Matches </script followed by optional whitespace/attributes and >
-    // This must be done first before other replacements
-    str = str.replace(SCRIPT_CLOSE_REGEXP, function(match) {
-        // Escape all <, /, and > characters in the closing script tag
-        return match.replace(/</g, '\\u003C').replace(/\//g, '\\u002F').replace(/>/g, '\\u003E');
+    // Record the [start, end) span of every string/template/regex literal
+    // and comment, so a script-close match inside one can be escaped
+    // differently from a match in plain code (see below).
+    var stringAndCommentSpans = [];
+    var match;
+    STRING_OR_COMMENT_REGEXP.lastIndex = 0;
+    while ((match = STRING_OR_COMMENT_REGEXP.exec(str))) {
+        stringAndCommentSpans.push([match.index, match.index + match[0].length]);
+    }
+
+    // Matches and spans are both in increasing offset order, so a single
+    // forward-moving cursor classifies every match in O(n) total instead of
+    // rescanning all spans for each match.
+    var spanCursor = 0;
+
+    str = str.replace(SCRIPT_CLOSE_REGEXP, function(scriptCloseMatch, offset) {
+        while (spanCursor < stringAndCommentSpans.length && stringAndCommentSpans[spanCursor][1] <= offset) {
+            spanCursor++;
+        }
+        var span = stringAndCommentSpans[spanCursor];
+        var inStringOrComment = !!span && offset >= span[0] && offset < span[1];
+        if (!inStringOrComment) {
+            // In plain code, `<` and `/` may be real tokens (comparison,
+            // regex delimiter, division, ...), so they can't be rewritten
+            // as unicode escapes without breaking syntax. A space is a
+            // no-op here but still breaks up the `</script` sequence.
+            return '< ' + scriptCloseMatch.slice(1);
+        }
+        // Inside a string/template/regex/comment, characters must be
+        // preserved exactly, so unicode-escape instead.
+        return scriptCloseMatch.replace(/</g, '\\u003C').replace(/\//g, '\\u002F').replace(/>/g, '\\u003E');
     });
-    // Escape line terminators (these are always unsafe)
     str = str.replace(/\u2028/g, '\\u2028');
     str = str.replace(/\u2029/g, '\\u2029');
     return str;
@@ -77,18 +146,6 @@ function generateUID() {
         result += bytes[i].toString(16);
     }
     return result;
-}
-
-function deleteFunctions(obj){
-    var functionKeys = [];
-    for (var key in obj) {
-        if (typeof obj[key] === "function") {
-            functionKeys.push(key);
-        }
-    }
-    for (var i = 0; i < functionKeys.length; i++) {
-        delete obj[functionKeys[i]];
-    }
 }
 
 module.exports = function serialize(obj, options) {
@@ -113,11 +170,6 @@ module.exports = function serialize(obj, options) {
     // Returns placeholders for functions and regexps (identified by index)
     // which are later replaced by their string representation.
     function replacer(key, value) {
-
-        // For nested function
-        if(options.ignoreFunction){
-            deleteFunctions(value);
-        }
 
         if (!value && value !== undefined && value !== BigInt(0)) {
             return value;
@@ -158,6 +210,10 @@ module.exports = function serialize(obj, options) {
         }
 
         if (type === 'function') {
+            if (options.ignoreFunction) {
+                // Let JSON.stringify omit functions without mutating the input.
+                return value;
+            }
             return '@__F-' + UID + '-' + (functions.push(origValue) - 1) + '__@';
         }
 
@@ -178,18 +234,25 @@ module.exports = function serialize(obj, options) {
 
     function serializeFunc(fn, options) {
       var serializedFn = fn.toString();
+
+      // A spoofed `toString()` can return a non-string whose `replace()` is
+      // attacker-controlled, which would let it pass through
+      // `escapeFunctionBody()` unescaped and inject markup into the output.
+      if (typeof serializedFn !== 'string') {
+          throw new TypeError('Function.toString() must return a string');
+      }
+
       if (IS_NATIVE_CODE_REGEXP.test(serializedFn)) {
           throw new TypeError('Serializing native function: ' + fn.name);
       }
 
       // Escape unsafe HTML characters in function body for XSS protection
-      // This must preserve arrow function syntax (=>) while escaping </script>
       if (options && options.unsafe !== true) {
           serializedFn = escapeFunctionBody(serializedFn);
       }
 
-      // pure functions, example: {key: function() {}}
-      if(IS_PURE_FUNCTION.test(serializedFn)) {
+      // Function and class expressions can be emitted without method conversion.
+      if(IS_PURE_FUNCTION.test(serializedFn) || IS_CLASS.test(serializedFn)) {
           return serializedFn;
       }
 
@@ -270,7 +333,7 @@ module.exports = function serialize(obj, options) {
         if (type === 'D') {
             // Validate ISO string format to prevent code injection via spoofed toISOString()
             var isoStr = String(dates[valueIndex].toISOString());
-            if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/.test(isoStr)) {
+            if (!/^(?:\d{4}|[+-]\d{6})-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/.test(isoStr)) {
                 throw new TypeError('Invalid Date ISO string');
             }
             return "new Date(\"" + isoStr + "\")";

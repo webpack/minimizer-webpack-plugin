@@ -140,21 +140,23 @@ jobs:
         if: matrix.node-version == '10.x' || matrix.node-version == '12.x'
         run: npm install -D --no-save memfs@^3.6.0 --force
 
-      - name: Pin terser to the locked version (Node 10/12/14)
+      - name: Pin terser and webpack to the locked versions (Node 10/12/14)
         # npm 6 (bundled with Node <= 14) can't read the lockfileVersion 3
-        # package-lock.json, so the install step re-resolves `terser` to the
-        # latest match of its range instead of the locked version (and
-        # rewrites package-lock.json to v1 in the process). A newer terser
-        # changes the minified output, which breaks the snapshots. Read the
-        # locked version from the pristine committed lockfile and reinstall
-        # that exact version so these rows match the snapshots.
+        # package-lock.json, so the install step re-resolves `terser` and
+        # `webpack` to the latest match of their ranges instead of the locked
+        # versions (and rewrites package-lock.json to v1 in the process). A newer
+        # terser or webpack changes the output, which breaks the snapshots, and a
+        # new webpack release would turn these rows red with no change here. Read
+        # the locked versions from the pristine committed lockfile and reinstall
+        # those exact versions so these rows test what the other rows test.
         if: matrix.node-version == '10.x' || matrix.node-version == '12.x' || matrix.node-version == '14.x'
         shell: bash
         run: |
           git show HEAD:package-lock.json > pristine-package-lock.json
           TERSER_VERSION="$(node -e "process.stdout.write(require('./pristine-package-lock.json').packages['node_modules/terser'].version)")"
+          WEBPACK_VERSION="$(node -e "process.stdout.write(require('./pristine-package-lock.json').packages['node_modules/webpack'].version)")"
           rm -f pristine-package-lock.json
-          npm install -D --no-save --ignore-scripts --force "terser@${TERSER_VERSION}"
+          npm install -D --no-save --ignore-scripts --force "terser@${TERSER_VERSION}" "webpack@${WEBPACK_VERSION}"
 
       - name: Install webpack ${{ matrix.webpack-version }}
         if: matrix.webpack-version != 'latest'
