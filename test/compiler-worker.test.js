@@ -76,6 +76,7 @@ describe("compiler.worker", () => {
         expect(Worker).not.toHaveBeenCalled();
         expect(workerSpy).toHaveBeenCalledWith(
           require.resolve("../src/minify"),
+          { numWorkers: expect.any(Number) },
         );
         // a one-CPU host gets an inline pool (`max: 0`)
         if (pool.options.max > 0) {
@@ -97,23 +98,38 @@ describe("compiler.worker", () => {
       }
     });
 
-    it("keeps jest-worker while experiments.threads is off", async () => {
-      Worker.mockImplementation((workerPath) => ({
-        minify: (data) => require(workerPath).minify(data),
-        transform: (data) => require(workerPath).transform(data),
-        end: jest.fn(),
-        getStdout: jest.fn(),
-        getStderr: jest.fn(),
-      }));
+    it("minifies on webpack's threads while experiments.threads is off", async () => {
+      const inline = getCompiler();
+
+      new MinimizerPlugin({ parallel: false }).apply(inline);
+
+      const expected = readsAssets(inline, await compile(inline));
 
       const compiler = getCompiler();
 
       applyWithCores(new MinimizerPlugin(), compiler);
 
-      const stats = await compile(compiler);
+      try {
+        const stats = await compile(compiler);
 
-      expect(getErrors(stats)).toEqual([]);
-      expect(Worker).toHaveBeenCalledTimes(1);
+        expect(readsAssets(compiler, stats)).toEqual(expected);
+        expect(getErrors(stats)).toEqual([]);
+        expect(Worker).not.toHaveBeenCalled();
+
+        const { _pool: pool } = compiler.worker(
+          require.resolve("../src/minify"),
+          { numWorkers: 2 },
+        );
+
+        // the configured pool stays inline; the minimizer's runs on threads,
+        // unless worker_threads or a second CPU is missing
+        expect(pool).not.toBe(compiler._getWorkerPool());
+        expect(pool.stats.spawned).toBeLessThanOrEqual(2);
+      } finally {
+        await new Promise((resolve, reject) => {
+          compiler.close((error) => (error ? reject(error) : resolve()));
+        });
+      }
     });
   });
 
@@ -124,7 +140,7 @@ describe("compiler.worker", () => {
     });
 
     describeWithThreads("with worker_threads", () => {
-      it("sends minify calls to compiler.worker when experiments.threads is on", async () => {
+      it("sends minify calls to compiler.worker with numWorkers", async () => {
         const inline = getCompiler();
 
         new MinimizerPlugin({ parallel: false }).apply(inline);
@@ -137,7 +153,6 @@ describe("compiler.worker", () => {
         );
 
         Object.assign(compiler, { worker: jest.fn(() => ({ run })) });
-        compiler.options.experiments.threads = true;
 
         applyWithCores(new MinimizerPlugin(), compiler);
 
@@ -149,6 +164,7 @@ describe("compiler.worker", () => {
         expect(compiler.worker).toHaveBeenCalledTimes(1);
         expect(compiler.worker).toHaveBeenCalledWith(
           require.resolve("../src/minify"),
+          { numWorkers: expect.any(Number) },
         );
         expect(run).toHaveBeenCalled();
         expect(run.mock.calls.every(([method]) => method === "minify")).toBe(
@@ -166,7 +182,6 @@ describe("compiler.worker", () => {
         );
 
         Object.assign(compiler, { worker: jest.fn(() => ({ run })) });
-        compiler.options.experiments.threads = true;
 
         applyWithCores(new MinimizerPlugin({ minify: impl }), compiler);
 
@@ -183,25 +198,51 @@ describe("compiler.worker", () => {
       });
     });
 
-    it("keeps jest-worker when compiler.worker exists but threads are off", async () => {
-      Worker.mockImplementation((workerPath) => ({
-        minify: (data) => require(workerPath).minify(data),
-        transform: (data) => require(workerPath).transform(data),
-        end: jest.fn(),
-        getStdout: jest.fn(),
-        getStderr: jest.fn(),
-      }));
+    /**
+     * @param {string} workerPath the module jest-worker would load
+     * @returns {{ minify: (data: EXPECTED_ANY) => EXPECTED_ANY, transform: (data: string) => EXPECTED_ANY, end: () => void, getStdout: () => void, getStderr: () => void }} a jest-worker stand-in that runs calls here
+     */
+    const fakeJestWorker = (workerPath) => ({
+      minify: (data) => require(workerPath).minify(data),
+      transform: (data) => require(workerPath).transform(data),
+      end: jest.fn(),
+      getStdout: jest.fn(),
+      getStderr: jest.fn(),
+    });
+
+    it("keeps jest-worker for a minimizer that needs child processes", async () => {
+      Worker.mockImplementation(fakeJestWorker);
+
+      // serialized as source for `transform`, so it must not close over anything
+      const impl = (input) => ({ code: Object.values(input)[0] });
+
+      impl.supportsWorkerThreads = () => false;
 
       const compiler = getCompiler();
 
       Object.assign(compiler, { worker: jest.fn() });
+
+      applyWithCores(new MinimizerPlugin({ minify: impl }), compiler);
+
+      const stats = await compile(compiler);
+
+      expect(getErrors(stats)).toEqual([]);
+      expect(compiler.worker).not.toHaveBeenCalled();
+      expect(Worker).toHaveBeenCalledTimes(1);
+    });
+
+    it("keeps jest-worker on webpack without compiler.worker", async () => {
+      Worker.mockImplementation(fakeJestWorker);
+
+      const compiler = getCompiler();
+
+      Object.assign(compiler, { worker: undefined });
 
       applyWithCores(new MinimizerPlugin(), compiler);
 
       const stats = await compile(compiler);
 
       expect(getErrors(stats)).toEqual([]);
-      expect(compiler.worker).not.toHaveBeenCalled();
       expect(Worker).toHaveBeenCalledTimes(1);
     });
   });

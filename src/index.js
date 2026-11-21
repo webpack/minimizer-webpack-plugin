@@ -238,9 +238,9 @@ const canUseWorkerThreads = () => {
  */
 
 /**
- * What the plugin reads of webpack's shared thread pool, `compiler.worker()` with `experiments.threads`; older webpack has neither, so both are optional.
+ * What the plugin reads of webpack's shared thread pool, `compiler.worker()`; older webpack has none, so it is optional.
  * @template T
- * @typedef {{ worker?: (workerPath: string) => { run(method: "minify", options: InternalOptions<T>): Promise<MinimizedResult>, run(method: "transform", options: string): Promise<MinimizedResult> }, options: { experiments: { threads?: boolean | { max?: number } } } }} ThreadsCompiler
+ * @typedef {{ worker?: (workerPath: string, options?: { numWorkers?: number }) => { run(method: "minify", options: InternalOptions<T>): Promise<MinimizedResult>, run(method: "transform", options: string): Promise<MinimizedResult> } }} ThreadsCompiler
  */
 
 /**
@@ -920,19 +920,21 @@ class MinimizerPlugin {
           return initializedWorker;
         }
 
-        // webpack's own pool (`experiments.threads`) lives as long as the
-        // compiler and is shared with loaders, so its threads are not ours to
-        // end; it runs only worker_threads, so a child-process minimizer stays
-        // on jest-worker.
+        // webpack's own pool lives as long as the compiler and is shared with
+        // loaders and other compilers, so its threads are not ours to end.
+        // `numWorkers` asks for threads even without `experiments.threads`,
+        // which, when set, sizes the pool instead. It runs only worker_threads,
+        // so a child-process minimizer stays on jest-worker.
         const threadsCompiler = /** @type {ThreadsCompiler<T>} */ (compiler);
 
         if (
           typeof threadsCompiler.worker === "function" &&
-          threadsCompiler.options.experiments.threads &&
           enableWorkerThreads &&
           workerThreadsAvailable
         ) {
-          const worker = threadsCompiler.worker(require.resolve("./minify"));
+          const worker = threadsCompiler.worker(require.resolve("./minify"), {
+            numWorkers: numberOfWorkers,
+          });
 
           initializedWorker = {
             minify: (options) => worker.run("minify", options),

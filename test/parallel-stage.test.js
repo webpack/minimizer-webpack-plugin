@@ -6,7 +6,13 @@ import { Worker } from "jest-worker";
 import MinimizerPlugin from "../src/index";
 import { terserMinify } from "../src/utils.js";
 
-import { compile, getCompiler, getErrors, getWarnings } from "./helpers";
+import {
+  compile,
+  getCompiler,
+  getErrors,
+  getWarnings,
+  hideCompilerWorker,
+} from "./helpers";
 
 jest.mock("os", () => {
   const actualOs = jest.requireActual("os");
@@ -75,6 +81,13 @@ const neverOverlapped = () => {
 };
 
 describe("parallel across stages", () => {
+  // these cases cover the jest-worker pool
+  let restoreCompilerWorker;
+
+  beforeAll(() => {
+    restoreCompilerWorker = hideCompilerWorker();
+  });
+
   let compiler;
 
   beforeEach(() => {
@@ -90,6 +103,10 @@ describe("parallel across stages", () => {
         four: path.resolve(__dirname, "./fixtures/entry.js"),
       },
     });
+  });
+
+  afterAll(() => {
+    restoreCompilerWorker();
   });
 
   it("should keep one pool when `compress` minifies beside a worker minimizer", async () => {

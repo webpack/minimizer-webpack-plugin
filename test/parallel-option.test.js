@@ -14,6 +14,7 @@ import {
   getCompiler,
   getErrors,
   getWarnings,
+  hideCompilerWorker,
   readsAssets,
 } from "./helpers";
 
@@ -77,6 +78,13 @@ const getParallelism = () => {
 };
 
 describe("parallel option", () => {
+  // these cases cover the jest-worker pool
+  let restoreCompilerWorker;
+
+  beforeAll(() => {
+    restoreCompilerWorker = hideCompilerWorker();
+  });
+
   let compiler;
 
   beforeEach(() => {
@@ -90,6 +98,10 @@ describe("parallel option", () => {
         four: path.resolve(__dirname, "./fixtures/entry.js"),
       },
     });
+  });
+
+  afterAll(() => {
+    restoreCompilerWorker();
   });
 
   it("should match snapshot when a value is not specify", async () => {

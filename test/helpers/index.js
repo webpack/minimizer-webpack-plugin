@@ -11,3 +11,4 @@ export { default as getWarnings } from "./getWarnings";
 export { default as getErrors } from "./getErrors";
 export { default as normalizeErrors } from "./normalizeErrors";
 export { default as readAsset } from "./readAsset";
+export { default as hideCompilerWorker } from "./hideCompilerWorker";

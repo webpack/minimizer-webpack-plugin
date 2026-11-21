@@ -2,4 +2,4 @@
 "minimizer-webpack-plugin": minor
 ---
 
-Use webpack's shared thread pool (`compiler.worker()`) when `experiments.threads` is enabled.
+Run on webpack's shared thread pool (`compiler.worker()`) instead of `jest-worker` when webpack provides it.
