@@ -658,24 +658,20 @@ type MinimizerWorker<T> = {
   minify: (options: InternalOptions<T>) => Promise<MinimizedResult>;
 };
 /**
- * What the plugin reads of webpack's shared thread pool, `compiler.worker()` with `experiments.threads`; older webpack has neither, so both are optional.
+ * What the plugin reads of webpack's shared thread pool, `compiler.worker()`; older webpack has none, so it is optional.
  */
 type ThreadsCompiler<T> = {
-  worker?: (workerPath: string) => {
+  worker?: (
+    workerPath: string,
+    options?: {
+      numWorkers?: number;
+    },
+  ) => {
     run(
       method: "minify",
       options: InternalOptions<T>,
     ): Promise<MinimizedResult>;
     run(method: "transform", options: string): Promise<MinimizedResult>;
-  };
-  options: {
-    experiments: {
-      threads?:
-        | boolean
-        | {
-            max?: number;
-          };
-    };
   };
 };
 type Parallel = undefined | boolean | number;
