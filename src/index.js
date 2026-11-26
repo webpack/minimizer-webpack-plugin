@@ -234,7 +234,13 @@ const canUseWorkerThreads = () => {
 
 /**
  * @template T
- * @typedef {JestWorker & { transform: (options: string) => Promise<MinimizedResult>, minify: (options: InternalOptions<T>) => Promise<MinimizedResult> }} MinimizerWorker
+ * @typedef {{ transform: (options: string) => Promise<MinimizedResult>, minify: (options: InternalOptions<T>) => Promise<MinimizedResult>, end: () => Promise<void> }} MinimizerWorker
+ */
+
+/**
+ * What the plugin reads of webpack's shared thread pool, `compiler.worker()`; older webpack has none, so it is optional.
+ * @template T
+ * @typedef {{ worker?: (workerPath: string, options?: { numWorkers?: number }) => { run(method: "minify", options: InternalOptions<T>): Promise<MinimizedResult>, run(method: "transform", options: string): Promise<MinimizedResult> } }} ThreadsCompiler
  */
 
 /**
@@ -872,7 +878,7 @@ class MinimizerPlugin {
     /** @type {undefined | (() => MinimizerWorker<T>)} */
     let getWorker;
     /** @type {undefined | MinimizerWorker<T>} */
-    let initializedWorker;
+    let worker;
     /** @type {undefined | number} */
     let numberOfWorkers;
 
@@ -896,6 +902,12 @@ class MinimizerPlugin {
         fn.supportsWorkerThreads() !== false,
     );
     const workerThreadsAvailable = canUseWorkerThreads();
+    // webpack's threads take every minimizer: without `experiments.threads`
+    // they are this compiler's, new for each build as jest-worker's were, and
+    // with it they are shared. Older webpack keeps jest-worker.
+    const useCompilerWorker =
+      typeof (/** @type {ThreadsCompiler<T>} */ (compiler).worker) ===
+        "function" && workerThreadsAvailable;
     const needCreateWorker =
       optimizeOptions.availableNumberOfCores > 0 &&
       workerCapable.includes(true);
@@ -908,14 +920,35 @@ class MinimizerPlugin {
       );
 
       getWorker = () => {
-        if (initializedWorker) {
-          return initializedWorker;
+        if (worker) {
+          return worker;
+        }
+
+        const { worker: createWorker } = /** @type {ThreadsCompiler<T>} */ (
+          compiler
+        );
+
+        if (useCompilerWorker && createWorker) {
+          const threads = createWorker.call(
+            compiler,
+            require.resolve("./minify"),
+            { numWorkers: numberOfWorkers },
+          );
+
+          worker = {
+            minify: (options) => threads.run("minify", options),
+            transform: (options) => threads.run("transform", options),
+            // webpack owns its threads, and their output reaches ours as it is
+            end: async () => {},
+          };
+
+          return worker;
         }
 
         const { Worker } = require("jest-worker");
 
-        initializedWorker =
-          /** @type {MinimizerWorker<T>} */
+        const jestWorker =
+          /** @type {JestWorker & Omit<MinimizerWorker<T>, "end">} */
           (
             new Worker(require.resolve("./minify"), {
               numWorkers: numberOfWorkers,
@@ -925,19 +958,27 @@ class MinimizerPlugin {
           );
 
         // https://github.com/facebook/jest/issues/8872#issuecomment-524822081
-        const workerStdout = initializedWorker.getStdout();
+        const workerStdout = jestWorker.getStdout();
 
         if (workerStdout) {
           workerStdout.on("data", (chunk) => process.stdout.write(chunk));
         }
 
-        const workerStderr = initializedWorker.getStderr();
+        const workerStderr = jestWorker.getStderr();
 
         if (workerStderr) {
           workerStderr.on("data", (chunk) => process.stderr.write(chunk));
         }
 
-        return initializedWorker;
+        worker = {
+          minify: (options) => jestWorker.minify(options),
+          transform: (options) => jestWorker.transform(options),
+          end: async () => {
+            await jestWorker.end();
+          },
+        };
+
+        return worker;
       };
     }
 
@@ -960,7 +1001,9 @@ class MinimizerPlugin {
       // the whole asset on `transform`.
       if (
         canMinifyByPath(options, {
-          enableWorkerThreads: enableWorkerThreads && workerThreadsAvailable,
+          enableWorkerThreads:
+            useCompilerWorker ||
+            (enableWorkerThreads && workerThreadsAvailable),
         })
       ) {
         return getWorker().minify(options);
@@ -1347,8 +1390,8 @@ class MinimizerPlugin {
     } finally {
       // A task that rejects after the pool started must not leave its
       // workers running — the process would never exit.
-      if (initializedWorker) {
-        await initializedWorker.end();
+      if (worker) {
+        await worker.end();
       }
     }
 
