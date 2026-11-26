@@ -234,7 +234,7 @@ const canUseWorkerThreads = () => {
 
 /**
  * @template T
- * @typedef {{ transform: (options: string) => Promise<MinimizedResult>, minify: (options: InternalOptions<T>) => Promise<MinimizedResult> }} MinimizerWorker
+ * @typedef {{ transform: (options: string) => Promise<MinimizedResult>, minify: (options: InternalOptions<T>) => Promise<MinimizedResult>, end: () => Promise<void> }} MinimizerWorker
  */
 
 /**
@@ -878,9 +878,7 @@ class MinimizerPlugin {
     /** @type {undefined | (() => MinimizerWorker<T>)} */
     let getWorker;
     /** @type {undefined | MinimizerWorker<T>} */
-    let initializedWorker;
-    /** @type {undefined | JestWorker} */
-    let jestWorker;
+    let worker;
     /** @type {undefined | number} */
     let numberOfWorkers;
 
@@ -922,35 +920,35 @@ class MinimizerPlugin {
       );
 
       getWorker = () => {
-        if (initializedWorker) {
-          return initializedWorker;
+        if (worker) {
+          return worker;
         }
 
-        // webpack owns the threads, so they are not ours to end; `numWorkers`
-        // sizes them from `parallel` unless `experiments.threads` does.
         const { worker: createWorker } = /** @type {ThreadsCompiler<T>} */ (
           compiler
         );
 
         if (useCompilerWorker && createWorker) {
-          const worker = createWorker.call(
+          const threads = createWorker.call(
             compiler,
             require.resolve("./minify"),
             { numWorkers: numberOfWorkers },
           );
 
-          initializedWorker = {
-            minify: (options) => worker.run("minify", options),
-            transform: (options) => worker.run("transform", options),
+          worker = {
+            minify: (options) => threads.run("minify", options),
+            transform: (options) => threads.run("transform", options),
+            // webpack owns its threads, and their output reaches ours as it is
+            end: async () => {},
           };
 
-          return initializedWorker;
+          return worker;
         }
 
         const { Worker } = require("jest-worker");
 
-        jestWorker =
-          /** @type {JestWorker & MinimizerWorker<T>} */
+        const jestWorker =
+          /** @type {JestWorker & Omit<MinimizerWorker<T>, "end">} */
           (
             new Worker(require.resolve("./minify"), {
               numWorkers: numberOfWorkers,
@@ -972,11 +970,15 @@ class MinimizerPlugin {
           workerStderr.on("data", (chunk) => process.stderr.write(chunk));
         }
 
-        initializedWorker = /** @type {JestWorker & MinimizerWorker<T>} */ (
-          jestWorker
-        );
+        worker = {
+          minify: (options) => jestWorker.minify(options),
+          transform: (options) => jestWorker.transform(options),
+          end: async () => {
+            await jestWorker.end();
+          },
+        };
 
-        return initializedWorker;
+        return worker;
       };
     }
 
@@ -1388,8 +1390,8 @@ class MinimizerPlugin {
     } finally {
       // A task that rejects after the pool started must not leave its
       // workers running — the process would never exit.
-      if (jestWorker) {
-        await jestWorker.end();
+      if (worker) {
+        await worker.end();
       }
     }
 

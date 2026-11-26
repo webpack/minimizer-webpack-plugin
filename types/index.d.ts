@@ -656,6 +656,7 @@ type InternalOptions<T> = {
 type MinimizerWorker<T> = {
   transform: (options: string) => Promise<MinimizedResult>;
   minify: (options: InternalOptions<T>) => Promise<MinimizedResult>;
+  end: () => Promise<void>;
 };
 /**
  * What the plugin reads of webpack's shared thread pool, `compiler.worker()`; older webpack has none, so it is optional.
