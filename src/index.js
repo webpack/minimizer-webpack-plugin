@@ -904,6 +904,12 @@ class MinimizerPlugin {
         fn.supportsWorkerThreads() !== false,
     );
     const workerThreadsAvailable = canUseWorkerThreads();
+    // webpack's threads take every minimizer: without `experiments.threads`
+    // they are this compiler's, new for each build as jest-worker's were, and
+    // with it they are shared. Older webpack keeps jest-worker.
+    const useCompilerWorker =
+      typeof (/** @type {ThreadsCompiler<T>} */ (compiler).worker) ===
+        "function" && workerThreadsAvailable;
     const needCreateWorker =
       optimizeOptions.availableNumberOfCores > 0 &&
       workerCapable.includes(true);
@@ -920,21 +926,18 @@ class MinimizerPlugin {
           return initializedWorker;
         }
 
-        // webpack's own pool lives as long as the compiler and is shared with
-        // loaders and other compilers, so its threads are not ours to end.
-        // `numWorkers` asks for threads even without `experiments.threads`,
-        // which, when set, sizes the pool instead. It runs only worker_threads,
-        // so a child-process minimizer stays on jest-worker.
-        const threadsCompiler = /** @type {ThreadsCompiler<T>} */ (compiler);
+        // webpack owns the threads, so they are not ours to end; `numWorkers`
+        // sizes them from `parallel` unless `experiments.threads` does.
+        const { worker: createWorker } = /** @type {ThreadsCompiler<T>} */ (
+          compiler
+        );
 
-        if (
-          typeof threadsCompiler.worker === "function" &&
-          enableWorkerThreads &&
-          workerThreadsAvailable
-        ) {
-          const worker = threadsCompiler.worker(require.resolve("./minify"), {
-            numWorkers: numberOfWorkers,
-          });
+        if (useCompilerWorker && createWorker) {
+          const worker = createWorker.call(
+            compiler,
+            require.resolve("./minify"),
+            { numWorkers: numberOfWorkers },
+          );
 
           initializedWorker = {
             minify: (options) => worker.run("minify", options),
@@ -996,7 +999,9 @@ class MinimizerPlugin {
       // the whole asset on `transform`.
       if (
         canMinifyByPath(options, {
-          enableWorkerThreads: enableWorkerThreads && workerThreadsAvailable,
+          enableWorkerThreads:
+            useCompilerWorker ||
+            (enableWorkerThreads && workerThreadsAvailable),
         })
       ) {
         return getWorker().minify(options);

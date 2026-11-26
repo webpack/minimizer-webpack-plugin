@@ -231,7 +231,7 @@ Use multi-process parallel running to improve the build speed.
 
 Default number of concurrent runs: `os.cpus().length - 1` or `os.availableParallelism() - 1` (if this function is supported).
 
-On a webpack version with `compiler.worker()`, the work runs on webpack's shared thread pool, the one loaders and other plugins use, instead of `jest-worker`; `parallel` sets how many threads it asks for unless `experiments.threads` configures the pool. Minimizers that need child processes (`swcMinify`, `esbuildMinify`, `minifyHtmlNode`, `swcMinifyHtml`, `swcMinifyHtmlFragment`) keep using `jest-worker`.
+On a webpack version with `compiler.worker()`, every minimizer runs on webpack's threads instead of `jest-worker`. Without `experiments.threads`, `parallel` sets how many threads the compiler starts for each build, as before. With it, the plugin reuses webpack's shared threads, the ones loaders and other plugins use, and `experiments.threads` sets their number. Older webpack keeps `jest-worker`.
 
 > **Note**
 >

@@ -210,25 +210,29 @@ describe("compiler.worker", () => {
       getStderr: jest.fn(),
     });
 
-    it("keeps jest-worker for a minimizer that needs child processes", async () => {
-      Worker.mockImplementation(fakeJestWorker);
+    describeWithThreads("child-process minimizers", () => {
+      it("sends a minimizer that needs child processes to compiler.worker too", async () => {
+        // serialized as source for `transform`, so it must not close over anything
+        const impl = (input) => ({ code: Object.values(input)[0] });
 
-      // serialized as source for `transform`, so it must not close over anything
-      const impl = (input) => ({ code: Object.values(input)[0] });
+        impl.supportsWorkerThreads = () => false;
 
-      impl.supportsWorkerThreads = () => false;
+        const compiler = getCompiler();
+        const run = jest.fn((method, ...args) =>
+          require("../src/minify")[method](...args),
+        );
 
-      const compiler = getCompiler();
+        Object.assign(compiler, { worker: jest.fn(() => ({ run })) });
 
-      Object.assign(compiler, { worker: jest.fn() });
+        applyWithCores(new MinimizerPlugin({ minify: impl }), compiler);
 
-      applyWithCores(new MinimizerPlugin({ minify: impl }), compiler);
+        const stats = await compile(compiler);
 
-      const stats = await compile(compiler);
-
-      expect(getErrors(stats)).toEqual([]);
-      expect(compiler.worker).not.toHaveBeenCalled();
-      expect(Worker).toHaveBeenCalledTimes(1);
+        expect(getErrors(stats)).toEqual([]);
+        expect(Worker).not.toHaveBeenCalled();
+        expect(compiler.worker).toHaveBeenCalledTimes(1);
+        expect(run).toHaveBeenCalled();
+      });
     });
 
     it("keeps jest-worker on webpack without compiler.worker", async () => {
