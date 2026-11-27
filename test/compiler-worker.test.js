@@ -210,7 +210,7 @@ describe("compiler.worker", () => {
       getStderr: jest.fn(),
     });
 
-    describe("minimizers without worker thread support", () => {
+    describe("minimizers preferring the main thread", () => {
       /**
        * @returns {EXPECTED_ANY} a native-like minimizer
        */
@@ -218,6 +218,7 @@ describe("compiler.worker", () => {
         const impl = jest.fn((input) => ({ code: Object.values(input)[0] }));
 
         impl.supportsWorkerThreads = () => false;
+        impl.prefersMainThread = () => true;
 
         return impl;
       };
@@ -254,7 +255,56 @@ describe("compiler.worker", () => {
         expect(impl).toHaveBeenCalled();
       });
 
+      it("is declared by the async native minimizers only", () => {
+        const prefers = (fn) =>
+          typeof fn.prefersMainThread === "function" && fn.prefersMainThread();
+
+        for (const fn of [
+          MinimizerPlugin.swcMinify,
+          MinimizerPlugin.esbuildMinify,
+          MinimizerPlugin.swcMinifyHtml,
+          MinimizerPlugin.swcMinifyHtmlFragment,
+          MinimizerPlugin.esbuildMinifyCss,
+          MinimizerPlugin.swcMinifyCss,
+        ]) {
+          expect(prefers(fn)).toBe(true);
+        }
+
+        // synchronous: on the main thread they would run one asset at a time
+        for (const fn of [
+          MinimizerPlugin.minifyHtmlNode,
+          MinimizerPlugin.jsonMinify,
+          MinimizerPlugin.lightningCssMinify,
+          MinimizerPlugin.terserMinify,
+        ]) {
+          expect(prefers(fn)).toBe(false);
+        }
+      });
+
       describeWithThreads("with worker_threads", () => {
+        it("keeps a synchronous minimizer without worker thread support on compiler.worker", async () => {
+          // serialized as source for `transform`, so it must not close over anything
+          const impl = (input) => ({ code: Object.values(input)[0] });
+
+          impl.supportsWorkerThreads = () => false;
+
+          const compiler = getCompiler();
+          const run = jest.fn((method, ...args) =>
+            require("../src/minify")[method](...args),
+          );
+
+          Object.assign(compiler, { worker: jest.fn(() => ({ run })) });
+
+          applyWithCores(new MinimizerPlugin({ minify: impl }), compiler);
+
+          const stats = await compile(compiler);
+
+          expect(getErrors(stats)).toEqual([]);
+          expect(Worker).not.toHaveBeenCalled();
+          expect(compiler.worker).toHaveBeenCalledTimes(1);
+          expect(run).toHaveBeenCalled();
+        });
+
         it("keeps the minimizers beside them on compiler.worker", async () => {
           const impl = nativeMinify();
 

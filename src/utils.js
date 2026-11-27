@@ -1123,6 +1123,11 @@ swcMinify.getMinimizerVersion = () => packageVersion("@swc/core");
 swcMinify.supportsWorkerThreads = () => false;
 
 /**
+ * @returns {boolean} true, the call is async and native: the main thread only starts it
+ */
+swcMinify.prefersMainThread = () => true;
+
+/**
  * The language this minifies, for a caller dispatching source that carries
  * no filename of its own.
  * @returns {string[]} the languages
@@ -1266,6 +1271,11 @@ esbuildMinify.getMinimizerVersion = () => packageVersion("esbuild");
  * @returns {boolean | undefined} true if worker thread is supported, false otherwise
  */
 esbuildMinify.supportsWorkerThreads = () => false;
+
+/**
+ * @returns {boolean} true, the call is async and native: the main thread only starts it
+ */
+esbuildMinify.prefersMainThread = () => true;
 
 /**
  * The language this minifies, for a caller dispatching source that carries
@@ -1504,6 +1514,11 @@ swcMinifyHtml.getMinimizerVersion = () => packageVersion("@swc/html");
 swcMinifyHtml.supportsWorkerThreads = () => false;
 
 /**
+ * @returns {boolean} true, the call is async and native: the main thread only starts it
+ */
+swcMinifyHtml.prefersMainThread = () => true;
+
+/**
  * The language this minifies, for a caller dispatching source that carries
  * no filename of its own.
  * @returns {string[]} the languages
@@ -1560,6 +1575,11 @@ swcMinifyHtmlFragment.getMinimizerVersion = () => packageVersion("@swc/html");
  * @returns {boolean | undefined} false because `@swc/html` is a native binding
  */
 swcMinifyHtmlFragment.supportsWorkerThreads = () => false;
+
+/**
+ * @returns {boolean} true, the call is async and native: the main thread only starts it
+ */
+swcMinifyHtmlFragment.prefersMainThread = () => true;
 
 /**
  * The language this minifies, for a caller dispatching source that carries
@@ -2021,6 +2041,11 @@ esbuildMinifyCss.getMinimizerVersion = () => packageVersion("esbuild");
 esbuildMinifyCss.supportsWorkerThreads = () => false;
 
 /**
+ * @returns {boolean} true, the call is async and native: the main thread only starts it
+ */
+esbuildMinifyCss.prefersMainThread = () => true;
+
+/**
  * The language this minifies, for a caller dispatching source that carries
  * no filename of its own.
  * @returns {string[]} the languages
@@ -2217,6 +2242,11 @@ swcMinifyCss.getMinimizerVersion = () => packageVersion("@swc/css");
  * @returns {boolean | undefined} false because `@swc/css` is a native binding
  */
 swcMinifyCss.supportsWorkerThreads = () => false;
+
+/**
+ * @returns {boolean} true, the call is async and native: the main thread only starts it
+ */
+swcMinifyCss.prefersMainThread = () => true;
 
 /**
  * The language this minifies, for a caller dispatching source that carries

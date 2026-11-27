@@ -217,6 +217,10 @@ export namespace esbuildMinify {
    */
   function supportsWorkerThreads(): boolean | undefined;
   /**
+   * @returns {boolean} true, the call is async and native: the main thread only starts it
+   */
+  function prefersMainThread(): boolean;
+  /**
    * The language this minifies, for a caller dispatching source that carries
    * no filename of its own.
    * @returns {string[]} the languages
@@ -249,6 +253,10 @@ export namespace esbuildMinifyCss {
    * @returns {boolean | undefined} false because `esbuild` is a native binding
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @returns {boolean} true, the call is async and native: the main thread only starts it
+   */
+  function prefersMainThread(): boolean;
   /**
    * The language this minifies, for a caller dispatching source that carries
    * no filename of its own.
@@ -771,6 +779,10 @@ export namespace swcMinify {
    */
   function supportsWorkerThreads(): boolean | undefined;
   /**
+   * @returns {boolean} true, the call is async and native: the main thread only starts it
+   */
+  function prefersMainThread(): boolean;
+  /**
    * The language this minifies, for a caller dispatching source that carries
    * no filename of its own.
    * @returns {string[]} the languages
@@ -804,6 +816,10 @@ export namespace swcMinifyCss {
    */
   function supportsWorkerThreads(): boolean | undefined;
   /**
+   * @returns {boolean} true, the call is async and native: the main thread only starts it
+   */
+  function prefersMainThread(): boolean;
+  /**
    * The language this minifies, for a caller dispatching source that carries
    * no filename of its own.
    * @returns {string[]} the languages
@@ -836,6 +852,10 @@ export namespace swcMinifyHtml {
    * @returns {boolean | undefined} false because `@swc/html` is a native binding
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @returns {boolean} true, the call is async and native: the main thread only starts it
+   */
+  function prefersMainThread(): boolean;
   /**
    * The language this minifies, for a caller dispatching source that carries
    * no filename of its own.
@@ -872,6 +892,10 @@ export namespace swcMinifyHtmlFragment {
    * @returns {boolean | undefined} false because `@swc/html` is a native binding
    */
   function supportsWorkerThreads(): boolean | undefined;
+  /**
+   * @returns {boolean} true, the call is async and native: the main thread only starts it
+   */
+  function prefersMainThread(): boolean;
   /**
    * The language this minifies, for a caller dispatching source that carries
    * no filename of its own.

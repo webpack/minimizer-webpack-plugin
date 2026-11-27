@@ -555,6 +555,10 @@ type MinimizeFunctionHelpers = {
    */
   supportsWorker?: (() => boolean | undefined) | undefined;
   /**
+   * true when the minimizer's work is async and runs off the JavaScript thread (a native binding such as `swc` or `esbuild`): it then runs in the webpack process, `parallel` calls at once, rather than on a thread or a child process, which would only add a copy of every source and result. A synchronous minimizer must not declare it, or it would block the event loop and run one asset at a time
+   */
+  prefersMainThread?: (() => boolean | undefined) | undefined;
+  /**
    * true when the minimizer takes the asset's bytes rather than its text — an image minimizer. Its input reaches it as a `Buffer` and its `code` may be one. Only when every minimizer an asset is dispatched to declares it, since one that does not could not read the bytes
    */
   supportsBinary?: (() => boolean | undefined) | undefined;

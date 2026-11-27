@@ -233,7 +233,7 @@ Default number of concurrent runs: `os.cpus().length - 1` or `os.availableParall
 
 On a webpack version with `compiler.worker()`, every minimizer runs on webpack's threads instead of `jest-worker`. Without `experiments.threads`, `parallel` sets how many threads the compiler starts for each build, as before. With it, the plugin reuses webpack's shared threads, the ones loaders and other plugins use, and `experiments.threads` sets their number. Older webpack keeps `jest-worker`.
 
-Minimizers that do not support worker threads (`swcMinify`, `esbuildMinify`, `minifyHtmlNode`, `swcMinifyHtml`, `swcMinifyHtmlFragment`, `jsonMinify`) run in the webpack process on every webpack version, `parallel` of them at once: `swc` and `esbuild` do their work off the JavaScript thread, so a thread or a child process would only add a copy of every source and result. On 2,500 assets, `swcMinify` took 2.5 s and 456 MB this way, 3.7 s and 746 MB on threads, and 4.1 s and 950 MB on `jest-worker`'s child processes.
+Async native minimizers (`swcMinify`, `esbuildMinify`, `swcMinifyHtml`, `swcMinifyHtmlFragment`, `esbuildMinifyCss`, `swcMinifyCss`; they declare `prefersMainThread()`) run in the webpack process on every webpack version, `parallel` of them at once: `swc` and `esbuild` do their work off the JavaScript thread, so a thread or a child process would only add a copy of every source and result. Synchronous ones (`minifyHtmlNode`, `lightningCssMinify`, `jsonMinify`) keep the pool, since in the webpack process they would run one asset at a time. On 2,500 assets, `swcMinify` took 2.5 s and 456 MB this way, 3.7 s and 746 MB on threads, and 4.1 s and 950 MB on `jest-worker`'s child processes.
 
 > **Note**
 >
