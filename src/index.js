@@ -193,6 +193,7 @@ const canUseWorkerThreads = () => {
  * @property {() => string | undefined=} getMinimizerVersion function that returns version of minimizer
  * @property {() => boolean | undefined=} supportsWorkerThreads true when minimizer support worker threads, otherwise false
  * @property {() => boolean | undefined=} supportsWorker true when minimizer support worker, otherwise false
+ * @property {() => boolean | undefined=} prefersMainThread true when the minimizer's work is async and runs off the JavaScript thread (a native binding such as `swc` or `esbuild`): it then runs in the webpack process, `parallel` calls at once, rather than on a thread or a child process, which would only add a copy of every source and result. A synchronous minimizer must not declare it, or it would block the event loop and run one asset at a time
  * @property {() => boolean | undefined=} supportsBinary true when the minimizer takes the asset's bytes rather than its text — an image minimizer. Its input reaches it as a `Buffer` and its `code` may be one. Only when every minimizer an asset is dispatched to declares it, since one that does not could not read the bytes
  * @property {(name: string, info?: AssetInfo) => boolean | undefined=} filter return true when the minimizer supports the asset, otherwise false. When an array of minimizers is configured, each asset is dispatched only to the minimizers whose `filter` accepts it. Assets rejected by every minimizer in the array are skipped entirely.
  * @property {() => string[] | undefined=} getTypes the languages this minimizer minifies, e.g. `["css"]`. Source that carries no filename — what a module embeds in another language's output — is dispatched by this rather than by `test` / `filter`, and a minimizer that declares nothing is never handed any
@@ -886,10 +887,24 @@ class MinimizerPlugin {
     // only to the minimizers its name matched, so one that cannot run in a
     // worker — an image minimizer, whose bytes have no way across — must not
     // take the pool away from the JavaScript ones configured beside it.
+    //
+    // A minimizer that prefers the main thread (`swc`, `esbuild`) is native
+    // and async: the main thread only starts each call, and `parallel` of
+    // them run at once off it. A thread or a child process would add a copy
+    // of every source and result, and a native crash on a thread kills the
+    // process anyway (swc/swc#9855). Measured on 2,500 assets: 2.5 s and
+    // 456 MB here, 3.7 s and 746 MB on threads, 4.1 s and 950 MB on
+    // jest-worker's processes. A synchronous one (`minify-html`,
+    // `lightningcss`) keeps the pool: here it would run one asset at a time.
+    const prefersMainThread = minimizerSlots.some(
+      ({ fn }) =>
+        typeof fn.prefersMainThread === "function" && fn.prefersMainThread(),
+    );
     const workerCapable = minimizerSlots.map(
       ({ fn }) =>
-        typeof fn.supportsWorker === "undefined" ||
-        (typeof fn.supportsWorker === "function" && fn.supportsWorker()),
+        (typeof fn.supportsWorker === "undefined" ||
+          (typeof fn.supportsWorker === "function" && fn.supportsWorker())) &&
+        !(typeof fn.prefersMainThread === "function" && fn.prefersMainThread()),
     );
     const binaryCapable = minimizerSlots.map(
       ({ fn }) =>
@@ -991,7 +1006,13 @@ class MinimizerPlugin {
      * @returns {Promise<MinimizedResult>} the result
      */
     const run = (options, matched) => {
-      if (!(getWorker && matched.every((i) => workerCapable[i]))) {
+      // An asset with `embedded` may reach every configured minimizer, not
+      // just the ones it matched, so one preferring the main thread keeps it here.
+      if (
+        !getWorker ||
+        !matched.every((i) => workerCapable[i]) ||
+        (options.embedded && prefersMainThread)
+      ) {
         return minify(options);
       }
 
