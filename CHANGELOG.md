@@ -1,5 +1,15 @@
 # Changelog
 
+## 5.15.0
+
+### Minor Changes
+
+- Run on webpack's threads (`compiler.worker()`) instead of `jest-worker` when webpack provides it. (by [@alexander-akait](https://github.com/alexander-akait) in [#769](https://github.com/webpack/minimizer-webpack-plugin/pull/769))
+
+### Patch Changes
+
+- Run async native minimizers (`swcMinify`, `esbuildMinify`, `swcMinifyHtml`, `swcMinifyHtmlFragment`, `esbuildMinifyCss`, `swcMinifyCss`) in the webpack process, `parallel` at once, instead of on threads or `jest-worker` child processes: faster and less memory. They declare the new `prefersMainThread()`; synchronous minimizers keep the pool. (by [@alexander-akait](https://github.com/alexander-akait) in [#774](https://github.com/webpack/minimizer-webpack-plugin/pull/774))
+
 ## 5.14.1
 
 ### Patch Changes
