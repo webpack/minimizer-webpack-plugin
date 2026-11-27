@@ -254,31 +254,33 @@ describe("compiler.worker", () => {
         expect(impl).toHaveBeenCalled();
       });
 
-      it("keeps the minimizers beside them on compiler.worker", async () => {
-        const impl = nativeMinify();
+      describeWithThreads("with worker_threads", () => {
+        it("keeps the minimizers beside them on compiler.worker", async () => {
+          const impl = nativeMinify();
 
-        // claims no asset of this build, so terser alone handles each one
-        impl.filter = () => false;
-        const compiler = getCompiler();
-        const run = jest.fn((method, ...args) =>
-          require("../src/minify")[method](...args),
-        );
+          // claims no asset of this build, so terser alone handles each one
+          impl.filter = () => false;
+          const compiler = getCompiler();
+          const run = jest.fn((method, ...args) =>
+            require("../src/minify")[method](...args),
+          );
 
-        Object.assign(compiler, { worker: jest.fn(() => ({ run })) });
+          Object.assign(compiler, { worker: jest.fn(() => ({ run })) });
 
-        applyWithCores(
-          new MinimizerPlugin({
-            minify: [MinimizerPlugin.terserMinify, impl],
-          }),
-          compiler,
-        );
+          applyWithCores(
+            new MinimizerPlugin({
+              minify: [MinimizerPlugin.terserMinify, impl],
+            }),
+            compiler,
+          );
 
-        const stats = await compile(compiler);
+          const stats = await compile(compiler);
 
-        expect(getErrors(stats)).toEqual([]);
-        expect(compiler.worker).toHaveBeenCalledTimes(1);
-        expect(run).toHaveBeenCalled();
-        expect(impl).not.toHaveBeenCalled();
+          expect(getErrors(stats)).toEqual([]);
+          expect(compiler.worker).toHaveBeenCalledTimes(1);
+          expect(run).toHaveBeenCalled();
+          expect(impl).not.toHaveBeenCalled();
+        });
       });
 
       it("keeps an asset on the main thread when a body it embeds may reach them", async () => {
