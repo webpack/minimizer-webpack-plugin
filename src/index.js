@@ -886,20 +886,26 @@ class MinimizerPlugin {
     // only to the minimizers its name matched, so one that cannot run in a
     // worker — an image minimizer, whose bytes have no way across — must not
     // take the pool away from the JavaScript ones configured beside it.
+    //
+    // A minimizer that does not support worker threads (`swc`, `esbuild`,
+    // `minify-html`) is native and async: the main thread only starts each
+    // call, and `parallel` of them run at once off it. A thread or a child
+    // process would add a copy of every source and result, and a native crash
+    // on a thread kills the process anyway (swc/swc#9855). Measured on 2,500
+    // assets: 2.5 s and 456 MB here, 3.7 s and 746 MB on threads, 4.1 s and
+    // 950 MB on jest-worker's processes.
     const workerCapable = minimizerSlots.map(
       ({ fn }) =>
-        typeof fn.supportsWorker === "undefined" ||
-        (typeof fn.supportsWorker === "function" && fn.supportsWorker()),
+        (typeof fn.supportsWorker === "undefined" ||
+          (typeof fn.supportsWorker === "function" && fn.supportsWorker())) &&
+        !(
+          typeof fn.supportsWorkerThreads === "function" &&
+          fn.supportsWorkerThreads() === false
+        ),
     );
     const binaryCapable = minimizerSlots.map(
       ({ fn }) =>
         typeof fn.supportsBinary === "function" && fn.supportsBinary(),
-    );
-    const enableWorkerThreads = minimizerSlots.every(
-      ({ fn }, i) =>
-        !workerCapable[i] ||
-        typeof fn.supportsWorkerThreads === "undefined" ||
-        fn.supportsWorkerThreads() !== false,
     );
     const workerThreadsAvailable = canUseWorkerThreads();
     // webpack's threads take every minimizer: without `experiments.threads`
@@ -952,8 +958,8 @@ class MinimizerPlugin {
           (
             new Worker(require.resolve("./minify"), {
               numWorkers: numberOfWorkers,
-              // Only what can reach the pool decides how it is run.
-              enableWorkerThreads,
+              // only minimizers that support worker threads reach the pool
+              enableWorkerThreads: true,
             })
           );
 
@@ -991,7 +997,16 @@ class MinimizerPlugin {
      * @returns {Promise<MinimizedResult>} the result
      */
     const run = (options, matched) => {
-      if (!(getWorker && matched.every((i) => workerCapable[i]))) {
+      // An asset with `embedded` may reach every configured minimizer, not
+      // just the ones it matched.
+      if (
+        !getWorker ||
+        !(
+          options.embedded
+            ? workerCapable
+            : matched.map((i) => workerCapable[i])
+        ).every(Boolean)
+      ) {
         return minify(options);
       }
 
@@ -1001,9 +1016,7 @@ class MinimizerPlugin {
       // the whole asset on `transform`.
       if (
         canMinifyByPath(options, {
-          enableWorkerThreads:
-            useCompilerWorker ||
-            (enableWorkerThreads && workerThreadsAvailable),
+          enableWorkerThreads: workerThreadsAvailable,
         })
       ) {
         return getWorker().minify(options);

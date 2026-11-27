@@ -210,19 +210,40 @@ describe("compiler.worker", () => {
       getStderr: jest.fn(),
     });
 
-    describeWithThreads("child-process minimizers", () => {
-      it("sends a minimizer that needs child processes to compiler.worker too", async () => {
-        // serialized as source for `transform`, so it must not close over anything
-        const impl = (input) => ({ code: Object.values(input)[0] });
+    describe("minimizers without worker thread support", () => {
+      /**
+       * @returns {EXPECTED_ANY} a native-like minimizer
+       */
+      const nativeMinify = () => {
+        const impl = jest.fn((input) => ({ code: Object.values(input)[0] }));
 
         impl.supportsWorkerThreads = () => false;
 
-        const compiler = getCompiler();
-        const run = jest.fn((method, ...args) =>
-          require("../src/minify")[method](...args),
-        );
+        return impl;
+      };
 
-        Object.assign(compiler, { worker: jest.fn(() => ({ run })) });
+      it("runs them on the main thread, not on compiler.worker", async () => {
+        const impl = nativeMinify();
+        const compiler = getCompiler();
+        const worker = jest.fn();
+
+        Object.assign(compiler, { worker });
+
+        applyWithCores(new MinimizerPlugin({ minify: impl }), compiler);
+
+        const stats = await compile(compiler);
+
+        expect(getErrors(stats)).toEqual([]);
+        expect(worker).not.toHaveBeenCalled();
+        expect(Worker).not.toHaveBeenCalled();
+        expect(impl).toHaveBeenCalled();
+      });
+
+      it("runs them on the main thread on webpack without compiler.worker", async () => {
+        const impl = nativeMinify();
+        const compiler = getCompiler();
+
+        Object.assign(compiler, { worker: undefined });
 
         applyWithCores(new MinimizerPlugin({ minify: impl }), compiler);
 
@@ -230,8 +251,61 @@ describe("compiler.worker", () => {
 
         expect(getErrors(stats)).toEqual([]);
         expect(Worker).not.toHaveBeenCalled();
+        expect(impl).toHaveBeenCalled();
+      });
+
+      it("keeps the minimizers beside them on compiler.worker", async () => {
+        const impl = nativeMinify();
+
+        // claims no asset of this build, so terser alone handles each one
+        impl.filter = () => false;
+        const compiler = getCompiler();
+        const run = jest.fn((method, ...args) =>
+          require("../src/minify")[method](...args),
+        );
+
+        Object.assign(compiler, { worker: jest.fn(() => ({ run })) });
+
+        applyWithCores(
+          new MinimizerPlugin({
+            minify: [MinimizerPlugin.terserMinify, impl],
+          }),
+          compiler,
+        );
+
+        const stats = await compile(compiler);
+
+        expect(getErrors(stats)).toEqual([]);
         expect(compiler.worker).toHaveBeenCalledTimes(1);
         expect(run).toHaveBeenCalled();
+        expect(impl).not.toHaveBeenCalled();
+      });
+
+      it("keeps an asset on the main thread when a body it embeds may reach them", async () => {
+        const native = nativeMinify();
+
+        native.filter = () => false;
+        native.getTypes = () => ["css"];
+
+        const outer = (input) => ({ code: Object.values(input)[0] });
+
+        outer.getTypes = () => ["javascript"];
+        outer.getEmbeddedTypes = () => ["css"];
+
+        const compiler = getCompiler();
+        const worker = jest.fn();
+
+        Object.assign(compiler, { worker });
+
+        applyWithCores(
+          new MinimizerPlugin({ minify: [outer, native] }),
+          compiler,
+        );
+
+        const stats = await compile(compiler);
+
+        expect(getErrors(stats)).toEqual([]);
+        expect(worker).not.toHaveBeenCalled();
       });
     });
 
